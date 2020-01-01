@@ -1,0 +1,8 @@
+{
+	"editor.formatOnSave": true,
+	"python.linting.pycodestyleEnabled": true,
+	"python.linting.pylintPath": "pylint",
+	"python.linting.pylintArgs": ["--load-plugins", "pylint_django"],
+	"python.linting.pylintEnabled": true,
+	"python.venvPath": "${workspaceFolder}/Backend/env/bin/python3.8"
+}

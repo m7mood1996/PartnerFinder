@@ -5,7 +5,7 @@ from .views import OrganizationProfileViewSet
 
 router = routers.DefaultRouter()
 
-router.register('api/OrganizationProfiles',
+router.register('api/OrganizationProfile',
                 OrganizationProfileViewSet, 'finder')
 
 urlpatterns = router.urls

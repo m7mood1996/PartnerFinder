@@ -3,12 +3,6 @@ from django.db import models
 # Create your models here.
 
 
-# class Finder(models.Model):
-#     legalName = models.TextField()
-
-#     def __str__(self):
-#         return self.legalName
-
 class OrganizationProfile(models.Model):
     pic = models.IntegerField(unique=True)
     legalName = models.CharField(max_length=200)

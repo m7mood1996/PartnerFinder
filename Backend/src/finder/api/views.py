@@ -1,12 +1,12 @@
 from ..models import OrganizationProfile
 from rest_framework import viewsets, permissions
-from rest_framework.generics import ListAPIView
+
 from .serializers import OrganizationProfileSerializer
 
 
 class OrganizationProfileViewSet(viewsets.ModelViewSet):
     queryset = OrganizationProfile.objects.all()
-    # permission_classes = [
-    #     permissions.AllowAny
-    # ]
+    permission_classes = [
+        permissions.AllowAny
+    ]
     serializer_class = OrganizationProfileSerializer

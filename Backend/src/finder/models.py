@@ -1,5 +1,7 @@
-from django.db import models
-
+# from django.db import models
+from djongo import models
+from django.contrib.postgres.fields import JSONField
+from django.contrib.postgres.fields import ArrayField
 # Create your models here.
 
 
@@ -11,8 +13,8 @@ class OrganizationProfile(models.Model):
     # numberOfProjects = models.IntegerField()
     description = models.TextField()
     address = models.TextField()
-    # collaborations = models.TextField()
     tagsAndKeywords = models.TextField()
+    # tagsAndKeywords = ArrayField(models.CharField(max_length=200))
 
     def getAddress(self):
         return json.loads(self.address)

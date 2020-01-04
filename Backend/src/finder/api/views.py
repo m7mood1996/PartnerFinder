@@ -1,6 +1,5 @@
 from ..models import OrganizationProfile
 from rest_framework import viewsets, permissions
-
 from .serializers import OrganizationProfileSerializer
 
 

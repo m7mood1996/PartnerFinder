@@ -5,6 +5,9 @@ from django.contrib import admin
 
 # admin.site.register(Finder)
 
-from .models import OrganizationProfile
+from .models import OrganizationProfile, Address, Tag
 
 admin.site.register(OrganizationProfile)
+admin.site.register(Address)
+admin.site.register(Tag)
+

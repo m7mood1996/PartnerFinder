@@ -5,31 +5,27 @@ from django.contrib.postgres.fields import ArrayField
 # Create your models here.
 
 
+class Address(models.Model):
+    country = models.CharField(max_length=200, blank=True)
+    city = models.CharField(max_length=200, blank=True, null=True)
+
+
 class OrganizationProfile(models.Model):
     pic = models.IntegerField(unique=True)
     legalName = models.CharField(max_length=200)
     businessName = models.CharField(max_length=200)
-    classificationType = models.CharField(max_length=50)
+    classificationType = models.CharField(max_length=50, blank=True, null=True)
     # numberOfProjects = models.IntegerField()
-    description = models.TextField()
-    address = models.TextField()
-    tagsAndKeywords = models.TextField()
-    # tagsAndKeywords = ArrayField(models.CharField(max_length=200))
+    description = models.TextField(blank=True, null=True)
+    address = models.OneToOneField(
+        Address, blank=True, null=True, on_delete=models.CASCADE)
+    # address = models.TextField(blank=True, null=True)
+    # tagsAndKeywords = models.TextField(blank=True, null=True)
+    # tagsAndKeywords = models.ForeignKey(
+    #     Tag, blank=True, null=True, on_delete=models.CASCADE)
 
-    def getAddress(self):
-        return json.loads(self.address)
 
-    def setAddress(self, address):
-        self.address = json.dumps(address)
-
-    # def getCollaborations(self):
-    #     return json.loads(self.collaborations)
-
-    # def setCollaborations(self, collaborations):
-    #     self.collaborations = json.dumps(collaborations)
-
-    def getTagsAndKeywords(self):
-        return json.loads(self.tagsAndKeywords)
-
-    def setTagsAndKeywords(self, tagsAndKeywords):
-        self.tagsAndKeywords = json.dumps(tagsAndKeywords)
+class Tag(models.Model):
+    tag = models.CharField(max_length=200, blank=True, null=True)
+    organization = models.ForeignKey(
+        OrganizationProfile, blank=True, null=True, on_delete=models.CASCADE, related_name='tagsAndKeywords')

@@ -1,11 +1,11 @@
 from rest_framework import routers
 
-from django.urls import path
+from django.urls import path, include
 from .views import OrganizationProfileViewSet
 
 router = routers.DefaultRouter()
+router.register('organizations', OrganizationProfileViewSet)
 
-router.register('',
-                OrganizationProfileViewSet, 'finder')
-
-urlpatterns = router.urls
+urlpatterns = [
+    path('', include(router.urls))
+]

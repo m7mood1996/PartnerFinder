@@ -19,10 +19,6 @@ class OrganizationProfile(models.Model):
     description = models.TextField(blank=True, null=True)
     address = models.OneToOneField(
         Address, blank=True, null=True, on_delete=models.CASCADE)
-    # address = models.TextField(blank=True, null=True)
-    # tagsAndKeywords = models.TextField(blank=True, null=True)
-    # tagsAndKeywords = models.ForeignKey(
-    #     Tag, blank=True, null=True, on_delete=models.CASCADE)
 
 
 class Tag(models.Model):

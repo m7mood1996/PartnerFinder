@@ -17,7 +17,7 @@ class OrganizationProfileViewSet(viewsets.ModelViewSet):
 
     @action(detail=False, methods=['POST'])
     def createOrganization(self, request):
-        response = {'Message': 'Organization added successfully!'}
+        response = {'Message': 'Organization created successfully!'}
 
         data = json.loads(request.data['data'])
         try:
@@ -25,18 +25,32 @@ class OrganizationProfileViewSet(viewsets.ModelViewSet):
             response = {
                 'Message': 'Organization with the same PIC is already exists!'}
         except:
-            print(data)
             newAddress = Address(
                 country=data['address']['country'], city=data['address']['city'])
             newAddress.save()
             org = OrganizationProfile(pic=data['pic'], legalName=data['legalName'], businessName=data['businessName'], classificationType=data['classificationType'], description=data['description'],
                                       address=newAddress)
             org.save()
-            print(data['tagsAndKeywords'])
             for tag in data['tagsAndKeywords']:
                 currTag = Tag(tag=tag, organization=org)
                 currTag.save()
 
+        return Response(response, status=status.HTTP_200_OK)
+
+    @action(detail=False, methods=['GET'])
+    def getOrganizationsByTag(self, request):
+        data = json.loads(request.data['data'])
+        tags = data['tags']
+        res = []
+        allTags = Tag.objects.all()
+        for tag in allTags:
+            if tag.tag in tags:
+                res.append(tag.organization)
+        response = []
+        for val in res:
+            response.append({'pic': val.pic, 'legalName': val.legalName, 'businessName': val.businessName,
+                             'address': {'country': val.address.country, 'city' : val.address.city}})
+   
         return Response(response, status=status.HTTP_200_OK)
 
 

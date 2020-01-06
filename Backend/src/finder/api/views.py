@@ -17,7 +17,7 @@ class OrganizationProfileViewSet(viewsets.ModelViewSet):
 
     @action(detail=False, methods=['POST'])
     def createOrganization(self, request):
-        response = {'Message': 'Organization created successfully!'}
+        response = {'Message': 'Organization Created Successfully!'}
 
         data = json.loads(request.data['data'])
         try:
@@ -25,15 +25,22 @@ class OrganizationProfileViewSet(viewsets.ModelViewSet):
             response = {
                 'Message': 'Organization with the same PIC is already exists!'}
         except:
-            newAddress = Address(
-                country=data['address']['country'], city=data['address']['city'])
-            newAddress.save()
+            if 'address' in data:
+                if 'country' in data['address'] and 'city' in data['address']:
+                    newAddress = Address(
+                        country=data['address']['country'], city=data['address']['city'])
+                    newAddress.save()
             org = OrganizationProfile(pic=data['pic'], legalName=data['legalName'], businessName=data['businessName'], classificationType=data['classificationType'], description=data['description'],
                                       address=newAddress)
             org.save()
             for tag in data['tagsAndKeywords']:
-                currTag = Tag(tag=tag, organization=org)
-                currTag.save()
+                try:
+                    currTag = Tag.objects.get(tag=tag)
+                    currTag.organizations.add(org)
+                except:
+                    currTag = Tag(tag=tag)
+                    currTag.save()
+                    currTag.organizations.add(org)
 
         return Response(response, status=status.HTTP_200_OK)
 
@@ -45,7 +52,7 @@ class OrganizationProfileViewSet(viewsets.ModelViewSet):
         allTags = Tag.objects.all()
         for tag in allTags:
             if tag.tag in tags:
-                res.append(tag.organization)
+                res.extend(tag.organizations.all())
         response = []
         for val in res:
             response.append({'pic': val.pic, 'legalName': val.legalName, 'businessName': val.businessName,
@@ -54,18 +61,18 @@ class OrganizationProfileViewSet(viewsets.ModelViewSet):
         return Response(response, status=status.HTTP_200_OK)
 
     @action(detail=False, methods=['GET'])
-    def getOrganizationsByCountry(self, request):
+    def getOrganizationsByCountries(self, request):
         data = json.loads(request.data['data'])
-        countrys = data['countrys']
+        countries = data['countries']
         res = []
         allOrgs = OrganizationProfile.objects.all()
         for org in allOrgs:
-            if org.address.country in countrys:
+            if org.address.country in countries:
                 res.append(org)
         response = []
         for val in res:
             response.append({'pic': val.pic, 'legalName': val.legalName, 'businessName': val.businessName,
-                             'address': {'country': val.address.country, 'city': val.address.city}})
+                             'address': {'country': val.address.country, 'city': val.address.city}, 'discreption': val.description})
 
         return Response(response, status=status.HTTP_200_OK)
 

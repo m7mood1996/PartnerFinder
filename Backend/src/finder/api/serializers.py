@@ -12,7 +12,7 @@ class AddressSerializer(serializers.ModelSerializer):
 class TagSerializer(serializers.ModelSerializer):
     class Meta:
         model = Tag
-        fields = ['tag']
+        fields = ['tag', 'organizations']
 
 
 class OrganizationProfileSerializer(serializers.ModelSerializer):

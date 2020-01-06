@@ -1,9 +1,13 @@
 # from django.db import models
 from djongo import models
 
+
 class Address(models.Model):
     country = models.CharField(max_length=200, blank=True)
     city = models.CharField(max_length=200, blank=True, null=True)
+
+    def __str__(self):
+        return self.country + ' ' + self.city
 
 
 class OrganizationProfile(models.Model):
@@ -16,8 +20,14 @@ class OrganizationProfile(models.Model):
     address = models.OneToOneField(
         Address, blank=True, null=True, on_delete=models.CASCADE)
 
+    def __str__(self):
+        return str(self.pic)
+
 
 class Tag(models.Model):
     tag = models.CharField(max_length=200, blank=True, null=True)
-    organization = models.ForeignKey(
-        OrganizationProfile, blank=True, null=True, on_delete=models.CASCADE, related_name='tagsAndKeywords')
+    organizations = models.ManyToManyField(
+        OrganizationProfile, blank=True, related_name='tagsAndKeywords')
+
+    def __str__(self):
+        return self.tag

@@ -38,7 +38,7 @@ class OrganizationProfileViewSet(viewsets.ModelViewSet):
         return Response(response, status=status.HTTP_200_OK)
 
     @action(detail=False, methods=['GET'])
-    def getOrganizationsByTag(self, request):
+    def getOrganizationsByTags(self, request):
         data = json.loads(request.data['data'])
         tags = data['tags']
         res = []
@@ -49,8 +49,24 @@ class OrganizationProfileViewSet(viewsets.ModelViewSet):
         response = []
         for val in res:
             response.append({'pic': val.pic, 'legalName': val.legalName, 'businessName': val.businessName,
-                             'address': {'country': val.address.country, 'city' : val.address.city}})
-   
+                             'address': {'country': val.address.country, 'city': val.address.city}})
+
+        return Response(response, status=status.HTTP_200_OK)
+
+    @action(detail=False, methods=['GET'])
+    def getOrganizationsByCountry(self, request):
+        data = json.loads(request.data['data'])
+        countrys = data['countrys']
+        res = []
+        allOrgs = OrganizationProfile.objects.all()
+        for org in allOrgs:
+            if org.address.country in countrys:
+                res.append(org)
+        response = []
+        for val in res:
+            response.append({'pic': val.pic, 'legalName': val.legalName, 'businessName': val.businessName,
+                             'address': {'country': val.address.country, 'city': val.address.city}})
+
         return Response(response, status=status.HTTP_200_OK)
 
 

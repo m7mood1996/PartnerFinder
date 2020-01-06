@@ -1,9 +1,5 @@
 # from django.db import models
 from djongo import models
-from django.contrib.postgres.fields import JSONField
-from django.contrib.postgres.fields import ArrayField
-# Create your models here.
-
 
 class Address(models.Model):
     country = models.CharField(max_length=200, blank=True)

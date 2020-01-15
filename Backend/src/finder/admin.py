@@ -5,9 +5,9 @@ from django.contrib import admin
 
 # admin.site.register(Finder)
 
-from .models import OrganizationProfile, Address, Tag
+from .models import OrganizationProfile, Address, Tag, Event
 
 admin.site.register(OrganizationProfile)
 admin.site.register(Address)
 admin.site.register(Tag)
-
+admin.site.register(Event)

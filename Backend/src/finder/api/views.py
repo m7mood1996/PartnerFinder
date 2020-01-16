@@ -200,8 +200,12 @@ class OrganizationProfileViewSet(viewsets.ModelViewSet):
 
     @action(detail=False, methods=['GET'])
     def getOrganizationsByTags(self, request):
-        data = json.loads(request.data['data'])
-        tags = data['tags']
+        print("Data is ff: \t", request.query_params)
+        tags = request.query_params['data']
+        tags = tags.split(',')
+        # tags = json.loads(tags)
+        print("TAGS \t", tags)
+        # tags = data['tags']
         res = []
         allTags = Tag.objects.all()
         for tag in allTags:
@@ -210,14 +214,16 @@ class OrganizationProfileViewSet(viewsets.ModelViewSet):
         response = []
         for val in res:
             response.append({'pic': val.pic, 'legalName': val.legalName, 'businessName': val.businessName,
-                             'address': {'country': val.address.country, 'city': val.address.city}, 'discreption': val.description, 'classificationType' : val.classificationType})
+                             'address': {'country': val.address.country, 'city': val.address.city}, 'description': val.description, 'classificationType' : val.classificationType})
 
         return Response(response, status=status.HTTP_200_OK)
 
     @action(detail=False, methods=['GET'])
     def getOrganizationsByCountries(self, request):
-        data = json.loads(request.data['data'])
-        countries = data['countries']
+        countries = request.query_params['data']
+        countries = countries.split(',')
+        print ("countries", countries)
+        # countries = data['countries']
         res = []
         allOrgs = OrganizationProfile.objects.all()
         for org in allOrgs:
@@ -226,7 +232,7 @@ class OrganizationProfileViewSet(viewsets.ModelViewSet):
         response = []
         for val in res:
             response.append({'pic': val.pic, 'legalName': val.legalName, 'businessName': val.businessName,
-                             'address': {'country': val.address.country, 'city': val.address.city}, 'discreption': val.description, 'classificationType' : val.classificationType})
+                             'address': {'country': val.address.country, 'city': val.address.city}, 'description': val.description, 'classificationType' : val.classificationType})
 
         return Response(response, status=status.HTTP_200_OK)
 

@@ -200,12 +200,8 @@ class OrganizationProfileViewSet(viewsets.ModelViewSet):
 
     @action(detail=False, methods=['GET'])
     def getOrganizationsByTags(self, request):
-        print("Data is ff: \t", request.query_params)
         tags = request.query_params['data']
         tags = tags.split(',')
-        # tags = json.loads(tags)
-        print("TAGS \t", tags)
-        # tags = data['tags']
         res = []
         allTags = Tag.objects.all()
         for tag in allTags:
@@ -222,8 +218,6 @@ class OrganizationProfileViewSet(viewsets.ModelViewSet):
     def getOrganizationsByCountries(self, request):
         countries = request.query_params['data']
         countries = countries.split(',')
-        print ("countries", countries)
-        # countries = data['countries']
         res = []
         allOrgs = OrganizationProfile.objects.all()
         for org in allOrgs:

@@ -53,7 +53,7 @@ class Participants(models.Model):
 
 class TagP(models.Model):
     tag = models.CharField(max_length=200, blank=True, null=True)
-    participant = models.ManyToManyField(Participants, blank=True, related_name='participants')
+    participant = models.ManyToManyField(Participants, blank=True, related_name='tagsAndKeywordsP')
 
 
 class Event(models.Model):

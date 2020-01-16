@@ -210,7 +210,7 @@ class OrganizationProfileViewSet(viewsets.ModelViewSet):
         response = []
         for val in res:
             response.append({'pic': val.pic, 'legalName': val.legalName, 'businessName': val.businessName,
-                             'address': {'country': val.address.country, 'city': val.address.city}})
+                             'address': {'country': val.address.country, 'city': val.address.city}, 'discreption': val.description, 'classificationType' : val.classificationType})
 
         return Response(response, status=status.HTTP_200_OK)
 
@@ -226,7 +226,7 @@ class OrganizationProfileViewSet(viewsets.ModelViewSet):
         response = []
         for val in res:
             response.append({'pic': val.pic, 'legalName': val.legalName, 'businessName': val.businessName,
-                             'address': {'country': val.address.country, 'city': val.address.city}, 'discreption': val.description})
+                             'address': {'country': val.address.country, 'city': val.address.city}, 'discreption': val.description, 'classificationType' : val.classificationType})
 
         return Response(response, status=status.HTTP_200_OK)
 
@@ -333,9 +333,12 @@ class ParticipantsViewSet(viewsets.ModelViewSet):
         print(events.event_name)
         print(events.event_url)
         # url_arr =getParticipentFromUrl(events.event_url + "/participants")
-        url_arr =getParticipentFromUrl('https://technology-business-cooperation-days-2020.b2match.io/participants')
+        url_arr = getParticipentFromUrl('https://technology-business-cooperation-days-2020.b2match.io/participants')
         for item in url_arr:
-            part_temp = getParticipentDATA(item)
+            try:
+                part_temp = getParticipentDATA(item)
+            except:
+                continue
 
             print("xD" * 10)
             location = Location(location=part_temp[3])
@@ -343,15 +346,26 @@ class ParticipantsViewSet(viewsets.ModelViewSet):
             print("xD" * 10)
             participant = Participants(participant_name=part_temp[0], participant_img_url=part_temp[1],
                                        organization_name=part_temp[2], org_type=part_temp[4], org_url=part_temp[5],
-                                       org_icon_url=part_temp[6], description=part_temp[8],location=location)
+                                       org_icon_url=part_temp[6], description=part_temp[8], location=location)
+
+            participant.save()
+
             print("xD" * 10)
             print("xD" * 10)
             print(location)
             print("xD" * 10)
 
-            print(part_temp[7],"kkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkk"*3)
+            print(part_temp[7], "kkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkk" * 3)
             for i in part_temp[7]:
                 print(i)
+                try:
+                    currTag = TagP.objects.get(tag=i)
+                    currTag.participant.add(participant)
+                except:
+                    currTag = TagP(tag=i)
+                    currTag.save()
+                    currTag.participant.add(participant)
+                """
                 try:
                     tag = TagP.objects.get(tag=i)
                 except:
@@ -361,20 +375,19 @@ class ParticipantsViewSet(viewsets.ModelViewSet):
                     participant.tags.add(tag=tag)
 
                 except:
-                    pass
+                    pass"""
             print("hello", part_temp[3])
 
-            participant.save()
             """try:
                 location = Location.objects.get(location=part_temp[3])
             except:"""
-            #print("xD"*10,participant)
+            # print("xD"*10,participant)
             #    location.save()
-            #location.participant.add(participent=participent)
+            # location.participant.add(participent=participent)
 
             print("what!!!!")
-            #participent.location.add(location)
+            # participent.location.add(location)
 
-        return Response({'message':'done see DataBase'}, status=status.HTTP_200_OK)
+        return Response({'message': 'done see DataBase'}, status=status.HTTP_200_OK)
 
 

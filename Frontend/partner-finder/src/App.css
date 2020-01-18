@@ -1,7 +1,7 @@
-body{
+body {
   background-color: white;
 }
-.App{
+.App {
   text-align: center;
   background-color: white;
   min-height: 100vh;
@@ -23,36 +23,33 @@ body{
   margin-left: 20px;
   font-size: 9.5px;
 }
-#company_name{
-background-color: white;
-size: 2px;
-height: 2px;
+#company_name {
+  background-color: white;
+  size: 2px;
+  height: 2px;
 }
 
 .SearchTab {
   display: grid;
 }
 
-
-#tab{
+#tab {
   width: 140px;
 }
-.type{
-  display: grid;
-  
-}
-.counrty{
+.type {
   display: grid;
 }
-.first_row{
+.counrty {
+  display: grid;
+}
+.first_row {
   color: black;
   display: grid;
-  grid-template-columns: auto 0.5fr auto; 
+  grid-template-columns: auto 0.5fr auto;
   margin-left: 20px;
   font-size: 9.5px;
-  
 }
-.second_row{
+.second_row {
   color: black;
   margin-top: 35px;
   display: grid;
@@ -60,26 +57,26 @@ height: 2px;
   margin-left: 20px;
   font-size: 9.5px;
 }
-.third_row{
+.third_row {
   color: black;
   margin-top: 35px;
   display: grid;
-  grid-template-columns: auto 0.5fr auto; 
+  grid-template-columns: auto 0.5fr auto;
   margin-left: 20px;
   font-size: 9.5px;
 }
-.profit{
+.profit {
   display: grid;
   grid-template-columns: 10em 0.5em;
 }
-.Partners{
-  display:grid;
+.Partners {
+  display: grid;
   grid-template-columns: auto 2fr auto;
 }
-.SearchButton{
+.SearchButton {
   margin-top: 42px;
   text-align: center;
 }
-#Search{
-  width:125px;
+#Search {
+  width: 125px;
 }

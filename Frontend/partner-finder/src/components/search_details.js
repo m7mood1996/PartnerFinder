@@ -14,20 +14,21 @@ import countryList from 'react-select-country-list'
 // import SearchResults from './searchResults'
 import SearchResults from './searchResults';
 
-const columns = [
-    'legalName',
-    'businessName',
-    'classificationType',
-    'country', 'city',
-    'description',
+import { WithContext as ReactTags } from 'react-tag-input';
 
-]
+const KeyCodes = {
+    comma: 188,
+    enter: 13,
+};
+
+const delimiters = [KeyCodes.comma, KeyCodes.enter];
+
 
 function SearchDetails() {
     const [type, setType] = React.useState('');
     const [country, setCountry] = React.useState('');
     const [value, setValue] = React.useState('');
-    const [keyword, setKeyword] = React.useState('');
+    const [tags, setTags] = React.useState([]);
     const [field, setField] = React.useState('');
     const [name, setName] = React.useState('');
     const [checked, setChecked] = React.useState(false);
@@ -40,6 +41,17 @@ function SearchDetails() {
         "SME", "International organisation", "Higher or secondary education",
         "Research organisation", "Private for profit organisation", "Public organisation", "other"
     ]
+
+    const deleteTag = (tag) => {
+        let newTags = tags.filter((val) => val.text != tag)
+        console.log(newTags)
+        setTags(newTags)
+    }
+
+    const addTag = (tag) => {
+        setTags([...tags, tag])
+        console.log(tags)
+    }
     const toggleChecked = () => {
         setChecked(prev => !prev);
     };
@@ -236,12 +248,17 @@ function SearchDetails() {
                     </form>
                 </div>
                 <div className="SearchTab">
-                    <h1>Keyword:</h1>
+                    <h1>Tags and Keywords</h1>
                     <form className={SearchDetails.root} noValidate autoComplete="off">
-                        <TextField id="company_name" label="Keyword" variant="outlined"
+                        {/* <TextField id="company_name" label="Keyword" variant="outlined"
                             value={keyword}
                         // onChange={}
-                        />
+                        /> */}
+
+                        <ReactTags tags={tags}
+                            handleDelete={deleteTag}
+                            handleAddition={addTag}
+                            delimiters={delimiters} />
                     </form>
                 </div>
             </div>

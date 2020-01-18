@@ -42,10 +42,20 @@ function SearchDetails() {
         "Research organisation", "Private for profit organisation", "Public organisation", "other"
     ]
 
-    const deleteTag = (tag) => {
-        let newTags = tags.filter((val) => val.text != tag)
+    const deleteTag = (idx) => {
+        let newTags = tags.filter((val, i) => i != idx)
         console.log(newTags)
         setTags(newTags)
+    }
+
+    const dragTag = (tag, currPos, newPos) => {
+        // let newTags = [...tags];
+        // newTags = newTags.slice();
+
+        // newTags.splice(currPos, 1);
+        // newTags.splice(newPos, 0, tag);
+
+        // setTags(newTags)
     }
 
     const addTag = (tag) => {
@@ -258,6 +268,7 @@ function SearchDetails() {
                         <ReactTags tags={tags}
                             handleDelete={deleteTag}
                             handleAddition={addTag}
+                            handleDrag={dragTag}
                             delimiters={delimiters} />
                     </form>
                 </div>

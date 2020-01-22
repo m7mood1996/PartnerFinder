@@ -158,8 +158,8 @@ function SearchDetails() {
         console.log("HERE")
         // let arr1 = [{'pic': 123, 'name': 'ss'}, {'pic':434, 'name':'nnn'}]
         // console.log(isExist(arr1, 434))
-        getOrgsByCountries(['Italy', 'Germany'])
-        getOrgsByTags(['materials engineering', 'security'])
+        getOrgsByCountries(['Italy'])
+        getOrgsByTags(['machine learning', 'security'])
 
         // while(orgsByCountries === [] || orgsByTags === []){
         //     let i = 0;

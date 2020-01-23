@@ -14,9 +14,6 @@ body {
 }
 .Header {
   text-align: center;
-  background-color: white;
-  color: black;
-  margin-top: 5px;
 }
 .Search {
   color: white;
@@ -53,7 +50,7 @@ body {
   color: black;
   margin-top: 35px;
   display: grid;
-  grid-template-columns: auto 0.42fr auto;
+  grid-template-columns: auto 0.57fr auto;
   margin-left: 20px;
   font-size: 9.5px;
 }
@@ -65,13 +62,18 @@ body {
   margin-left: 20px;
   font-size: 9.5px;
 }
-.profit {
+.fourth_row {
+  color: black;
+  margin-top: 35px;
   display: grid;
-  grid-template-columns: 10em 0.5em;
+  grid-template-columns: auto 0.5fr auto;
+  margin-left: 20px;
+  font-size: 9.5px;
 }
+
 .Partners {
   display: grid;
-  grid-template-columns: auto 2fr auto;
+  grid-template-columns: auto ;
 }
 .SearchButton {
   margin-top: 42px;
@@ -145,4 +147,9 @@ div.ReactTags__suggestions li mark {
 div.ReactTags__suggestions ul li.ReactTags__activeSuggestion {
   background: #b7cfe0;
   cursor: pointer;
+}
+
+.MuiDivider{
+  font-weight: 900;
+  margin: 100px;
 }

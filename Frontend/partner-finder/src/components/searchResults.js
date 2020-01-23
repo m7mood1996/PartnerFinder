@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+import React from 'react';
 import MaterialTable from 'material-table';
 
 const columns = [
@@ -13,11 +13,7 @@ const columns = [
 
 function SearchResults(props) {
 
-  // const [data, setData] = React.useState([
-  //     { legalName: 'Mehmet', businessName: 'Baran', classificationType: 1987, city: 'jerusalem', description: 'bla'},
 
-  // ]);
-  console.log("DATA PROPS", props.data)
   const [data, setData] = React.useState([]);
   if (data.length === 0)
     setData(props.data);
@@ -26,7 +22,7 @@ function SearchResults(props) {
     <div>
       {data.length === 0 ? null :
         <MaterialTable
-          title="Editable Example"
+          title="Organizations Results"
           columns={columns}
           data={data}
         />}

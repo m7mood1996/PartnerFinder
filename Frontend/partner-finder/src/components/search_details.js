@@ -1,6 +1,7 @@
 import React, { useEffect } from 'react';
 import TextField from '@material-ui/core/TextField';
 import Select from '@material-ui/core/Select';
+import Typography from '@material-ui/core/Typography'
 import InputLabel from '@material-ui/core/InputLabel';
 import MenuItem from '@material-ui/core/MenuItem';
 import FormControl from '@material-ui/core/FormControl';
@@ -11,10 +12,9 @@ import Grid from "@material-ui/core/Grid";
 import Input from "@material-ui/core/Input";
 import { Button } from '@material-ui/core';
 import countryList from 'react-select-country-list'
-// import SearchResults from './searchResults'
 import SearchResults from './searchResults';
-
 import { WithContext as ReactTags } from 'react-tag-input';
+
 
 const KeyCodes = {
     comma: 188,
@@ -27,7 +27,8 @@ const delimiters = [KeyCodes.comma, KeyCodes.enter];
 function SearchDetails() {
     const [type, setType] = React.useState('');
     const [country, setCountry] = React.useState('');
-    const [value, setValue] = React.useState('');
+    const [countrySearched, setCountrySearched] = React.useState('');
+    const [number, setNumber] = React.useState('');
     const [tags, setTags] = React.useState([]);
     const [field, setField] = React.useState('');
     const [name, setName] = React.useState('');
@@ -35,76 +36,164 @@ function SearchDetails() {
     const [data, setData] = React.useState([]);
     const [orgsByCountries, setOrgsByCountries] = React.useState([]);
     const [orgsByTags, setOrgsByTags] = React.useState([]);
-
+    const [formState, setFormState] = React.useState({
+        name :false,
+        field : false,
+        country : false,
+        countrySearched : false,
+        type : false, 
+        tags : false,
+        numbers : false,
+    })
 
     const companyTypesOptions = [
-        "SME", "International organisation", "Higher or secondary education",
-        "Research organisation", "Private for profit organisation", "Public organisation", "other"
+        "SME", "International Organization", "Higher or Secondary Education",
+        "Research Organization", "Private for Profit Organization", "Public Organization", "Other"
     ]
 
     const deleteTag = (idx) => {
-        let newTags = tags.filter((val, i) => i != idx)
-        console.log(newTags)
+        let newTags = tags.filter((val, i) => i !== idx)
         setTags(newTags)
     }
 
     const dragTag = (tag, currPos, newPos) => {
-        // let newTags = [...tags];
-        // newTags = newTags.slice();
-
-        // newTags.splice(currPos, 1);
-        // newTags.splice(newPos, 0, tag);
-
-        // setTags(newTags)
     }
 
     const addTag = (tag) => {
         setTags([...tags, tag])
-        console.log(tags)
+        
+    }
+
+    const changeTagInput = (event) => {
+        if (event.length !== 0) {
+            setFormState({...formState, tags:false})
+        }
     }
     const toggleChecked = () => {
         setChecked(prev => !prev);
     };
-
+    const changeName = event => {
+        setName(event.target.value);
+        if (event.target.value.length !== 0)
+            setFormState({...formState, name: false})
+    }
     const handleChange = event => {
         setType(event.target.value);
+        if (event.target.value.length !== 0)
+            setFormState({...formState, type: false})
+    
+    };
+    const changeField = event => {
+        setField(event.target.value);
+        if (event.target.value.length !== 0)
+            setFormState({...formState, field: false})
+    
     };
     const handleCountry = event => {
         setCountry(event.target.value);
+        if (event.target.value.length !== 0)
+            setFormState({...formState, country: false})
+    
+    };
+    const handleCountrySearched = event => {
+        setCountrySearched(event.target.value);
+        if (event.target.value.length !== 0)
+            setFormState({...formState, countrySearched: false})
     };
     const handleInputChange = event => {
-        setValue(event.target.value === "" ? "" : Number(event.target.value));
+        setNumber(event.target.value === "" ? "" : Number(event.target.value));
+        if (event.target.value.length !== 0)
+            setFormState({...formState, number: false})
     }
     const handleBlur = () => {
-        if (value < 1) {
-            setValue(1);
-        } else if (value > 100) {
-            setValue(100);
+        if (number < 1) {
+            setNumber(1);
+        } else if (number > 100) {
+            setNumber(100);
         }
     };
+    const formValidation = () => {
+        let res = {}
+        let check = false
+        if(name === '' || name.length === 0 ){
+            res = {...res, name: true}
+            setFormState(res)
+            check = true
+        }  
+        else{
+            res = {...res, name: false}
+        }
 
+        if(country.length === 0 || country === undefined || country === null){
+            res = {...res, country: true}
+            setFormState(res)
+            check = true
+        }  
+        else{
+            res = {...res, country: false}
+        }
+        if(countrySearched.length === 0 || countrySearched === undefined || countrySearched === null){
+            res = {...res, countrySearched: true}
+            setFormState(res)
+            check = true
+        }  
+        else{
+            res = {...res, countrySearched: false}
+        }
+        if(field.length === 0 || field === undefined || field === null){
+            res = {...res, field: true}
+            setFormState(res)
+            check = true
+        }  
+        else{
+            res = {...res, field: false}
+        }
+        if(type.length === 0 || type === undefined || type === null){
+            res = {...res, type: true}
+            setFormState(res)
+            check = true
+        }  
+        else{
+            res = {...res, type: false}
+        }
+        if(number.length === 0 || number === undefined || number === null){
+            res = {...res, number: true}
+            setFormState(res)
+            check = true
+        }  
+        else{
+            res = {...res, number: false}
+        }
+        if(tags.length === 0 || tags === undefined || tags === null){
+            res = {...res, tags: true}
+            setFormState(res)
+            check = true
+        }  
+        else{
+            res = {...res, tags: false}
+        }
+
+ 
+        setFormState(res)
+        return check
+    }
 
 
 
     const getOrgsByTags = (tags) => {
-        // console.log("COUNTRIES")
         let url = new URL('http://127.0.0.1:8000/api/organizations/getOrganizationsByTags/')
-        // let params = {'tags': tags}
         let params = { 'data': tags }
         Object.keys(params).forEach(key => url.searchParams.append(key, params[key]))
-        // url.search = new URLSearchParams(params)
         fetch(url, {
             method: 'GET'
 
         }).then(res => res.json())
             .then(resp => setOrgsByTags(resp))
-            // .then(resp => console.log(resp))
             .catch(error => console.log(error))
     }
 
     const getRelativeData = (arr) => {
         let res = arr.map(org => {
-            console.log("Curr", org)
             let temp = org
             let address = temp.address
             delete temp.pic
@@ -114,7 +203,6 @@ function SearchDetails() {
             return temp
         })
 
-        console.log(res)
         return res
     }
     useEffect(() => {
@@ -122,28 +210,21 @@ function SearchDetails() {
 
             if (data.length === 0) {
                 let res = getRelativeData(getIntersect(orgsByCountries, orgsByTags))
-                console.log(res)
                 setData(res)
-                console.log("Set DATA")
             }
-            // console.log("intersect", getIntersect(orgsByCountries, orgsByTags))
         }
 
     }, [orgsByCountries, orgsByTags])
 
     const getOrgsByCountries = (countries) => {
-
         let url = new URL('http://127.0.0.1:8000/api/organizations/getOrganizationsByCountries/')
-        // let params = {'tags': tags}
         let params = { 'data': countries }
         Object.keys(params).forEach(key => url.searchParams.append(key, params[key]))
-        // url.search = new URLSearchParams(params)
         fetch(url, {
             method: 'GET'
 
         }).then(res => res.json())
             .then(resp => setOrgsByCountries(resp))
-            // .then(resp => console.log(resp))
             .catch(error => console.log(error))
 
     }
@@ -155,36 +236,31 @@ function SearchDetails() {
         return arr1.filter(org => isExist(arr2, org.pic))
     }
     const searchCompany = () => {
-        console.log("HERE")
-        // let arr1 = [{'pic': 123, 'name': 'ss'}, {'pic':434, 'name':'nnn'}]
-        // console.log(isExist(arr1, 434))
-        getOrgsByCountries(['Italy'])
-        getOrgsByTags(['machine learning', 'security'])
-
-        // while(orgsByCountries === [] || orgsByTags === []){
-        //     let i = 0;
-        // }
-
-        // console.log("Here")
-        // console.log('arr1', orgsByCountries,'\narr2', orgsByTags)
-        // console.log('intersect', getIntersect(orgsByCountries, orgsByTags))
-
-
-        // setData(['blabla'])
+        if(formValidation()){
+            setData([])
+            return;
+        }else{
+            setData([])
+            getOrgsByCountries([countrySearched])
+            let Tags = tags.map(tag => tag.text)
+            getOrgsByTags(Tags)
+        }
     }
     return (
         <React.Fragment>
+            <div className="Org_Details">
+                <h1 style={{'margin-left':'1%'}}>Organization Details</h1>
             <div className="first_row">
                 <div className="SearchTab">
-                    <h1>Clients Organization Name:</h1>
-                    <form className={SearchDetails.root} noValidate autoComplete="off">
-                        <TextField id="company_name" label="Name" variant="outlined" />
+                    <h1>Name</h1>
+                    <form className={SearchDetails.root}  autoComplete="off">
+                        <TextField  id="company_name" onChange={changeName} label="Name" variant="outlined" error={formState.name}/>
                     </form>
                 </div>
                 <div className="type">
-                    <h1>Clients Organization Type:</h1>
+                    <h1>Type</h1>
                     <FormControl className={SearchDetails.formControl} id="tab">
-                        <InputLabel id="company_type">Type</InputLabel>
+                        <InputLabel id="company_type" error={formState.type}>Type</InputLabel>
                         <Select
                             labelId="company_type"
                             id="company_type"
@@ -194,30 +270,35 @@ function SearchDetails() {
                             {companyTypesOptions.map((val, idx) => {
                                 return <MenuItem value={idx}>{val}</MenuItem>
                             })}
-
-
                         </Select>
                     </FormControl>
                 </div>
                 <div className="country">
-                    <h1>Country:</h1>
-                    <FormControl className={SearchDetails.formControl} id="tab">
-                        <InputLabel id="company_type">Country</InputLabel>
+                    <h1>Country</h1>
+                    <FormControl className={SearchDetails.formControl} id="tab" >
+                        <InputLabel id="company_type" error={formState.country} >Country</InputLabel>
                         <Select
                             options={countryList().getData()}
                             value={country}
                             onChange={handleCountry}
                         >
                             {countryList().getData().map(val => {
-                                return <MenuItem value={val.value}>{val.label}</MenuItem>
+                                return <MenuItem value={val.label}>{val.label}</MenuItem>
                             })}
                         </Select>
                     </FormControl>
                 </div>
             </div>
+            
             <div className="second_row">
-                <div className="profit">
-                    <h1>Profit:</h1>
+                <div className="SearchTab">
+                    <h1>City</h1>
+                    <form className={SearchDetails.root} noValidate autoComplete="off">
+                        <TextField id="company_name" label="City" variant="outlined" />
+                    </form>
+                </div>
+                <div className="SearchTab" >
+                    <h1>Profit / Non-profit</h1>
                     <FormGroup style={{ 'margin-top': '5px' }}>
                         <FormControlLabel
                             control={<Switch size="medium" checked={checked} onChange={toggleChecked} />}
@@ -225,14 +306,46 @@ function SearchDetails() {
                         />
                     </FormGroup>
                 </div>
+            </div>
+                
+            </div>
+            <hr  style={{'margin-top':'3%','border': '2px solid gray','border-radius': '5px', 'marginLeft': '7%', 'marginRight': '7%'}}/>
+            <div className="Search_Details">
+                <h1 style={{'margin-left':'1%'}}>Search Details</h1>
+                <div className="third_row">
+                    <div className="SearchTab">
+                        <h1>Field</h1>
+                        <form className={SearchDetails.root} noValidate autoComplete="off">
+                            <TextField id="company_name" label="Field" variant="outlined"
+                                onChange={changeField}
+                                error={formState.field}
+                            />
+                        </form>
+                    </div>
+                    <div className="country">
+                    <h1>Country</h1>
+                    <FormControl className={SearchDetails.formControl} id="tab" >
+                        <InputLabel id="company_type" error={formState.countrySearched} >Country</InputLabel>
+                        <Select
+                            options={countryList().getData()}
+                            value={countrySearched}
+                            onChange={handleCountrySearched}
+                        >
+                            {countryList().getData().map(val => {
+                                return <MenuItem value={val.label}>{val.label}</MenuItem>
+                            })}
+                        </Select>
+                    </FormControl>
+                </div>
                 <div className="Partners">
-                    <h1>Number Of Partners: </h1>
+                    <h1>Number Of Partners</h1>
                     <Grid container spacing={2} alignItems="center" style={{ 'margin-left': '5px' }} >
                         <Grid item>
                             <Input
+                                error={formState.number}
                                 className={SearchDetails.input}
                                 id="company_type"
-                                value={value}
+                                value={number}
                                 margin="dense"
                                 onChange={handleInputChange}
                                 onBlur={handleBlur}
@@ -247,30 +360,24 @@ function SearchDetails() {
                         </Grid>
                     </Grid>
                 </div>
-            </div>
-            <div className="third_row">
-                <div className="SearchTab">
-                    <h1>Field:</h1>
-                    <form className={SearchDetails.root} noValidate autoComplete="off">
-                        <TextField id="company_name" label="Field" variant="outlined"
-                            value={setField}
-                        />
-                    </form>
                 </div>
+                <div className="fourth_row">
                 <div className="SearchTab">
                     <h1>Tags and Keywords</h1>
-                    <form className={SearchDetails.root} noValidate autoComplete="off">
-                        {/* <TextField id="company_name" label="Keyword" variant="outlined"
-                            value={keyword}
-                        // onChange={}
-                        /> */}
+                            <ReactTags tags={tags}
+                                handleDelete={deleteTag}
+                                handleAddition={addTag}
+                                handleDrag={dragTag}
+                                delimiters={delimiters}
+                                handleInputChange={changeTagInput}
+                                />
 
-                        <ReactTags tags={tags}
-                            handleDelete={deleteTag}
-                            handleAddition={addTag}
-                            handleDrag={dragTag}
-                            delimiters={delimiters} />
-                    </form>
+                               {formState.tags ? <Typography variant="caption" display="block" gutterBottom style= {{'color': 'red'}}>
+                                    Enter at least one tag
+                                    </Typography> : null}
+                        
+                        
+                </div>
                 </div>
             </div>
             <div className="SearchButton">

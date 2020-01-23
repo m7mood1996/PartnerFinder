@@ -1,6 +1,5 @@
 import SearchDetails from './search_details'
 import React from 'react'
-import CssBaseline from '@material-ui/core/CssBaseline';
 import Typography from '@material-ui/core/Typography';
 import Container from '@material-ui/core/Container';
 
@@ -12,9 +11,7 @@ function MainScene() {
                 <Typography component="div" style={{ backgroundColor: '#cfe8fc', height: '100vh' }}>
 
                     <div>
-                        <div className="Header">
-                            <h1>Find Partner</h1>
-                        </div>
+                            <h1 className="Header">Find Research Partner</h1>
                         <div>
 
                             <SearchDetails />

@@ -30,6 +30,7 @@ class EventSerializer(serializers.ModelSerializer):
         model = Event
         fields = ['_id', 'event_name', 'event_url']
 
+
 class TagPSerializer(serializers.ModelSerializer):
     class Meta:
         model = TagP
@@ -45,6 +46,7 @@ class LocationSerializer(serializers.ModelSerializer):
 class ParticipantsSerializer(serializers.ModelSerializer):
     location = LocationSerializer(many=False)
     tags = TagPSerializer(many=True)
+
     class Meta:
         model = Participants
         fields = '__all__'

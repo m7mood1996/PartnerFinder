@@ -3,6 +3,10 @@ from djongo import models
 
 
 class Address(models.Model):
+    """
+    class to define the data model of organization's address.
+    """
+
     country = models.CharField(max_length=200, blank=True)
     city = models.CharField(max_length=200, blank=True, null=True)
 
@@ -11,11 +15,14 @@ class Address(models.Model):
 
 
 class OrganizationProfile(models.Model):
+    """
+    class to define the data model of Organization profile which contains the necessary fields.
+    """
+
     pic = models.IntegerField(unique=True)
     legalName = models.CharField(max_length=200)
     businessName = models.CharField(max_length=200)
     classificationType = models.CharField(max_length=50, blank=True, null=True)
-    # numberOfProjects = models.IntegerField()
     description = models.TextField(blank=True, null=True)
     address = models.OneToOneField(
         Address, blank=True, null=True, on_delete=models.CASCADE)
@@ -25,6 +32,9 @@ class OrganizationProfile(models.Model):
 
 
 class Tag(models.Model):
+    """
+    class to define the data model of the tags in the DB.
+    """
     tag = models.CharField(max_length=200, blank=True, null=True)
     organizations = models.ManyToManyField(
         OrganizationProfile, blank=True, related_name='tagsAndKeywords')
@@ -33,27 +43,29 @@ class Tag(models.Model):
         return self.tag
 
 
-
 class Location(models.Model):
     location = models.CharField(max_length=200, blank=True)
-    #participant = models.(Participants, blank=True, null=True, on_delete=models.CASCADE, related_name='locationA')
+    # participant = models.(Participants, blank=True, null=True, on_delete=models.CASCADE, related_name='locationA')
 
 
 class Participants(models.Model):
     participant_name = models.CharField(max_length=200)
     organization_name = models.CharField(max_length=200)
     description = models.TextField(blank=True, null=True)
-    
-    location = models.OneToOneField(Location,on_delete=models.CASCADE)
-    participant_img_url = models.CharField(max_length=200,blank=True,null=True)
-    org_type = models.CharField(max_length=200,blank=True,null=True)
-    org_icon_url = models.CharField(max_length=200,blank=True,null=True)
-    org_url = models.CharField(max_length=200,blank=True,null=True)
+
+    location = models.OneToOneField(Location, on_delete=models.CASCADE)
+    participant_img_url = models.CharField(
+        max_length=200, blank=True, null=True)
+    org_type = models.CharField(max_length=200, blank=True, null=True)
+    org_icon_url = models.CharField(max_length=200, blank=True, null=True)
+    org_url = models.CharField(max_length=200, blank=True, null=True)
     #tags = models.ManyToManyField(TagP,related_name='participants_tags')
+
 
 class TagP(models.Model):
     tag = models.CharField(max_length=200, blank=True, null=True)
-    participant = models.ManyToManyField(Participants, blank=True, related_name='tagsAndKeywordsP')
+    participant = models.ManyToManyField(
+        Participants, blank=True, related_name='tagsAndKeywordsP')
 
 
 class Event(models.Model):
@@ -62,7 +74,3 @@ class Event(models.Model):
 
     def __str__(self):
         return self.event_name
-
-
-
-

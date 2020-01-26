@@ -3,6 +3,10 @@ from djongo import models
 
 
 class Address(models.Model):
+    """
+    class to define the data model of organization's address.
+    """
+
     country = models.CharField(max_length=200, blank=True)
     city = models.CharField(max_length=200, blank=True, null=True)
 
@@ -11,11 +15,14 @@ class Address(models.Model):
 
 
 class OrganizationProfile(models.Model):
+    """
+    class to define the data model of Organization profile which contains the necessary fields.
+    """
+
     pic = models.IntegerField(unique=True)
     legalName = models.CharField(max_length=200)
     businessName = models.CharField(max_length=200)
     classificationType = models.CharField(max_length=50, blank=True, null=True)
-    # numberOfProjects = models.IntegerField()
     description = models.TextField(blank=True, null=True)
     address = models.OneToOneField(
         Address, blank=True, null=True, on_delete=models.CASCADE)
@@ -25,6 +32,9 @@ class OrganizationProfile(models.Model):
 
 
 class Tag(models.Model):
+    """
+    class to define the data model of the tags in the DB.
+    """
     tag = models.CharField(max_length=200, blank=True, null=True)
     organizations = models.ManyToManyField(
         OrganizationProfile, blank=True, related_name='tagsAndKeywords')
@@ -51,9 +61,12 @@ class Participants(models.Model):
     org_url = models.CharField(max_length=200, blank=True, null=True)
     #tags = models.ManyToManyField(TagP,related_name='participants_tags')
 
+<<<<<<< HEAD
     def __str__(self):
         return self.participant_name
 
+=======
+>>>>>>> 68872fe8b529418a9efb994161df8d51c6f9964d
 
 class TagP(models.Model):
     tag = models.CharField(max_length=200, blank=True, null=True)

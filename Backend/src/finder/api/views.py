@@ -236,6 +236,10 @@ class OrganizationProfileViewSet(viewsets.ModelViewSet):
 
     @action(detail=False, methods=['POST'])
     def createOrganization(self, request):
+        """
+        method to define API to create new organization and save it to the local DB
+        """
+
         response = {'Message': 'Organization Created Successfully!'}
 
         data = json.loads(request.data['data'])
@@ -265,6 +269,9 @@ class OrganizationProfileViewSet(viewsets.ModelViewSet):
 
     @action(detail=False, methods=['GET'])
     def getOrganizationsByTags(self, request):
+        """
+        method to define API to get all organizations with at least one tag from the list of tags.
+        """
         tags = request.query_params['data']
         tags = tags.split(',')
         res = []
@@ -281,6 +288,9 @@ class OrganizationProfileViewSet(viewsets.ModelViewSet):
 
     @action(detail=False, methods=['GET'])
     def getOrganizationsByCountries(self, request):
+        """
+        method to define API to get all organizations that locates in one of the countries list.
+        """
         countries = request.query_params['data']
         countries = countries.split(',')
         res = []

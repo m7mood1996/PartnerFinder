@@ -205,6 +205,7 @@ function SearchDetails() {
 
         return res
     }
+    
     useEffect(() => {
         if (orgsByCountries !== [] && orgsByTags !== []) {
 

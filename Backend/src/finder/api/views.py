@@ -4,7 +4,8 @@ from rest_framework.response import Response
 from rest_framework.decorators import action
 from time import sleep
 from ..models import OrganizationProfile, Address, Tag, Event, TagP, Participants, Location
-from .serializers import OrganizationProfileSerializer, AddressSerializer, TagSerializer, EventSerializer, ParticipantsSerializer, LocationSerializer, TagPSerializer
+from .serializers import OrganizationProfileSerializer, AddressSerializer, TagSerializer, EventSerializer, \
+    ParticipantsSerializer, LocationSerializer, TagPSerializer
 import json
 import requests
 
@@ -13,13 +14,20 @@ from selenium import webdriver
 from googletrans import Translator
 
 
+# def NLPPreProcess(tag):
+#     # to lower case # done
+#     # tokenizing
+#     # remove stopwords
+#     # stemming
+
+
 def get_the_participent_urls(event_url):
     try:
         event_page = requests.get(event_url)
         all_events_soup = BeautifulSoup(event_page.content, 'html.parser')
         itemes = all_events_soup.find_all(class_="break-word")
         par_page = itemes[0].find("a")['href']
-        #print(par_page, "\t ", event_url)
+        # print(par_page, "\t ", event_url)
 
         return par_page
     except:
@@ -27,7 +35,6 @@ def get_the_participent_urls(event_url):
 
 
 def getParticipentFromUrl(url_):
-
     driver = webdriver.Chrome(
         'C:\\bin\chromedriver.exe')
     driver.get(url_)
@@ -45,7 +52,7 @@ def getParticipentFromUrl(url_):
     sleep(1)
     # print(num_of_part)
     j = 0
-    while(j < num_of_part):
+    while (j < num_of_part):
 
         while i < 8:
             res = str(script + str(i) + script2)
@@ -68,7 +75,7 @@ def getParticipentFromUrl(url_):
     for item in par:
         # url = url_ + item.find("a")['href']
         soup = BeautifulSoup(item, 'html.parser')
-        url = url_ + '/'+(soup.find("a")['href']).split('/')[-1]
+        url = url_ + '/' + (soup.find("a")['href']).split('/')[-1]
         participent_url_arr.append(url)
     # print(num_of_part)
     # res = driver.execute_script("return document.getElementsByClassName(\"card card-participant card-hover flex-row\")[3].outerHTML")
@@ -234,6 +241,14 @@ class OrganizationProfileViewSet(viewsets.ModelViewSet):
     ]
     serializer_class = OrganizationProfileSerializer
 
+    def translateData(self, data):
+        translator = Translator()
+        for key in data:
+            if type(data[key]) == str:
+                data[key] = translator.translate(data[key]).text
+
+        return data
+
     @action(detail=False, methods=['POST'])
     def createOrganization(self, request):
         """
@@ -243,6 +258,8 @@ class OrganizationProfileViewSet(viewsets.ModelViewSet):
         response = {'Message': 'Organization Created Successfully!'}
 
         data = json.loads(request.data['data'])
+        data = self.translateData(data)
+
         try:
             OrganizationProfile.objects.get(pic=data['pic'])
             response = {
@@ -253,7 +270,8 @@ class OrganizationProfileViewSet(viewsets.ModelViewSet):
                     newAddress = Address(
                         country=data['address']['country'], city=data['address']['city'])
                     newAddress.save()
-            org = OrganizationProfile(pic=data['pic'], legalName=data['legalName'], businessName=data['businessName'], classificationType=data['classificationType'], description=data['description'],
+            org = OrganizationProfile(pic=data['pic'], legalName=data['legalName'], businessName=data['businessName'],
+                                      classificationType=data['classificationType'], description=data['description'],
                                       address=newAddress)
             org.save()
             for tag in data['tagsAndKeywords']:
@@ -267,43 +285,130 @@ class OrganizationProfileViewSet(viewsets.ModelViewSet):
 
         return Response(response, status=status.HTTP_200_OK)
 
-    @action(detail=False, methods=['GET'])
-    def getOrganizationsByTags(self, request):
+    # @action(detail=False, methods=['GET'])
+    # def getOrganizationsByTags(self, request):
+    #     """
+    #     method to define API to get all organizations with at least one tag from the list of tags.
+    #     """
+    #     tags = request.query_params['data']
+    #     tags = tags.split(',')
+    #     res = []
+    #     allTags = Tag.objects.all()
+    #     for tag in allTags:
+    #         if tag.tag in tags:
+    #             res.extend(tag.organizations.all())
+    #     response = []
+    #     for val in res:
+    #         response.append({'pic': val.pic, 'legalName': val.legalName, 'businessName': val.businessName,
+    #                          'address': {'country': val.address.country, 'city': val.address.city},
+    #                          'description': val.description, 'classificationType': val.classificationType})
+    #
+    #     return Response(response, status=status.HTTP_200_OK)
+
+    def getOrganizationsByTags(self, tags):
         """
-        method to define API to get all organizations with at least one tag from the list of tags.
+        method to get all organizations with at least one tag from the list of tags.
         """
-        tags = request.query_params['data']
-        tags = tags.split(',')
+        tags = set(tags)
         res = []
         allTags = Tag.objects.all()
         for tag in allTags:
             if tag.tag in tags:
                 res.extend(tag.organizations.all())
-        response = []
-        for val in res:
-            response.append({'pic': val.pic, 'legalName': val.legalName, 'businessName': val.businessName,
-                             'address': {'country': val.address.country, 'city': val.address.city}, 'description': val.description, 'classificationType': val.classificationType})
 
-        return Response(response, status=status.HTTP_200_OK)
+        return res
 
-    @action(detail=False, methods=['GET'])
-    def getOrganizationsByCountries(self, request):
+    # @action(detail=False, methods=['GET'])
+    # def getOrganizationsByCountries(self, request):
+    #     """
+    #     method to define API to get all organizations that locates in one of the countries list.
+    #     """
+    #     countries = request.query_params['data']
+    #     countries = countries.split(',')
+    #     res = []
+    #     allOrgs = OrganizationProfile.objects.all()
+    #
+    #     for org in allOrgs:
+    #         if org.address.country in countries:
+    #             res.append(org)
+    #     response = []
+    #     for val in res:
+    #         response.append({'pic': val.pic, 'legalName': val.legalName, 'businessName': val.businessName,
+    #                          'address': {'country': val.address.country, 'city': val.address.city},
+    #                          'description': val.description, 'classificationType': val.classificationType})
+    #
+    #     return Response(response, status=status.HTTP_200_OK)
+
+    def getOrganizationsByCountries(self, countries):
         """
-        method to define API to get all organizations that locates in one of the countries list.
+        method to get all organizations that locates in one of the countries list.
         """
-        countries = request.query_params['data']
-        countries = countries.split(',')
+        countries = [val.lower() for val in countries]
+
+        countries = set(countries)
         res = []
         allOrgs = OrganizationProfile.objects.all()
+
+        if not countries:
+            return allOrgs
+
         for org in allOrgs:
-            if org.address.country in countries:
+            currCountry = org.address.country.lower()
+            if currCountry in countries:
                 res.append(org)
-        response = []
-        for val in res:
-            response.append({'pic': val.pic, 'legalName': val.legalName, 'businessName': val.businessName,
-                             'address': {'country': val.address.country, 'city': val.address.city}, 'description': val.description, 'classificationType': val.classificationType})
+
+        return res
+
+    def getOrgsByCountriesAndTags(self, tags, countries):
+        orgsByCountries = self.getOrganizationsByCountries(countries)
+        orgsByTags = self.getOrganizationsByTags(tags)
+
+        res = self.getOrgsIntersection(orgsByCountries, orgsByTags)
+
+        # write method to rank the orgs by tags
+
+        return res
+
+    def getOrgsIntersection(self, orgs1, orgs2):
+        res, seenPICS = [], set()
+
+        for org in orgs1:
+            seenPICS.add(org.pic)
+
+        addedPICS = set()
+        for org in orgs2:
+            if org.pic in seenPICS and org.pic not in addedPICS:
+                res.append(org)
+                addedPICS.add(org.pic)
+
+        return res
+
+    @action(detail=False, methods=['GET'])
+    def searchByCountriesAndTags(self, request):
+
+        data = request.data['data']
+        data = json.loads(data)
+        countries = data['countries']
+        tags = data['tags']
+
+        EURes = self.getOrgsByCountriesAndTags(tags, countries)
+
+        # btmatch search result
+        # print("RES", EURes)
+        b2matchRes = []
+        EU = []
+        for val in EURes:
+            print(val.pic, 'address', val.address)
+            EU.append({'pic': val.pic, 'legalName': val.legalName, 'businessName': val.businessName,
+                       'address': {'country': val.address.country, 'city': val.address.city},
+                       'description': val.description, 'classificationType': val.classificationType})
+
+
+        response = {'EU': EU, 'B2MATCH': EU}
 
         return Response(response, status=status.HTTP_200_OK)
+
+    # def B2MatchSearchByTagsAndCountries(self, tags, countries):
 
 
 class AddressViewSet(viewsets.ModelViewSet):
@@ -398,7 +503,6 @@ class EventViewSet(viewsets.ModelViewSet):
         res = Event.objects.all()
         response = []
         for val in res:
-
             response.append({'event_name': val.event_name,
                              'event_url': val.event_url})
         return Response(response, status=status.HTTP_200_OK)
@@ -436,7 +540,8 @@ class ParticipantsViewSet(viewsets.ModelViewSet):
                 print("xD" * 10)
                 try:
                     participant = Participants(participant_name=part_temp[0], participant_img_url=part_temp[1],
-                                               organization_name=part_temp[2], org_type=part_temp[4], org_url=part_temp[5],
+                                               organization_name=part_temp[2], org_type=part_temp[4],
+                                               org_url=part_temp[5],
                                                org_icon_url=part_temp[6], description=part_temp[8], location=location)
 
                     participant.save()

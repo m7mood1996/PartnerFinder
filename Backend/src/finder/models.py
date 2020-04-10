@@ -46,9 +46,17 @@ class Tag(models.Model):
 class Location(models.Model):
     location = models.CharField(max_length=200, blank=True)
     # participant = models.(Participants, blank=True, null=True, on_delete=models.CASCADE, related_name='locationA')
+    def __str__(self):
+        return self.location
+
 
 
 class Participants(models.Model):
+    """
+        Participants from B2MATCH events contains: name, organization name, location, organization url,
+        org icon url and description
+        NOTE: may contain empty fields
+    """
     participant_name = models.CharField(max_length=200)
     organization_name = models.CharField(max_length=200)
     description = models.TextField(blank=True, null=True)
@@ -70,10 +78,20 @@ class TagP(models.Model):
     participant = models.ManyToManyField(
         Participants, blank=True, related_name='tagsAndKeywordsP')
 
+    def __str__(self):
+        return self.tag
+
 
 class Event(models.Model):
-    event_name = models.CharField(max_length=200)
+    """
+        Event Object which contains Event name, url and if the event is up coming or from the past
+    """
+    event_name = models.CharField(max_length=200, unique=True)
     event_url = models.CharField(max_length=200)
+    event_date = models.DateField(blank=True, null=True)
+    is_upcoming = models.BooleanField(default=False, null=True)
+    event_part = models.ManyToManyField( Participants, blank=True, related_name='Part_Event')
+
 
     def __str__(self):
         return self.event_name

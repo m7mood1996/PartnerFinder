@@ -270,6 +270,7 @@ class OrganizationProfileViewSet(viewsets.ModelViewSet):
 
     @action(detail=False, methods=['POST'])
     def createOrganization(self, request):
+
         """
         method to define API to create new organization and save it to the local DB
         """
@@ -405,6 +406,10 @@ class OrganizationProfileViewSet(viewsets.ModelViewSet):
     @action(detail=False, methods=['GET'])
     def searchByCountriesAndTags(self, request):
 
+        """
+            genirc function to search Orgs from EU and participants from B2Match
+        """
+
         data = request.data['data']
         data = json.loads(data)
         countries = data['countries']
@@ -414,7 +419,8 @@ class OrganizationProfileViewSet(viewsets.ModelViewSet):
 
         # btmatch search result
         # print("RES", EURes)
-        b2matchRes = []
+        B2MATCHRes = self.getB2MATCHPartByCountriesAndTags(tags, countries)
+        B2MATCH = []
         EU = []
         for val in EURes:
             print(val.pic, 'address', val.address)
@@ -422,12 +428,76 @@ class OrganizationProfileViewSet(viewsets.ModelViewSet):
                        'address': {'country': val.address.country, 'city': val.address.city},
                        'description': val.description, 'classificationType': val.classificationType})
 
+        for val in B2MATCHRes:
+            print(val.participant_name, 'address', val.location.location)
+            B2MATCH.append({'participant_name': val.participant_name, 'organization_name': val.organization_name, 'org_type': val.org_type,
+                       'address': val.location.location, 'description': val.description, 'participant_img': val.participant_img_url,
+                       'org_url': val.org_url, 'org_icon_url': val.org_icon_url})
 
-        response = {'EU': EU, 'B2MATCH': EU}
+
+        print(B2MATCH)
+        response = {'EU': EU, 'B2MATCH': B2MATCH}
 
         return Response(response, status=status.HTTP_200_OK)
 
     # def B2MatchSearchByTagsAndCountries(self, tags, countries):
+
+    def getB2MatchParByCountry(self, countries):
+        """
+        method to get all Participants that locates in one of the countries list.
+        """
+        countries = [val.lower() for val in countries]
+        countries = set(countries)
+        res = []
+        allPart = Participants.objects.all()
+
+        if not countries:
+            return allPart
+
+        for participant in allPart:
+            currLocation = participant.location.location.lower().split(" ",1)[1]
+            if currLocation in countries:
+                res.append(participant)
+        return res
+
+    def getParticipantsByTags(self, tags):
+        """
+        method to get all organizations with at least one tag from the list of tags.
+        """
+        tags = set(tags)
+        res = []
+        allTags = TagP.objects.all()
+        for tag in allTags:
+            if tag.tag in tags:
+                res.extend(tag.participant.all())
+        return res
+
+    def getB2MATCHPartByCountriesAndTags(self, tags, countries):
+        apaarticipantsByCountries = self.getB2MatchParByCountry(countries)
+        ParticipantsByTags = self.getParticipantsByTags(tags)
+
+        res = self.getPartIntersection(apaarticipantsByCountries, ParticipantsByTags)
+
+        # write method to rank the orgs by tags
+
+        return res
+
+    def getPartIntersection(self, par1, par2):
+        res, seenPart = [], set()
+
+        for par in par1:
+            seenPart.add(par.participant_name)
+
+        addedPar = set()
+        for par in par2:
+            if par.participant_name in seenPart and par.participant_name not in addedPar:
+                res.append(par)
+                addedPar.add(par.participant_name)
+        print(res)
+        return res
+
+
+
 
 
 class AddressViewSet(viewsets.ModelViewSet):

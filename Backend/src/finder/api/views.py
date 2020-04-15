@@ -285,26 +285,6 @@ class OrganizationProfileViewSet(viewsets.ModelViewSet):
 
         return Response(response, status=status.HTTP_200_OK)
 
-    # @action(detail=False, methods=['GET'])
-    # def getOrganizationsByTags(self, request):
-    #     """
-    #     method to define API to get all organizations with at least one tag from the list of tags.
-    #     """
-    #     tags = request.query_params['data']
-    #     tags = tags.split(',')
-    #     res = []
-    #     allTags = Tag.objects.all()
-    #     for tag in allTags:
-    #         if tag.tag in tags:
-    #             res.extend(tag.organizations.all())
-    #     response = []
-    #     for val in res:
-    #         response.append({'pic': val.pic, 'legalName': val.legalName, 'businessName': val.businessName,
-    #                          'address': {'country': val.address.country, 'city': val.address.city},
-    #                          'description': val.description, 'classificationType': val.classificationType})
-    #
-    #     return Response(response, status=status.HTTP_200_OK)
-
     def getOrganizationsByTags(self, tags):
         """
         method to get all organizations with at least one tag from the list of tags.
@@ -317,27 +297,6 @@ class OrganizationProfileViewSet(viewsets.ModelViewSet):
                 res.extend(tag.organizations.all())
 
         return res
-
-    # @action(detail=False, methods=['GET'])
-    # def getOrganizationsByCountries(self, request):
-    #     """
-    #     method to define API to get all organizations that locates in one of the countries list.
-    #     """
-    #     countries = request.query_params['data']
-    #     countries = countries.split(',')
-    #     res = []
-    #     allOrgs = OrganizationProfile.objects.all()
-    #
-    #     for org in allOrgs:
-    #         if org.address.country in countries:
-    #             res.append(org)
-    #     response = []
-    #     for val in res:
-    #         response.append({'pic': val.pic, 'legalName': val.legalName, 'businessName': val.businessName,
-    #                          'address': {'country': val.address.country, 'city': val.address.city},
-    #                          'description': val.description, 'classificationType': val.classificationType})
-    #
-    #     return Response(response, status=status.HTTP_200_OK)
 
     def getOrganizationsByCountries(self, countries):
         """
@@ -393,8 +352,7 @@ class OrganizationProfileViewSet(viewsets.ModelViewSet):
 
         EURes = self.getOrgsByCountriesAndTags(tags, countries)
 
-        # btmatch search result
-        # print("RES", EURes)
+
         b2matchRes = []
         EU = []
         for val in EURes:

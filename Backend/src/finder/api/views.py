@@ -398,7 +398,6 @@ class OrganizationProfileViewSet(viewsets.ModelViewSet):
         b2matchRes = []
         EU = []
         for val in EURes:
-            print(val.pic, 'address', val.address)
             EU.append({'pic': val.pic, 'legalName': val.legalName, 'businessName': val.businessName,
                        'address': {'country': val.address.country, 'city': val.address.city},
                        'description': val.description, 'classificationType': val.classificationType})

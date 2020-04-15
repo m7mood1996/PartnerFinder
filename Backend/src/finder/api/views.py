@@ -1,3 +1,5 @@
+import datetime
+
 from ..models import OrganizationProfile
 from rest_framework import viewsets, permissions, status
 from rest_framework.response import Response
@@ -13,7 +15,7 @@ from bs4 import BeautifulSoup
 from selenium import webdriver
 from googletrans import Translator
 
-
+import re
 # def NLPPreProcess(tag):
 #     # to lower case # done
 #     # tokenizing
@@ -22,6 +24,9 @@ from googletrans import Translator
 
 
 def get_the_participent_urls(event_url):
+    """
+            method to get the particepents urls from event url
+    """
     try:
         event_page = requests.get(event_url)
         all_events_soup = BeautifulSoup(event_page.content, 'html.parser')
@@ -35,8 +40,14 @@ def get_the_participent_urls(event_url):
 
 
 def getParticipentFromUrl(url_):
-    driver = webdriver.Chrome(
-        'C:\\bin\chromedriver.exe')
+    """
+            given particepant url extruct participent information
+
+    """
+    ##### for MacOS
+    driver = webdriver.Chrome()
+    ##### for Windows
+    # driver = webdriver.Chrome('C:\\bin\chromedriver.exe')
     driver.get(url_)
     sleep(1)
     num_of_part = int(driver.execute_script(
@@ -98,8 +109,16 @@ def getParticipentFromUrl(url_):
 
 
 def getParticipentDATA(url_):
+    """
+            after getint the participent info, do low level NLP and make up the participant object
+
+    """
     translator = Translator()
-    driver = webdriver.Chrome('C:\\bin\chromedriver.exe')
+    ### for macOS
+    driver = webdriver.Chrome()
+    ### for Windows
+    # driver = webdriver.Chrome('C:\\bin\chromedriver.exe')
+
     driver.get(url_)
     sleep(1)
     participant_panel_detail = driver.execute_script(
@@ -251,6 +270,7 @@ class OrganizationProfileViewSet(viewsets.ModelViewSet):
 
     @action(detail=False, methods=['POST'])
     def createOrganization(self, request):
+
         """
         method to define API to create new organization and save it to the local DB
         """
@@ -345,6 +365,10 @@ class OrganizationProfileViewSet(viewsets.ModelViewSet):
     @action(detail=False, methods=['GET'])
     def searchByCountriesAndTags(self, request):
 
+        """
+            genirc function to search Orgs from EU and participants from B2Match
+        """
+
         data = request.data['data']
         data = json.loads(data)
         countries = data['countries']
@@ -352,20 +376,86 @@ class OrganizationProfileViewSet(viewsets.ModelViewSet):
 
         EURes = self.getOrgsByCountriesAndTags(tags, countries)
 
-
-        b2matchRes = []
+        # btmatch search result
+        # print("RES", EURes)
+        B2MATCHRes = self.getB2MATCHPartByCountriesAndTags(tags, countries)
+        B2MATCH = []
         EU = []
         for val in EURes:
             EU.append({'pic': val.pic, 'legalName': val.legalName, 'businessName': val.businessName,
                        'address': {'country': val.address.country, 'city': val.address.city},
                        'description': val.description, 'classificationType': val.classificationType})
 
+        for val in B2MATCHRes:
+            print(val.participant_name, 'address', val.location.location)
+            B2MATCH.append({'participant_name': val.participant_name, 'organization_name': val.organization_name, 'org_type': val.org_type,
+                       'address': val.location.location, 'description': val.description, 'participant_img': val.participant_img_url,
+                       'org_url': val.org_url, 'org_icon_url': val.org_icon_url})
 
-        response = {'EU': EU, 'B2MATCH': EU}
+
+        print(B2MATCH)
+        response = {'EU': EU, 'B2MATCH': B2MATCH}
 
         return Response(response, status=status.HTTP_200_OK)
 
     # def B2MatchSearchByTagsAndCountries(self, tags, countries):
+
+    def getB2MatchParByCountry(self, countries):
+        """
+        method to get all Participants that locates in one of the countries list.
+        """
+        countries = [val.lower() for val in countries]
+        countries = set(countries)
+        res = []
+        allPart = Participants.objects.all()
+
+        if not countries:
+            return allPart
+
+        for participant in allPart:
+            currLocation = participant.location.location.lower().split(" ",1)[1]
+            if currLocation in countries:
+                res.append(participant)
+        return res
+
+    def getParticipantsByTags(self, tags):
+        """
+        method to get all organizations with at least one tag from the list of tags.
+        """
+        tags = set(tags)
+        res = []
+        allTags = TagP.objects.all()
+        for tag in allTags:
+            if tag.tag in tags:
+                res.extend(tag.participant.all())
+        return res
+
+    def getB2MATCHPartByCountriesAndTags(self, tags, countries):
+        apaarticipantsByCountries = self.getB2MatchParByCountry(countries)
+        ParticipantsByTags = self.getParticipantsByTags(tags)
+
+        res = self.getPartIntersection(apaarticipantsByCountries, ParticipantsByTags)
+
+        # write method to rank the orgs by tags
+
+        return res
+
+    def getPartIntersection(self, par1, par2):
+        res, seenPart = [], set()
+
+        for par in par1:
+            seenPart.add(par.participant_name)
+
+        addedPar = set()
+        for par in par2:
+            if par.participant_name in seenPart and par.participant_name not in addedPar:
+                res.append(par)
+                addedPar.add(par.participant_name)
+        print(res)
+        return res
+
+
+
 
 
 class AddressViewSet(viewsets.ModelViewSet):
@@ -396,6 +486,9 @@ class EventViewSet(viewsets.ModelViewSet):
 
     @action(detail=False, methods=['POST'])
     def add_all_events(self, request):
+        """
+                method to define API to iimport all the events from B2MATCH and save it to the local DB
+        """
         all_event_b2match = "https://events.b2match.com/?all=true"
         b2match = "https://events.b2match.com"
         all_events_page = requests.get(all_event_b2match)
@@ -414,11 +507,34 @@ class EventViewSet(viewsets.ModelViewSet):
                 event_title = item.find(class_="event-card-title").get_text()
             except:
                 pass
+            try:
+                event_date_ = item.find(class_="event-card-date").get_text()
+                event_date_ =event_date_.upper()
+                dt= re.findall("((([0-9]{2})| ([0-9]{1}))\ (\w+)\,\ [0-9]{4})",event_date_)
+
+                print(dt[0][0])
+            except:
+                pass
+            """try:
+                event_date = datetime.datetime.strptime(event_date_, '%d %m ,%Y ')
+            except:
+                event_date = datetime.datetime.strptime(event_date_, '%d - %d %m ,%Y ')
+            """
+            event_date = datetime.datetime.strptime(dt[0][0], '%d %B, %Y')
 
             # newEvent = B2match_event(url,date,event_title,event_location,event_text)
             # all_events_list.append(newEvent)
             url = get_the_participent_urls(url)
-            event = Event(event_name=event_title, event_url=url)
+            upComing = False
+            CurrentDate = datetime.datetime.now()
+            if CurrentDate < event_date:
+                print("hello hello hello")
+
+                upComing = True
+            print(event_date)
+            print(CurrentDate)
+            print(upComing)
+            event = Event(event_name=event_title, event_url=url, event_date=event_date, is_upcoming= upComing)
             print(url)
             event.save()
 
@@ -445,8 +561,32 @@ class EventViewSet(viewsets.ModelViewSet):
                 # newEvent = B2match_event(url,date,event_title,event_location,event_text)
                 # all_events_list.append(newEvent)
                 try:
+                    event_date_ = item.find(class_="event-card-date").get_text()
+                    event_date_ = event_date_.upper()
+                    dt = re.findall("((([0-9]{2})| ([0-9]{1}))\ (\w+)\,\ [0-9]{4})", event_date_)
+
+                    print(dt[0][0])
+
+                except:
+                    pass
+                """try:
+                    event_date = datetime.datetime.strptime(event_date_, '%d %m ,%Y ')
+                except:
+                    event_date = datetime.datetime.strptime(event_date_, '%d - %d %m ,%Y ')
+                """
+                event_date = datetime.datetime.strptime(dt[0][0], '%d %B, %Y')
+                try:
                     url = get_the_participent_urls(url)
-                    event = Event(event_name=event_title, event_url=url)
+                    upComing = False
+                    CurrentDate = datetime.datetime.now()
+                    if CurrentDate < event_date:
+                        print("hello hello hello")
+
+                        upComing = True
+                    print(event_date)
+                    print(CurrentDate)
+                    print(upComing)
+                    event = Event(event_name=event_title, event_url=url, event_date=event_date, is_upcoming=upComing)
                     event.save()
                 except:
                     pass
@@ -474,6 +614,9 @@ class ParticipantsViewSet(viewsets.ModelViewSet):
 
     @action(detail=False, methods=['POST'])
     def add_Participants_from_Event(self, request):
+        """
+                method to define API to import all the participants from the events we have in our DB and save them to the local DB
+        """
         events = Event.objects.all()
         for event in events:
             print(event.event_name)
@@ -502,6 +645,7 @@ class ParticipantsViewSet(viewsets.ModelViewSet):
                                                org_icon_url=part_temp[6], description=part_temp[8], location=location)
 
                     participant.save()
+                    event.event_part.add(participant)
                 except:
                     continue
                 print("xD" * 10)

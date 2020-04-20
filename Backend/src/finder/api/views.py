@@ -16,11 +16,89 @@ from selenium import webdriver
 from googletrans import Translator
 
 import re
-# def NLPPreProcess(tag):
-#     # to lower case # done
-#     # tokenizing
-#     # remove stopwords
-#     # stemming
+
+LIST_OF_ATTRIBUTES = {'pic', 'businessName', 'legalName', 'classificationType', 'description',
+                      'address', 'tagsAndKeywords', 'dataStatus', 'numberOfProjects', 'consorsiumRoles',
+                      'collaborations'}
+
+
+def getPicsFromCollaborations(collaborations):
+    pics = set()
+    for col in collaborations:
+        pics.add(col['pic'])
+
+    return pics
+
+
+def getNumOfProjects(pic):
+    """
+    method to get number of projects for certain organization
+    :param pic: id of the organization
+    :return: number of projects for this organization
+    """
+
+    url = 'https://ec.europa.eu/info/funding-tenders/opportunities/api/orgProfile/publicProjects.json?pic=' + str(pic)
+    response = []
+    try:
+        response = requests.get(url)
+    except requests.exceptions.RequestException as error:
+        print("Error - ", error)
+        exit(0)
+
+    return len(response.json()['publicProjects'])
+
+
+def getOrganisationProfileFromEUByPIC(pic):
+    """
+    method to get organisation profile from the database of EU by pic number
+    :param pic: id of the organization
+    :return: organisation profile in format of json
+    """
+    url = 'https://ec.europa.eu/info/funding-tenders/opportunities/api/orgProfile/data.json?pic=' + str(pic)
+    response = []
+    try:
+        response = requests.get(url)
+    except requests.exceptions.RequestException as error:
+        print("Error - ", error)
+        exit(0)
+
+    return getRelatedAttributes(response.json()['organizationProfile'])
+
+
+def getRelatedAttributes(obj):
+    """
+    method to get the related fields from an EU organization object
+    :param obj: obj from EU
+    :return: obj with the related fields
+    """
+    resObj = {}
+    publicAttributes = obj['publicOrganizationData']
+
+    for attribute in LIST_OF_ATTRIBUTES:
+        if attribute in publicAttributes:
+            if attribute == 'address':
+                address = {'country': publicAttributes[attribute]['country'],
+                           'city': publicAttributes[attribute]['city']}
+                resObj[attribute] = address
+            else:
+                resObj[attribute] = publicAttributes[attribute]
+        elif attribute == 'tagsAndKeywords' and attribute in obj:
+            tags = obj[attribute]
+            listOfTags = []
+            for tag in tags:
+                if 'text' in tag:
+                    listOfTags.append(tag['text'])
+            resObj[attribute] = listOfTags
+        else:
+            if attribute in obj:
+                resObj[attribute] = obj[attribute]
+            else:
+                resObj[attribute] = ''
+
+    resObj['numberOfProjects'] = getNumOfProjects(obj['publicOrganizationData']['pic'])
+    resObj['consorsiumRoles'] = True if 'COORDINATOR' in resObj['consorsiumRoles'] else False
+
+    return resObj
 
 
 def get_the_participent_urls(event_url):
@@ -305,10 +383,17 @@ class OrganizationProfileViewSet(viewsets.ModelViewSet):
 
         return Response(response, status=status.HTTP_200_OK)
 
-    def getOrganizationsByTags(self, tags):
+    # TODO: write method to update organizations
+    # def updateOrganizations(self):
+    #     allOrgs = OrganizationProfile.objects.all()
+
+    def getOraganizationsByTags(self, tags):
         """
         method to get all organizations with at least one tag from the list of tags.
+        :param tags: list of tags
+        :return: list of organizations objects
         """
+
         tags = set(tags)
         res = []
         allTags = Tag.objects.all()
@@ -321,7 +406,10 @@ class OrganizationProfileViewSet(viewsets.ModelViewSet):
     def getOrganizationsByCountries(self, countries):
         """
         method to get all organizations that locates in one of the countries list.
+        :param countries: list of countries
+        :return: list of organizations objects
         """
+
         countries = [val.lower() for val in countries]
 
         countries = set(countries)
@@ -339,16 +427,29 @@ class OrganizationProfileViewSet(viewsets.ModelViewSet):
         return res
 
     def getOrgsByCountriesAndTags(self, tags, countries):
+        """
+        private method to get organizations from the database that have a certain tags
+        or located in one of the countries list.
+        :param tags: list of tags
+        :param countries: list of countries
+        :return: list of organizations objects
+        """
         orgsByCountries = self.getOrganizationsByCountries(countries)
         orgsByTags = self.getOrganizationsByTags(tags)
 
         res = self.getOrgsIntersection(orgsByCountries, orgsByTags)
 
-        # write method to rank the orgs by tags
+        # TODO: write method to rank the orgs by tags
 
         return res
 
     def getOrgsIntersection(self, orgs1, orgs2):
+        """
+        private method to get intersection between two lists of organizations
+        :param orgs1: first list
+        :param orgs2: second list
+        :return: intersection list
+        """
         res, seenPICS = [], set()
 
         for org in orgs1:
@@ -364,9 +465,10 @@ class OrganizationProfileViewSet(viewsets.ModelViewSet):
 
     @action(detail=False, methods=['GET'])
     def searchByCountriesAndTags(self, request):
-
         """
-            genirc function to search Orgs from EU and participants from B2Match
+        generic function to search organizations from EU and participants from B2Match
+        :param request: request with tags and countries fields
+        :return:
         """
 
         data = request.data['data']
@@ -375,10 +477,8 @@ class OrganizationProfileViewSet(viewsets.ModelViewSet):
         tags = data['tags']
 
         EURes = self.getOrgsByCountriesAndTags(tags, countries)
-
-        # btmatch search result
-        # print("RES", EURes)
         B2MATCHRes = self.getB2MATCHPartByCountriesAndTags(tags, countries)
+
         B2MATCH = []
         EU = []
         for val in EURes:
@@ -387,18 +487,15 @@ class OrganizationProfileViewSet(viewsets.ModelViewSet):
                        'description': val.description, 'classificationType': val.classificationType})
 
         for val in B2MATCHRes:
-            print(val.participant_name, 'address', val.location.location)
-            B2MATCH.append({'participant_name': val.participant_name, 'organization_name': val.organization_name, 'org_type': val.org_type,
-                       'address': val.location.location, 'description': val.description, 'participant_img': val.participant_img_url,
-                       'org_url': val.org_url, 'org_icon_url': val.org_icon_url})
+            B2MATCH.append({'participant_name': val.participant_name, 'organization_name': val.organization_name,
+                            'org_type': val.org_type,
+                            'address': val.location.location, 'description': val.description,
+                            'participant_img': val.participant_img_url,
+                            'org_url': val.org_url, 'org_icon_url': val.org_icon_url})
 
-
-        print(B2MATCH)
         response = {'EU': EU, 'B2MATCH': B2MATCH}
 
         return Response(response, status=status.HTTP_200_OK)
-
-    # def B2MatchSearchByTagsAndCountries(self, tags, countries):
 
     def getB2MatchParByCountry(self, countries):
         """
@@ -413,7 +510,7 @@ class OrganizationProfileViewSet(viewsets.ModelViewSet):
             return allPart
 
         for participant in allPart:
-            currLocation = participant.location.location.lower().split(" ",1)[1]
+            currLocation = participant.location.location.lower().split(" ", 1)[1]
             if currLocation in countries:
                 res.append(participant)
         return res
@@ -453,9 +550,6 @@ class OrganizationProfileViewSet(viewsets.ModelViewSet):
                 addedPar.add(par.participant_name)
         print(res)
         return res
-
-
-
 
 
 class AddressViewSet(viewsets.ModelViewSet):
@@ -509,8 +603,8 @@ class EventViewSet(viewsets.ModelViewSet):
                 pass
             try:
                 event_date_ = item.find(class_="event-card-date").get_text()
-                event_date_ =event_date_.upper()
-                dt= re.findall("((([0-9]{2})| ([0-9]{1}))\ (\w+)\,\ [0-9]{4})",event_date_)
+                event_date_ = event_date_.upper()
+                dt = re.findall("((([0-9]{2})| ([0-9]{1}))\ (\w+)\,\ [0-9]{4})", event_date_)
 
                 print(dt[0][0])
             except:
@@ -534,7 +628,7 @@ class EventViewSet(viewsets.ModelViewSet):
             print(event_date)
             print(CurrentDate)
             print(upComing)
-            event = Event(event_name=event_title, event_url=url, event_date=event_date, is_upcoming= upComing)
+            event = Event(event_name=event_title, event_url=url, event_date=event_date, is_upcoming=upComing)
             print(url)
             event.save()
 

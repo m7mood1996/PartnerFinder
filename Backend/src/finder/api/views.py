@@ -1,4 +1,5 @@
 import datetime
+import collections
 
 from rest_framework import viewsets, permissions, status
 from rest_framework.response import Response
@@ -22,6 +23,11 @@ LIST_OF_ATTRIBUTES = {'pic', 'businessName', 'legalName', 'classificationType', 
 
 
 def getPicsFromCollaborations(collaborations):
+    """
+    function to get list of pics from list of organizations
+    :param collaborations: list of organizations
+    :return: list of pics
+    """
     pics = set()
     for col in collaborations:
         pics.add(col['pic'])
@@ -30,7 +36,7 @@ def getPicsFromCollaborations(collaborations):
 
 def getNumOfProjects(pic):
     """
-    method to get number of projects for certain organization
+    function to get number of projects for certain organization
     :param pic: id of the organization
     :return: number of projects for this organization
     """
@@ -48,7 +54,7 @@ def getNumOfProjects(pic):
 
 def getOrganizationProfileFromEUByPIC(pic):
     """
-    method to get organisation profile from the database of EU by pic number
+    function to get organisation profile from the database of EU by pic number
     :param pic: id of the organization
     :return: organization profile in format of json
     """
@@ -95,8 +101,10 @@ def getRelatedAttributes(obj):
 
     resObj['numberOfProjects'] = getNumOfProjects(obj['publicOrganizationData']['pic'])
     resObj['consorsiumRoles'] = True if 'COORDINATOR' in resObj['consorsiumRoles'] else False
+    resObj['pic'] = int(resObj['pic'])
 
     return resObj
+
 
 def add_Participants_from_Upcoming_Event():
     """
@@ -149,6 +157,7 @@ def add_Participants_from_Upcoming_Event():
                     currTag.save()
                     currTag.participant.add(participant)
         print("what!!!!")
+
 
 def get_the_participent_urls(event_url):
     """
@@ -380,20 +389,40 @@ def getParticipentDATA(url_):
     return name, img_src, org_name, location, org_type, org_url, org_logo, tags, org_description
 
 
+def translateData(data):
+    """
+    function to translate non english data in object into english
+    :param data: object
+    :return: translated object
+    """
+    translator = Translator()
+    for key in data:
+        if type(data[key]) == str:
+            try:
+                data[key] = translator.translate(data[key]).text
+            except:
+                continue
+    return data
+
+
+class Graph:
+    def __init__(self):
+        self.graph = collections.defaultdict(set)
+        self.vertices = set()
+
+    def add(self, u, v):
+        self.vertices.add(u)
+        self.vertices.add(v)
+        self.graph[u].add(v)
+        self.graph[v].add(u)
+
+
 class OrganizationProfileViewSet(viewsets.ModelViewSet):
     queryset = OrganizationProfile.objects.all()
     permission_classes = [
         permissions.AllowAny
     ]
     serializer_class = OrganizationProfileSerializer
-
-    def translateData(self, data):
-        translator = Translator()
-        for key in data:
-            if type(data[key]) == str:
-                data[key] = translator.translate(data[key]).text
-
-        return data
 
     @action(detail=False, methods=['POST'])
     def createOrganization(self, request):
@@ -405,7 +434,7 @@ class OrganizationProfileViewSet(viewsets.ModelViewSet):
         response = {'Message': 'Organization Created Successfully!'}
 
         data = json.loads(request.data['data'])
-        data = self.translateData(data)
+        data = translateData(data)
 
         try:
             OrganizationProfile.objects.get(pic=data['pic'])
@@ -432,9 +461,76 @@ class OrganizationProfileViewSet(viewsets.ModelViewSet):
 
         return Response(response, status=status.HTTP_200_OK)
 
+    def addOrganization(self, org):
+        """
+        method to add new organization with specific pic
+        :param pic:
+        :return:
+        """
+        response = True
+        org['collaborations'] = len(org['collaborations'])
+        org = translateData(org)
+        try:
+            OrganizationProfile.objects.get(pic=org['pic'])
+            response = False
+        except:
+            if 'address' in org:
+                if 'country' in org['address'] and 'city' in org['address']:
+                    newAddress = Address(
+                        country=org['address']['country'], city=org['address']['city'])
+                    newAddress.save()
+            newOrg = OrganizationProfile(pic=org['pic'], legalName=org['legalName'], businessName=org['businessName'],
+                                         classificationType=org['classificationType'], description=org['description'],
+                                         address=newAddress, dataStatus=org['dataStatus'],
+                                         numberOfProjects=org['numberOfProjects'],
+                                         consorsiumRoles=org['consorsiumRoles'], collaborations=org['collaborations'])
+            newOrg.save()
+            for tag in org['tagsAndKeywords']:
+                try:
+                    currTag = Tag.objects.get(tag=tag)
+                    currTag.organizations.add(newOrg)
+                except:
+                    currTag = Tag(tag=tag)
+                    currTag.save()
+                    currTag.organizations.add(newOrg)
+
+        return response
+
+    # @action(detail=False, methods=['GET'])
+    # def deleteOrgs(self, request):
+
     # TODO: write method to update organizations
-    # def updateOrganizations(self):
-    #     allOrgs = OrganizationProfile.objects.all()
+    @action(detail=False, methods=['GET'])
+    def updateOrganizations(self, request):
+        response = {'Message': 'Error while updating the organizations!'}
+        allOrgs = OrganizationProfile.objects.all()
+        allOrgs = {org.pic: org for org in allOrgs}
+        status = {}
+        graph = Graph()
+        visitngQueue = collections.deque()
+        for pic in allOrgs:
+            status[pic] = 'notVisited'
+        startOrg = '999993953'
+        visitngQueue.append(startOrg)
+        status[startOrg] = 'visiting'
+        while len(visitngQueue) > 0:
+            currPic = visitngQueue.popleft()
+            try:
+                currOrg = getOrganizationProfileFromEUByPIC(currPic)
+                currAdjacent = getPicsFromCollaborations(currOrg['collaborations'])
+            except:
+                continue
+            for pic in currAdjacent:
+                if pic not in graph.vertices or status[pic] == 'notVisited':
+                    graph.add(currPic, pic)
+                    status[pic] = 'visiting'
+                    visitngQueue.append(pic)
+
+            self.addOrganization(currOrg)
+            status[currPic] = 'visited'
+
+        response = {'Message': 'Organizations updated successfully!'}
+        return Response(response, status=status.HTTP_200_OK)
 
     def getOraganizationsByTags(self, tags):
         """
@@ -620,7 +716,7 @@ class TagViewSet(viewsets.ModelViewSet):
 def changeEventStatus(eventNoLongerUpcoming):
     print("updating......\n")
     for event in eventNoLongerUpcoming:
-        e =Event.objects.get(event_name=event.event_name)
+        e = Event.objects.get(event_name=event.event_name)
         e.is_upcoming = True
         e.save()
         print("[EVN]\t\t")
@@ -647,6 +743,7 @@ def deleteEventsTree(toupdate):
             print(part)
             print("\n")
             part.delete()
+
 
 class EventViewSet(viewsets.ModelViewSet):
     queryset = Event.objects.all()
@@ -923,8 +1020,6 @@ class EventViewSet(viewsets.ModelViewSet):
             e.save()
         print("Adding new Participants....\n")
         add_Participants_from_Upcoming_Event()
-
-
 
         return Response([{'message': 'done, B2MATCH Reposutory updated'}], status=status.HTTP_200_OK)
 

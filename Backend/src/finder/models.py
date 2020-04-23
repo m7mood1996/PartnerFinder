@@ -26,10 +26,10 @@ class OrganizationProfile(models.Model):
     description = models.TextField(blank=True, null=True)
     address = models.OneToOneField(
         Address, blank=True, null=True, on_delete=models.CASCADE)
-    dataStatus = models.CharField(max_length=200)
-    numberOfProjects = models.IntegerField()
+    dataStatus = models.CharField(max_length=200, default='')
+    numberOfProjects = models.IntegerField(default=0)
     consorsiumRoles = models.BooleanField(default=False)
-    collaborations = models.IntegerField()
+    collaborations = models.IntegerField(default=0)
 
     def __str__(self):
         return str(self.pic)

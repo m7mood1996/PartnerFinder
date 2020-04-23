@@ -1,6 +1,5 @@
 import datetime
 
-from ..models import OrganizationProfile
 from rest_framework import viewsets, permissions, status
 from rest_framework.response import Response
 from rest_framework.decorators import action
@@ -26,7 +25,6 @@ def getPicsFromCollaborations(collaborations):
     pics = set()
     for col in collaborations:
         pics.add(col['pic'])
-
     return pics
 
 
@@ -48,11 +46,11 @@ def getNumOfProjects(pic):
     return len(response.json()['publicProjects'])
 
 
-def getOrganisationProfileFromEUByPIC(pic):
+def getOrganizationProfileFromEUByPIC(pic):
     """
     method to get organisation profile from the database of EU by pic number
     :param pic: id of the organization
-    :return: organisation profile in format of json
+    :return: organization profile in format of json
     """
     url = 'https://ec.europa.eu/info/funding-tenders/opportunities/api/orgProfile/data.json?pic=' + str(pic)
     response = []

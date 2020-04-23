@@ -98,6 +98,57 @@ def getRelatedAttributes(obj):
 
     return resObj
 
+def add_Participants_from_Upcoming_Event():
+    """
+            method to define API to import all the participants from the events we have in our DB and save them to the local DB
+    """
+    events = Event.objects.filter(is_upcoming=True)
+    for event in events:
+        print(event.event_name)
+        print(event.event_url)
+        try:
+            url_arr = getParticipentFromUrl(
+                event.event_url + "/participants")
+        except:
+            continue
+
+        print(url_arr, "\t\t URL ARRAY")
+        for item in url_arr:
+            print("the url op participent is \t" + item)
+
+            print("in the try \t" + item)
+            part_temp = getParticipentDATA(item)
+
+            print("xD" * 10)
+            location = Location(location=part_temp[3])
+            location.save()
+            print("xD" * 10)
+            try:
+                participant = Participants(participant_name=part_temp[0], participant_img_url=part_temp[1],
+                                           organization_name=part_temp[2], org_type=part_temp[4],
+                                           org_url=part_temp[5],
+                                           org_icon_url=part_temp[6], description=part_temp[8], location=location)
+
+                participant.save()
+                event.event_part.add(participant)
+            except:
+                continue
+            print("xD" * 10)
+            print("xD" * 10)
+            print(location)
+            print("xD" * 10)
+            print(
+                part_temp[7], "kkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkk" * 3)
+            for i in part_temp[7]:
+                print(i)
+                try:
+                    currTag = TagP.objects.get(tag=i)
+                    currTag.participant.add(participant)
+                except:
+                    currTag = TagP(tag=i)
+                    currTag.save()
+                    currTag.participant.add(participant)
+        print("what!!!!")
 
 def get_the_participent_urls(event_url):
     """
@@ -566,6 +617,37 @@ class TagViewSet(viewsets.ModelViewSet):
     serializer_class = TagSerializer
 
 
+def changeEventStatus(eventNoLongerUpcoming):
+    print("updating......\n")
+    for event in eventNoLongerUpcoming:
+        e =Event.objects.get(event_name=event.event_name)
+        e.is_upcoming = True
+        e.save()
+        print("[EVN]\t\t")
+        print(e)
+        print("\n")
+
+
+def deleteEventsTree(toupdate):
+    print("deleting......\n")
+    for event in toupdate:
+        currEvent = Event.objects.get(event_name=event.event_name)
+        # get all the participant from each Event
+
+        participants = list(currEvent.event_part.all())
+        for part in participants:
+            tags = part.tagsAndKeywordsP.all()
+            for tag in tags:
+                if tag.participant.all().count() < 2:
+                    print("[Tag]\t\t")
+                    print(tag)
+                    print("\n")
+                    tag.delete()
+            print("[Par]\t\t")
+            print(part)
+            print("\n")
+            part.delete()
+
 class EventViewSet(viewsets.ModelViewSet):
     queryset = Event.objects.all()
     permission_classes = [
@@ -695,6 +777,156 @@ class EventViewSet(viewsets.ModelViewSet):
             response.append({'event_name': val.event_name,
                              'event_url': val.event_url})
         return Response(response, status=status.HTTP_200_OK)
+
+    @action(detail=False, methods=['POST'])
+    def update_upcoming_events(self, request):
+        """
+                updating upcoming events in the database <not tested yet>
+        """
+        newEvents = []
+        upcoming_event_b2match = "https://events.b2match.com"
+        b2match = "https://events.b2match.com"
+        upcoming_events_page = requests.get(upcoming_event_b2match)
+        upcoming_events_soup = BeautifulSoup(upcoming_events_page.content, 'html.parser')
+        itemes = upcoming_events_soup.find_all(class_="last next")
+        upcoming_events_last_page = itemes[0].find("a")['href']
+        upcoming_events = upcoming_events_soup.find_all(
+            class_="event-card-wrapper col-sm-6 col-md-4")
+
+        for item in upcoming_events:
+            try:
+                url = b2match + item.find("a")['href']
+            except:
+                pass
+            try:
+                event_title = item.find(class_="event-card-title").get_text()
+            except:
+                pass
+            try:
+                event_date_ = item.find(class_="event-card-date").get_text()
+                event_date_ = event_date_.upper()
+                dt = re.findall("((([0-9]{2})| ([0-9]{1}))\ (\w+)\,\ [0-9]{4})", event_date_)
+
+                print(dt[0][0])
+            except:
+                pass
+            """try:
+                event_date = datetime.datetime.strptime(event_date_, '%d %m ,%Y ')
+            except:
+                event_date = datetime.datetime.strptime(event_date_, '%d - %d %m ,%Y ')
+            """
+            event_date = datetime.datetime.strptime(dt[0][0], '%d %B, %Y')
+
+            # newEvent = B2match_event(url,date,event_title,event_location,event_text)
+            # all_events_list.append(newEvent)
+            url = get_the_participent_urls(url)
+            upComing = False
+            CurrentDate = datetime.datetime.now()
+            if CurrentDate < event_date:
+                print("hello hello hello")
+                upComing = True
+            print(event_date)
+            print(CurrentDate)
+            print(upComing)
+            event = Event(event_name=event_title, event_url=url, event_date=event_date, is_upcoming=upComing)
+            newEvents.append(event)
+            print(url)
+            # event.save()
+
+        curr_page = "/?page="
+        i = 2
+        while 1:
+            upcoming_events_page = requests.get(b2match + curr_page + str(i))
+            upcoming_events_soup = BeautifulSoup(
+                upcoming_events_page.content, 'html.parser')
+            upcoming_events = upcoming_events_soup.find_all(
+                class_="event-card-wrapper col-sm-6 col-md-4")
+            print(i)
+            for item in upcoming_events:
+                try:
+                    url = b2match + item.find("a")['href']
+                except:
+                    pass
+                try:
+                    event_title = item.find(
+                        class_="event-card-title").get_text()
+                except:
+                    pass
+
+                # newEvent = B2match_event(url,date,event_title,event_location,event_text)
+                # all_events_list.append(newEvent)
+                try:
+                    event_date_ = item.find(class_="event-card-date").get_text()
+                    event_date_ = event_date_.upper()
+                    dt = re.findall("((([0-9]{2})| ([0-9]{1}))\ (\w+)\,\ [0-9]{4})", event_date_)
+
+                    print(dt[0][0])
+
+                except:
+                    pass
+                """try:
+                    event_date = datetime.datetime.strptime(event_date_, '%d %m ,%Y ')
+                except:
+                    event_date = datetime.datetime.strptime(event_date_, '%d - %d %m ,%Y ')
+                """
+                event_date = datetime.datetime.strptime(dt[0][0], '%d %B, %Y')
+                try:
+                    url = get_the_participent_urls(url)
+                    upComing = False
+                    CurrentDate = datetime.datetime.now()
+                    if CurrentDate < event_date:
+                        print("hello hello hello")
+
+                        upComing = True
+                    print(event_date)
+                    print(CurrentDate)
+                    print(upComing)
+                    event = Event(event_name=event_title, event_url=url, event_date=event_date, is_upcoming=upComing)
+                    newEvents.append(event)
+                    # event.save()
+                except:
+                    pass
+
+                # all_events_list.append({"naem": event_title, "date": date, "location": event_location, "url": url, "event_text": event_text})
+
+            if (curr_page + str(i) == upcoming_events_last_page):
+                break
+
+            i += 1
+        myEvents = list(Event.objects.filter(is_upcoming=True))
+
+        toupdate = []
+        eventNoLongerUpcoming = []
+        print(len(myEvents))
+        print(len(newEvents))
+        newEvents2 = []
+        for e in newEvents:
+            newEvents2.append(e.event_name)
+
+        for event in myEvents:
+            if event.event_name not in newEvents2:
+                eventNoLongerUpcoming.append(event)
+            else:
+                toupdate.append(event)
+        print(toupdate)
+        print("\n\n")
+        print(eventNoLongerUpcoming)
+
+        changeEventStatus(eventNoLongerUpcoming)
+
+        deleteEventsTree(toupdate)
+
+        for e in toupdate:
+            e.delete()
+
+        for e in newEvents:
+            e.save()
+        print("Adding new Participants....\n")
+        add_Participants_from_Upcoming_Event()
+
+
+
+        return Response([{'message': 'done, B2MATCH Reposutory updated'}], status=status.HTTP_200_OK)
 
 
 class ParticipantsViewSet(viewsets.ModelViewSet):

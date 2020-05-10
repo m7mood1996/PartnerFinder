@@ -13,7 +13,7 @@ Corpora==1.0
 crossrefapi==1.4.0
 Cython==0.29.14
 dataclasses==0.6
-Django==2.2.7
+Django==2.2.10
 django-cors-headers==3.2.1
 django-tinymce4-lite==1.7.5
 djangorestframework==3.11.0

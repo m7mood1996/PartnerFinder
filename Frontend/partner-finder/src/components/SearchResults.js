@@ -12,14 +12,16 @@ const EU_columns = [
 ]
 
 const B2Match_columns = [
-    { title: 'Name', field: 'name' },
-    { title: 'Org. Name', field: 'org' },
-    { title: 'Type', field: 'type' },
-    { title: 'Country', field: 'country' },
-    { title: 'Website', field: 'web' },
-    { title: 'Event Name', field: 'event' },
+    { title: 'Name', field: 'participant_name' },
+    { title: 'Org. Name', field: 'organization_name' },
+    { title: 'Type', field: 'org_type' },
+    { title: 'Country', field: 'address' },
+    { title: 'Website', field: 'org_url' },
+    //{ title: 'Event Name', field: 'event' },
     { title: 'Description', field: 'description' }
 ]
+
+
 
 const getRelativeData = (arr) => {
     let res = arr.map(org => {

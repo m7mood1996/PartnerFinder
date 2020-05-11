@@ -1,5 +1,5 @@
 body {
-  background-color: white;
+  background-color:transparent;
 }
 .App {
   text-align: center;
@@ -14,19 +14,21 @@ body {
 }
 .Header {
   text-align: center;
+  height:50%;
+
 }
 .Search {
   color: white;
   margin-left: 20px;
   font-size: 9.5px;
 }
-#company_name {
+#fields {
   background-color: white;
   size: 2px;
   height: 2px;
 }
 
-.SearchTab {
+.Tags {
   display: grid;
 }
 
@@ -42,7 +44,7 @@ body {
 .first_row {
   color: black;
   display: grid;
-  grid-template-columns: auto 0.5fr auto;
+  grid-template-columns: auto auto auto auto;
   margin-left: 20px;
   font-size: 9.5px;
 }
@@ -50,7 +52,7 @@ body {
   color: black;
   margin-top: 35px;
   display: grid;
-  grid-template-columns: auto 0.57fr auto;
+  grid-template-columns: auto auto auto;
   margin-left: 20px;
   font-size: 9.5px;
 }
@@ -71,7 +73,7 @@ body {
   font-size: 9.5px;
 }
 
-.Partners {
+.Projects {
   display: grid;
   grid-template-columns: auto ;
 }

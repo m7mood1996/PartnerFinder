@@ -14,11 +14,15 @@ class Address(models.Model):
         return self.country + ' ' + self.city
 
 
+class MapIds(models.Model):
+    originalID = models.IntegerField(unique=True)
+    indexID = models.IntegerField(unique=True)
+
+
 class OrganizationProfile(models.Model):
     """
     class to define the data model of Organization profile which contains the necessary fields.
     """
-
     pic = models.IntegerField(unique=True)
     legalName = models.CharField(max_length=200)
     businessName = models.CharField(max_length=200)
@@ -49,10 +53,10 @@ class Tag(models.Model):
 
 class Location(models.Model):
     location = models.CharField(max_length=200, blank=True)
+
     # participant = models.(Participants, blank=True, null=True, on_delete=models.CASCADE, related_name='locationA')
     def __str__(self):
         return self.location
-
 
 
 class Participants(models.Model):
@@ -71,7 +75,8 @@ class Participants(models.Model):
     org_type = models.CharField(max_length=200, blank=True, null=True)
     org_icon_url = models.CharField(max_length=200, blank=True, null=True)
     org_url = models.CharField(max_length=200, blank=True, null=True)
-    #tags = models.ManyToManyField(TagP,related_name='participants_tags')
+
+    # tags = models.ManyToManyField(TagP,related_name='participants_tags')
 
     def __str__(self):
         return self.participant_name
@@ -94,8 +99,7 @@ class Event(models.Model):
     event_url = models.CharField(max_length=200)
     event_date = models.DateField(blank=True, null=True)
     is_upcoming = models.BooleanField(default=False, null=True)
-    event_part = models.ManyToManyField( Participants, blank=True, related_name='Part_Event')
-
+    event_part = models.ManyToManyField(Participants, blank=True, related_name='Part_Event')
 
     def __str__(self):
         return self.event_name

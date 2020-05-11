@@ -5,21 +5,137 @@ from rest_framework import viewsets, permissions, status
 from rest_framework.response import Response
 from rest_framework.decorators import action
 from time import sleep
-from ..models import OrganizationProfile, Address, Tag, Event, TagP, Participants, Location
+from ..models import OrganizationProfile, Address, Tag, Event, TagP, Participants, Location, MapIds
 from .serializers import OrganizationProfileSerializer, AddressSerializer, TagSerializer, EventSerializer, \
     ParticipantsSerializer, LocationSerializer, TagPSerializer
 import json
 import requests
+import sys
 
 from bs4 import BeautifulSoup
 from selenium import webdriver
 from googletrans import Translator
+from nltk.corpus import stopwords
+from nltk.stem import PorterStemmer
+import gensim
+from nltk.tokenize import word_tokenize
 
 import re
 
 LIST_OF_ATTRIBUTES = {'pic', 'businessName', 'legalName', 'classificationType', 'description',
                       'address', 'tagsAndKeywords', 'dataStatus', 'numberOfProjects', 'consorsiumRoles',
                       'collaborations'}
+
+
+def NLP_Processor(documents):
+    """
+    function to make new corpus for a certain set of documents
+    :param documents: list of strings
+    :return: Corpus of the documents
+    """
+    tokens = [process_Document(doc) for doc in documents]
+
+    dictionary = get_ids(tokens)
+
+    return build_corpus(dictionary, tokens)
+
+
+def process_Document(document):
+    """
+    function to process a certain document which tokenize and make lower case for the current document
+    :param document: string
+    :return: list of tokens
+    """
+    ps = PorterStemmer()
+    stop_words = set(stopwords.words('english'))
+    return [ps.stem(word.lower()) for word in word_tokenize(document) if
+            not word in stop_words]  # tokenizing and normalize tokens
+
+
+def get_ids(tokens):
+    """
+    a function to map each token into a unique id
+    :param tokens: list of lists of tokens
+    :return: Dictionary object
+    """
+
+    return gensim.corpora.Dictionary(tokens)  # mapping termId : term
+
+
+def build_corpus(dictionary, tokens):
+    """
+    a function to build a corpus, which is mapping each token id to its frequency
+    :param dictionary: object for mapping token -> token id
+    :param tokens: list of lists of tokens
+    :return: list of lists of tuples (id, frequency)
+    """
+
+    return [dictionary.doc2bow(lst) for lst in tokens]  # for each doc map termId : term frequency
+
+
+def process_query_result(result):
+    """
+    a function to process similarity result, it will map each document similarity percentage with the document
+    id
+    :param result: list of lists of percentages
+    :return: pair of (doc id, doc similarity percentage)
+    """
+
+    if len(result) == 0:
+        return []
+    result = result[0]
+    pairs = []
+    for idx, sim_perc in enumerate(result):
+        pairs.append((idx, sim_perc))
+
+    return pairs
+
+
+def add_documents(index, documents):
+    """
+    function to add new documents to existent index
+    :param index: current index
+    :param documents: list of strings
+    :return: new index
+    """
+    corpus = NLP_Processor(documents)
+    for doc in corpus:
+        index.num_features += len(doc)
+    index.num_features += 1000
+    index.add_documents(corpus)
+    index.save()
+    return index
+
+
+def load_index(path):
+    """
+    function to load index from a specific directory in disk
+    :param path: path to directory
+    :return: Similarity Object
+    """
+
+    return gensim.similarities.Similarity.load(path)
+
+
+def build_index(path):
+    """
+    build an empty index in disk
+    :param path: path of the directory
+    :return: Similarity object "index"
+    """
+
+    corpus = NLP_Processor([])
+    tfidf = gensim.models.TfidfModel(corpus)
+
+    return gensim.similarities.Similarity(path, tfidf[corpus], num_features=0)  # build the index
+
+
+def get_document_from_org(org):
+    res = [org['description']]
+    for tag in org['tagsAndKeywords']:
+        res.append(tag)
+
+    return ' '.join(res)
 
 
 def getPicsFromCollaborations(collaborations):
@@ -36,7 +152,7 @@ def getPicsFromCollaborations(collaborations):
 
 def getNumOfProjects(pic):
     """
-    function to get number of projects for certain organization
+    function to get number of projects for a certain organization
     :param pic: id of the organization
     :return: number of projects for this organization
     """
@@ -461,10 +577,26 @@ class OrganizationProfileViewSet(viewsets.ModelViewSet):
 
         return Response(response, status=status.HTTP_200_OK)
 
+    def add_org_to_index(self, index, org):
+        """
+        function to add new organization to the index
+        :param index: current index
+        :param org: new organization
+        :return: updated index
+        """
+
+        doc = get_document_from_org(org)
+        originalID = org['pic']
+        indexID = len(index)
+        newMap = MapIds(originalID=originalID, indexID=indexID)
+        newMap.save()
+        index = add_documents(index, [doc])
+        return index
+
     def addOrganization(self, org):
         """
-        method to add new organization with specific pic
-        :param pic:
+        method to add new organization to the local db
+        :param org:
         :return:
         """
         response = True
@@ -496,13 +628,27 @@ class OrganizationProfileViewSet(viewsets.ModelViewSet):
 
         return response
 
-    # @action(detail=False, methods=['GET'])
-    # def deleteOrgs(self, request):
-
     # TODO: write method to update organizations
     @action(detail=False, methods=['GET'])
     def updateOrganizations(self, request):
+
+        OrganizationProfile.objects.all().delete()
+        MapIds.objects.all().delete()
+        Address.objects.all().delete()
+        # Tag.objects.all().delete()
+
         response = {'Message': 'Error while updating the organizations!'}
+        try:
+            index = load_index('EU_Index')
+        except:
+            index = None
+
+        if index is None:
+            index = build_index('EU_Index')
+        else:
+            index.destroy()
+            index = build_index('EU_Index')
+
         allOrgs = OrganizationProfile.objects.all()
         allOrgs = {org.pic: org for org in allOrgs}
         status = {}
@@ -527,26 +673,36 @@ class OrganizationProfileViewSet(viewsets.ModelViewSet):
                     visitngQueue.append(pic)
 
             self.addOrganization(currOrg)
+            index = self.add_org_to_index(index, currOrg)
             status[currPic] = 'visited'
 
         response = {'Message': 'Organizations updated successfully!'}
+
         return Response(response, status=status.HTTP_200_OK)
 
-    def getOraganizationsByTags(self, tags):
+    def getOrgsByTags(self, tags):
         """
         method to get all organizations with at least one tag from the list of tags.
         :param tags: list of tags
         :return: list of organizations objects
         """
 
-        tags = set(tags)
-        res = []
-        allTags = Tag.objects.all()
-        for tag in allTags:
-            if tag.tag in tags:
-                res.extend(tag.organizations.all())
+        tags = ' '.join(tags)
+        index = load_index('EU_Index')
+        corpus = NLP_Processor([tags])
+        res = index[corpus]
 
-        return res
+        res = process_query_result(res)
+        res = sorted(res, key=lambda pair: pair[1], reverse=True)
+        res = res[:101]
+        res = [pair for pair in res if pair[1] > 0.3]
+        res = [MapIds.objects.get(indexID=pair[0]) for pair in res]
+
+        finalRes = []
+        for mapId in res:
+            finalRes.append(OrganizationProfile.objects.get(pic=mapId.originalID))
+
+        return finalRes
 
     def getOrganizationsByCountries(self, countries):
         """
@@ -580,11 +736,9 @@ class OrganizationProfileViewSet(viewsets.ModelViewSet):
         :return: list of organizations objects
         """
         orgsByCountries = self.getOrganizationsByCountries(countries)
-        orgsByTags = self.getOrganizationsByTags(tags)
+        orgsByTags = self.getOrgsByTags(tags)
 
         res = self.getOrgsIntersection(orgsByCountries, orgsByTags)
-
-        # TODO: write method to rank the orgs by tags
 
         return res
 

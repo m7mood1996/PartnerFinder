@@ -635,7 +635,7 @@ class OrganizationProfileViewSet(viewsets.ModelViewSet):
         OrganizationProfile.objects.all().delete()
         MapIds.objects.all().delete()
         Address.objects.all().delete()
-        # Tag.objects.all().delete()
+        Tag.objects.all().delete()
 
         response = {'Message': 'Error while updating the organizations!'}
         try:

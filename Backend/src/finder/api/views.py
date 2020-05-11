@@ -532,7 +532,7 @@ class OrganizationProfileViewSet(viewsets.ModelViewSet):
         response = {'Message': 'Organizations updated successfully!'}
         return Response(response, status=status.HTTP_200_OK)
 
-    def getOraganizationsByTags(self, tags):
+    def getOrganizationsByTags(self, tags):
         """
         method to get all organizations with at least one tag from the list of tags.
         :param tags: list of tags
@@ -616,11 +616,11 @@ class OrganizationProfileViewSet(viewsets.ModelViewSet):
         :return:
         """
 
-        data = request.data['data']
+
+        data = request.query_params['data']
         data = json.loads(data)
         countries = data['countries']
         tags = data['tags']
-
         EURes = self.getOrgsByCountriesAndTags(tags, countries)
         B2MATCHRes = self.getB2MATCHPartByCountriesAndTags(tags, countries)
 
@@ -629,7 +629,8 @@ class OrganizationProfileViewSet(viewsets.ModelViewSet):
         for val in EURes:
             EU.append({'pic': val.pic, 'legalName': val.legalName, 'businessName': val.businessName,
                        'address': {'country': val.address.country, 'city': val.address.city},
-                       'description': val.description, 'classificationType': val.classificationType})
+                       'description': val.description, 'classificationType': val.classificationType,
+                       'dataStatus': val.dataStatus, 'numberOfProjects': val.numberOfProjects, 'consorsiumRoles': val.consorsiumRoles})
 
         for val in B2MATCHRes:
             B2MATCH.append({'participant_name': val.participant_name, 'organization_name': val.organization_name,

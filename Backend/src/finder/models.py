@@ -61,12 +61,9 @@ class Participants(models.Model):
     org_url = models.CharField(max_length=200, blank=True, null=True)
     #tags = models.ManyToManyField(TagP,related_name='participants_tags')
 
-<<<<<<< HEAD
     def __str__(self):
         return self.participant_name
 
-=======
->>>>>>> 68872fe8b529418a9efb994161df8d51c6f9964d
 
 class TagP(models.Model):
     tag = models.CharField(max_length=200, blank=True, null=True)

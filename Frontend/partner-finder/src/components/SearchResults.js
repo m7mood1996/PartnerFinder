@@ -73,15 +73,22 @@ const getRelativeData = (arr) => {
     return res
 }
 
+function handleDataChange(data) {
+    let tempData = data;
+    let eu = getRelativeData(tempData['EU']);
+    tempData = { ...tempData, 'EU': eu };
+
+    return tempData;
+}
+
+
+
 function SearchResults(props) {
     const [data, setData] = React.useState([]);
-    if (data.length === 0) {
-        let tempData = props.data
-        let eu = getRelativeData(tempData['EU'])
-        tempData = { ...tempData, 'EU': eu }
 
-        setData(tempData);
-    }
+    React.useEffect(function effectFunction() {
+        setData(handleDataChange(props.data))
+    }, [props.data]);
 
     return (
         <React.Fragment>

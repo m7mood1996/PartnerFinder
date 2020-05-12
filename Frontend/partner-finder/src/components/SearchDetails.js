@@ -66,7 +66,7 @@ function SearchDetails() {
     const changePhone = event => {
         console.log("Halaa " + event)
         setPhone(event);
-        if (event.target.value.length !== 0 || event.target.value === "")
+        if (!event || event.length !== 0 || event === "")
             setFormState({ ...formState, phone_num: false })
     }
     const handleChange = event => {

@@ -1,5 +1,5 @@
 body {
-  background-color:transparent;
+  background-color: transparent;
 }
 .App {
   text-align: center;
@@ -14,8 +14,7 @@ body {
 }
 .Header {
   text-align: center;
-  height:50%;
-
+  height: 50%;
 }
 .Search {
   color: white;
@@ -75,7 +74,7 @@ body {
 
 .Projects {
   display: grid;
-  grid-template-columns: auto ;
+  grid-template-columns: auto;
 }
 .SearchButton {
   margin-top: 42px;
@@ -151,7 +150,7 @@ div.ReactTags__suggestions ul li.ReactTags__activeSuggestion {
   cursor: pointer;
 }
 
-.MuiDivider{
+.MuiDivider {
   font-weight: 900;
   margin: 100px;
 }

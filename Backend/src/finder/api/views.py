@@ -1,10 +1,13 @@
-from ..models import OrganizationProfile
+import datetime
+import collections
+
 from rest_framework import viewsets, permissions, status
 from rest_framework.response import Response
 from rest_framework.decorators import action
 from time import sleep
 from ..models import OrganizationProfile, Address, Tag, Event, TagP, Participants, Location
-from .serializers import OrganizationProfileSerializer, AddressSerializer, TagSerializer, EventSerializer, ParticipantsSerializer, LocationSerializer, TagPSerializer
+from .serializers import OrganizationProfileSerializer, AddressSerializer, TagSerializer, EventSerializer, \
+    ParticipantsSerializer, LocationSerializer, TagPSerializer
 import json
 import requests
 
@@ -12,14 +15,160 @@ from bs4 import BeautifulSoup
 from selenium import webdriver
 from googletrans import Translator
 
+import re
+
+LIST_OF_ATTRIBUTES = {'pic', 'businessName', 'legalName', 'classificationType', 'description',
+                      'address', 'tagsAndKeywords', 'dataStatus', 'numberOfProjects', 'consorsiumRoles',
+                      'collaborations'}
+
+
+def getPicsFromCollaborations(collaborations):
+    """
+    function to get list of pics from list of organizations
+    :param collaborations: list of organizations
+    :return: list of pics
+    """
+    pics = set()
+    for col in collaborations:
+        pics.add(col['pic'])
+    return pics
+
+
+def getNumOfProjects(pic):
+    """
+    function to get number of projects for certain organization
+    :param pic: id of the organization
+    :return: number of projects for this organization
+    """
+
+    url = 'https://ec.europa.eu/info/funding-tenders/opportunities/api/orgProfile/publicProjects.json?pic=' + str(pic)
+    response = []
+    try:
+        response = requests.get(url)
+    except requests.exceptions.RequestException as error:
+        print("Error - ", error)
+        exit(0)
+
+    return len(response.json()['publicProjects'])
+
+
+def getOrganizationProfileFromEUByPIC(pic):
+    """
+    function to get organisation profile from the database of EU by pic number
+    :param pic: id of the organization
+    :return: organization profile in format of json
+    """
+    url = 'https://ec.europa.eu/info/funding-tenders/opportunities/api/orgProfile/data.json?pic=' + str(pic)
+    response = []
+    try:
+        response = requests.get(url)
+    except requests.exceptions.RequestException as error:
+        print("Error - ", error)
+        exit(0)
+
+    return getRelatedAttributes(response.json()['organizationProfile'])
+
+
+def getRelatedAttributes(obj):
+    """
+    method to get the related fields from an EU organization object
+    :param obj: obj from EU
+    :return: obj with the related fields
+    """
+    resObj = {}
+    publicAttributes = obj['publicOrganizationData']
+
+    for attribute in LIST_OF_ATTRIBUTES:
+        if attribute in publicAttributes:
+            if attribute == 'address':
+                address = {'country': publicAttributes[attribute]['country'],
+                           'city': publicAttributes[attribute]['city']}
+                resObj[attribute] = address
+            else:
+                resObj[attribute] = publicAttributes[attribute]
+        elif attribute == 'tagsAndKeywords' and attribute in obj:
+            tags = obj[attribute]
+            listOfTags = []
+            for tag in tags:
+                if 'text' in tag:
+                    listOfTags.append(tag['text'])
+            resObj[attribute] = listOfTags
+        else:
+            if attribute in obj:
+                resObj[attribute] = obj[attribute]
+            else:
+                resObj[attribute] = ''
+
+    resObj['numberOfProjects'] = getNumOfProjects(obj['publicOrganizationData']['pic'])
+    resObj['consorsiumRoles'] = True if 'COORDINATOR' in resObj['consorsiumRoles'] else False
+    resObj['pic'] = int(resObj['pic'])
+
+    return resObj
+
+
+def add_Participants_from_Upcoming_Event():
+    """
+            method to define API to import all the participants from the events we have in our DB and save them to the local DB
+    """
+    events = Event.objects.filter(is_upcoming=True)
+    for event in events:
+        print(event.event_name)
+        print(event.event_url)
+        try:
+            url_arr = getParticipentFromUrl(
+                event.event_url + "/participants")
+        except:
+            continue
+
+        print(url_arr, "\t\t URL ARRAY")
+        for item in url_arr:
+            print("the url op participent is \t" + item)
+
+            print("in the try \t" + item)
+            part_temp = getParticipentDATA(item)
+
+            print("xD" * 10)
+            location = Location(location=part_temp[3])
+            location.save()
+            print("xD" * 10)
+            try:
+                participant = Participants(participant_name=part_temp[0], participant_img_url=part_temp[1],
+                                           organization_name=part_temp[2], org_type=part_temp[4],
+                                           org_url=part_temp[5],
+                                           org_icon_url=part_temp[6], description=part_temp[8], location=location)
+
+                participant.save()
+                event.event_part.add(participant)
+            except:
+                continue
+            print("xD" * 10)
+            print("xD" * 10)
+            print(location)
+            print("xD" * 10)
+            print(
+                part_temp[7], "kkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkk" * 3)
+            for i in part_temp[7]:
+                print(i)
+                try:
+                    currTag = TagP.objects.get(tag=i)
+                    currTag.participant.add(participant)
+                except:
+                    currTag = TagP(tag=i)
+                    currTag.save()
+                    currTag.participant.add(participant)
+        print("what!!!!")
+
 
 def get_the_participent_urls(event_url):
+    """
+            method to get the particepents urls from event url
+    """
     try:
         event_page = requests.get(event_url)
         all_events_soup = BeautifulSoup(event_page.content, 'html.parser')
         itemes = all_events_soup.find_all(class_="break-word")
         par_page = itemes[0].find("a")['href']
-        #print(par_page, "\t ", event_url)
+        # print(par_page, "\t ", event_url)
 
         return par_page
     except:
@@ -27,9 +176,14 @@ def get_the_participent_urls(event_url):
 
 
 def getParticipentFromUrl(url_):
+    """
+            given particepant url extruct participent information
 
-    driver = webdriver.Chrome(
-        'C:\\bin\chromedriver.exe')
+    """
+    ##### for MacOS
+    driver = webdriver.Chrome()
+    ##### for Windows
+    # driver = webdriver.Chrome('C:\\bin\chromedriver.exe')
     driver.get(url_)
     sleep(1)
     num_of_part = int(driver.execute_script(
@@ -45,7 +199,7 @@ def getParticipentFromUrl(url_):
     sleep(1)
     # print(num_of_part)
     j = 0
-    while(j < num_of_part):
+    while (j < num_of_part):
 
         while i < 8:
             res = str(script + str(i) + script2)
@@ -68,7 +222,7 @@ def getParticipentFromUrl(url_):
     for item in par:
         # url = url_ + item.find("a")['href']
         soup = BeautifulSoup(item, 'html.parser')
-        url = url_ + '/'+(soup.find("a")['href']).split('/')[-1]
+        url = url_ + '/' + (soup.find("a")['href']).split('/')[-1]
         participent_url_arr.append(url)
     # print(num_of_part)
     # res = driver.execute_script("return document.getElementsByClassName(\"card card-participant card-hover flex-row\")[3].outerHTML")
@@ -91,8 +245,16 @@ def getParticipentFromUrl(url_):
 
 
 def getParticipentDATA(url_):
+    """
+            after getint the participent info, do low level NLP and make up the participant object
+
+    """
     translator = Translator()
-    driver = webdriver.Chrome('C:\\bin\chromedriver.exe')
+    ### for macOS
+    driver = webdriver.Chrome()
+    ### for Windows
+    # driver = webdriver.Chrome('C:\\bin\chromedriver.exe')
+
     driver.get(url_)
     sleep(1)
     participant_panel_detail = driver.execute_script(
@@ -227,6 +389,34 @@ def getParticipentDATA(url_):
     return name, img_src, org_name, location, org_type, org_url, org_logo, tags, org_description
 
 
+def translateData(data):
+    """
+    function to translate non english data in object into english
+    :param data: object
+    :return: translated object
+    """
+    translator = Translator()
+    for key in data:
+        if type(data[key]) == str:
+            try:
+                data[key] = translator.translate(data[key]).text
+            except:
+                continue
+    return data
+
+
+class Graph:
+    def __init__(self):
+        self.graph = collections.defaultdict(set)
+        self.vertices = set()
+
+    def add(self, u, v):
+        self.vertices.add(u)
+        self.vertices.add(v)
+        self.graph[u].add(v)
+        self.graph[v].add(u)
+
+
 class OrganizationProfileViewSet(viewsets.ModelViewSet):
     queryset = OrganizationProfile.objects.all()
     permission_classes = [
@@ -236,6 +426,7 @@ class OrganizationProfileViewSet(viewsets.ModelViewSet):
 
     @action(detail=False, methods=['POST'])
     def createOrganization(self, request):
+
         """
         method to define API to create new organization and save it to the local DB
         """
@@ -243,6 +434,8 @@ class OrganizationProfileViewSet(viewsets.ModelViewSet):
         response = {'Message': 'Organization Created Successfully!'}
 
         data = json.loads(request.data['data'])
+        data = translateData(data)
+
         try:
             OrganizationProfile.objects.get(pic=data['pic'])
             response = {
@@ -253,7 +446,8 @@ class OrganizationProfileViewSet(viewsets.ModelViewSet):
                     newAddress = Address(
                         country=data['address']['country'], city=data['address']['city'])
                     newAddress.save()
-            org = OrganizationProfile(pic=data['pic'], legalName=data['legalName'], businessName=data['businessName'], classificationType=data['classificationType'], description=data['description'],
+            org = OrganizationProfile(pic=data['pic'], legalName=data['legalName'], businessName=data['businessName'],
+                                      classificationType=data['classificationType'], description=data['description'],
                                       address=newAddress)
             org.save()
             for tag in data['tagsAndKeywords']:
@@ -267,43 +461,241 @@ class OrganizationProfileViewSet(viewsets.ModelViewSet):
 
         return Response(response, status=status.HTTP_200_OK)
 
+    def addOrganization(self, org):
+        """
+        method to add new organization with specific pic
+        :param pic:
+        :return:
+        """
+        response = True
+        org['collaborations'] = len(org['collaborations'])
+        org = translateData(org)
+        try:
+            OrganizationProfile.objects.get(pic=org['pic'])
+            response = False
+        except:
+            if 'address' in org:
+                if 'country' in org['address'] and 'city' in org['address']:
+                    newAddress = Address(
+                        country=org['address']['country'], city=org['address']['city'])
+                    newAddress.save()
+            newOrg = OrganizationProfile(pic=org['pic'], legalName=org['legalName'], businessName=org['businessName'],
+                                         classificationType=org['classificationType'], description=org['description'],
+                                         address=newAddress, dataStatus=org['dataStatus'],
+                                         numberOfProjects=org['numberOfProjects'],
+                                         consorsiumRoles=org['consorsiumRoles'], collaborations=org['collaborations'])
+            newOrg.save()
+            for tag in org['tagsAndKeywords']:
+                try:
+                    currTag = Tag.objects.get(tag=tag)
+                    currTag.organizations.add(newOrg)
+                except:
+                    currTag = Tag(tag=tag)
+                    currTag.save()
+                    currTag.organizations.add(newOrg)
+
+        return response
+
+    # @action(detail=False, methods=['GET'])
+    # def deleteOrgs(self, request):
+
+    # TODO: write method to update organizations
     @action(detail=False, methods=['GET'])
-    def getOrganizationsByTags(self, request):
+    def updateOrganizations(self, request):
+        response = {'Message': 'Error while updating the organizations!'}
+        allOrgs = OrganizationProfile.objects.all()
+        allOrgs = {org.pic: org for org in allOrgs}
+        status = {}
+        graph = Graph()
+        visitngQueue = collections.deque()
+        for pic in allOrgs:
+            status[pic] = 'notVisited'
+        startOrg = '999993953'
+        visitngQueue.append(startOrg)
+        status[startOrg] = 'visiting'
+        while len(visitngQueue) > 0:
+            currPic = visitngQueue.popleft()
+            try:
+                currOrg = getOrganizationProfileFromEUByPIC(currPic)
+                currAdjacent = getPicsFromCollaborations(currOrg['collaborations'])
+            except:
+                continue
+            for pic in currAdjacent:
+                if pic not in graph.vertices or status[pic] == 'notVisited':
+                    graph.add(currPic, pic)
+                    status[pic] = 'visiting'
+                    visitngQueue.append(pic)
+
+            self.addOrganization(currOrg)
+            status[currPic] = 'visited'
+
+        response = {'Message': 'Organizations updated successfully!'}
+        return Response(response, status=status.HTTP_200_OK)
+
+    def getOrganizationsByTags(self, tags):
         """
-        method to define API to get all organizations with at least one tag from the list of tags.
+        method to get all organizations with at least one tag from the list of tags.
+        :param tags: list of tags
+        :return: list of organizations objects
         """
-        tags = request.query_params['data']
-        tags = tags.split(',')
+
+        tags = set(tags)
         res = []
         allTags = Tag.objects.all()
         for tag in allTags:
             if tag.tag in tags:
                 res.extend(tag.organizations.all())
-        response = []
-        for val in res:
-            response.append({'pic': val.pic, 'legalName': val.legalName, 'businessName': val.businessName,
-                             'address': {'country': val.address.country, 'city': val.address.city}, 'description': val.description, 'classificationType': val.classificationType})
 
-        return Response(response, status=status.HTTP_200_OK)
+        return res
 
-    @action(detail=False, methods=['GET'])
-    def getOrganizationsByCountries(self, request):
+    def getOrganizationsByCountries(self, countries):
         """
-        method to define API to get all organizations that locates in one of the countries list.
+        method to get all organizations that locates in one of the countries list.
+        :param countries: list of countries
+        :return: list of organizations objects
         """
-        countries = request.query_params['data']
-        countries = countries.split(',')
+
+        countries = [val.lower() for val in countries]
+
+        countries = set(countries)
         res = []
         allOrgs = OrganizationProfile.objects.all()
+
+        if not countries:
+            return allOrgs
+
         for org in allOrgs:
-            if org.address.country in countries:
+            currCountry = org.address.country.lower()
+            if currCountry in countries:
                 res.append(org)
-        response = []
-        for val in res:
-            response.append({'pic': val.pic, 'legalName': val.legalName, 'businessName': val.businessName,
-                             'address': {'country': val.address.country, 'city': val.address.city}, 'description': val.description, 'classificationType': val.classificationType})
+
+        return res
+
+    def getOrgsByCountriesAndTags(self, tags, countries):
+        """
+        private method to get organizations from the database that have a certain tags
+        or located in one of the countries list.
+        :param tags: list of tags
+        :param countries: list of countries
+        :return: list of organizations objects
+        """
+        orgsByCountries = self.getOrganizationsByCountries(countries)
+        orgsByTags = self.getOrganizationsByTags(tags)
+
+        res = self.getOrgsIntersection(orgsByCountries, orgsByTags)
+
+        # TODO: write method to rank the orgs by tags
+
+        return res
+
+    def getOrgsIntersection(self, orgs1, orgs2):
+        """
+        private method to get intersection between two lists of organizations
+        :param orgs1: first list
+        :param orgs2: second list
+        :return: intersection list
+        """
+        res, seenPICS = [], set()
+
+        for org in orgs1:
+            seenPICS.add(org.pic)
+
+        addedPICS = set()
+        for org in orgs2:
+            if org.pic in seenPICS and org.pic not in addedPICS:
+                res.append(org)
+                addedPICS.add(org.pic)
+
+        return res
+
+    @action(detail=False, methods=['GET'])
+    def searchByCountriesAndTags(self, request):
+        """
+        generic function to search organizations from EU and participants from B2Match
+        :param request: request with tags and countries fields
+        :return:
+        """
+
+
+        data = request.query_params['data']
+        data = json.loads(data)
+        countries = data['countries']
+        tags = data['tags']
+        EURes = self.getOrgsByCountriesAndTags(tags, countries)
+        B2MATCHRes = self.getB2MATCHPartByCountriesAndTags(tags, countries)
+
+        B2MATCH = []
+        EU = []
+        for val in EURes:
+            EU.append({'pic': val.pic, 'legalName': val.legalName, 'businessName': val.businessName,
+                       'address': {'country': val.address.country, 'city': val.address.city},
+                       'description': val.description, 'classificationType': val.classificationType,
+                       'dataStatus': val.dataStatus, 'numberOfProjects': val.numberOfProjects, 'consorsiumRoles': val.consorsiumRoles})
+
+        for val in B2MATCHRes:
+            B2MATCH.append({'participant_name': val.participant_name, 'organization_name': val.organization_name,
+                            'org_type': val.org_type,
+                            'address': val.location.location, 'description': val.description,
+                            'participant_img': val.participant_img_url,
+                            'org_url': val.org_url, 'org_icon_url': val.org_icon_url})
+
+        response = {'EU': EU, 'B2MATCH': B2MATCH}
 
         return Response(response, status=status.HTTP_200_OK)
+
+    def getB2MatchParByCountry(self, countries):
+        """
+        method to get all Participants that locates in one of the countries list.
+        """
+        countries = [val.lower() for val in countries]
+        countries = set(countries)
+        res = []
+        allPart = Participants.objects.all()
+
+        if not countries:
+            return allPart
+
+        for participant in allPart:
+            currLocation = participant.location.location.lower().split(" ", 1)[1]
+            if currLocation in countries:
+                res.append(participant)
+        return res
+
+    def getParticipantsByTags(self, tags):
+        """
+        method to get all organizations with at least one tag from the list of tags.
+        """
+        tags = set(tags)
+        res = []
+        allTags = TagP.objects.all()
+        for tag in allTags:
+            if tag.tag in tags:
+                res.extend(tag.participant.all())
+        return res
+
+    def getB2MATCHPartByCountriesAndTags(self, tags, countries):
+        apaarticipantsByCountries = self.getB2MatchParByCountry(countries)
+        ParticipantsByTags = self.getParticipantsByTags(tags)
+
+        res = self.getPartIntersection(apaarticipantsByCountries, ParticipantsByTags)
+
+        # write method to rank the orgs by tags
+
+        return res
+
+    def getPartIntersection(self, par1, par2):
+        res, seenPart = [], set()
+
+        for par in par1:
+            seenPart.add(par.participant_name)
+
+        addedPar = set()
+        for par in par2:
+            if par.participant_name in seenPart and par.participant_name not in addedPar:
+                res.append(par)
+                addedPar.add(par.participant_name)
+        print(res)
+        return res
 
 
 class AddressViewSet(viewsets.ModelViewSet):
@@ -322,6 +714,38 @@ class TagViewSet(viewsets.ModelViewSet):
     serializer_class = TagSerializer
 
 
+def changeEventStatus(eventNoLongerUpcoming):
+    print("updating......\n")
+    for event in eventNoLongerUpcoming:
+        e = Event.objects.get(event_name=event.event_name)
+        e.is_upcoming = True
+        e.save()
+        print("[EVN]\t\t")
+        print(e)
+        print("\n")
+
+
+def deleteEventsTree(toupdate):
+    print("deleting......\n")
+    for event in toupdate:
+        currEvent = Event.objects.get(event_name=event.event_name)
+        # get all the participant from each Event
+
+        participants = list(currEvent.event_part.all())
+        for part in participants:
+            tags = part.tagsAndKeywordsP.all()
+            for tag in tags:
+                if tag.participant.all().count() < 2:
+                    print("[Tag]\t\t")
+                    print(tag)
+                    print("\n")
+                    tag.delete()
+            print("[Par]\t\t")
+            print(part)
+            print("\n")
+            part.delete()
+
+
 class EventViewSet(viewsets.ModelViewSet):
     queryset = Event.objects.all()
     permission_classes = [
@@ -334,6 +758,9 @@ class EventViewSet(viewsets.ModelViewSet):
 
     @action(detail=False, methods=['POST'])
     def add_all_events(self, request):
+        """
+                method to define API to iimport all the events from B2MATCH and save it to the local DB
+        """
         all_event_b2match = "https://events.b2match.com/?all=true"
         b2match = "https://events.b2match.com"
         all_events_page = requests.get(all_event_b2match)
@@ -352,11 +779,34 @@ class EventViewSet(viewsets.ModelViewSet):
                 event_title = item.find(class_="event-card-title").get_text()
             except:
                 pass
+            try:
+                event_date_ = item.find(class_="event-card-date").get_text()
+                event_date_ = event_date_.upper()
+                dt = re.findall("((([0-9]{2})| ([0-9]{1}))\ (\w+)\,\ [0-9]{4})", event_date_)
+
+                print(dt[0][0])
+            except:
+                pass
+            """try:
+                event_date = datetime.datetime.strptime(event_date_, '%d %m ,%Y ')
+            except:
+                event_date = datetime.datetime.strptime(event_date_, '%d - %d %m ,%Y ')
+            """
+            event_date = datetime.datetime.strptime(dt[0][0], '%d %B, %Y')
 
             # newEvent = B2match_event(url,date,event_title,event_location,event_text)
             # all_events_list.append(newEvent)
             url = get_the_participent_urls(url)
-            event = Event(event_name=event_title, event_url=url)
+            upComing = False
+            CurrentDate = datetime.datetime.now()
+            if CurrentDate < event_date:
+                print("hello hello hello")
+
+                upComing = True
+            print(event_date)
+            print(CurrentDate)
+            print(upComing)
+            event = Event(event_name=event_title, event_url=url, event_date=event_date, is_upcoming=upComing)
             print(url)
             event.save()
 
@@ -383,8 +833,32 @@ class EventViewSet(viewsets.ModelViewSet):
                 # newEvent = B2match_event(url,date,event_title,event_location,event_text)
                 # all_events_list.append(newEvent)
                 try:
+                    event_date_ = item.find(class_="event-card-date").get_text()
+                    event_date_ = event_date_.upper()
+                    dt = re.findall("((([0-9]{2})| ([0-9]{1}))\ (\w+)\,\ [0-9]{4})", event_date_)
+
+                    print(dt[0][0])
+
+                except:
+                    pass
+                """try:
+                    event_date = datetime.datetime.strptime(event_date_, '%d %m ,%Y ')
+                except:
+                    event_date = datetime.datetime.strptime(event_date_, '%d - %d %m ,%Y ')
+                """
+                event_date = datetime.datetime.strptime(dt[0][0], '%d %B, %Y')
+                try:
                     url = get_the_participent_urls(url)
-                    event = Event(event_name=event_title, event_url=url)
+                    upComing = False
+                    CurrentDate = datetime.datetime.now()
+                    if CurrentDate < event_date:
+                        print("hello hello hello")
+
+                        upComing = True
+                    print(event_date)
+                    print(CurrentDate)
+                    print(upComing)
+                    event = Event(event_name=event_title, event_url=url, event_date=event_date, is_upcoming=upComing)
                     event.save()
                 except:
                     pass
@@ -398,10 +872,157 @@ class EventViewSet(viewsets.ModelViewSet):
         res = Event.objects.all()
         response = []
         for val in res:
-
             response.append({'event_name': val.event_name,
                              'event_url': val.event_url})
         return Response(response, status=status.HTTP_200_OK)
+
+    @action(detail=False, methods=['POST'])
+    def update_upcoming_events(self, request):
+        """
+                updating upcoming events in the database <not tested yet>
+        """
+        newEvents = []
+        upcoming_event_b2match = "https://events.b2match.com"
+        b2match = "https://events.b2match.com"
+        upcoming_events_page = requests.get(upcoming_event_b2match)
+        upcoming_events_soup = BeautifulSoup(upcoming_events_page.content, 'html.parser')
+        itemes = upcoming_events_soup.find_all(class_="last next")
+        upcoming_events_last_page = itemes[0].find("a")['href']
+        upcoming_events = upcoming_events_soup.find_all(
+            class_="event-card-wrapper col-sm-6 col-md-4")
+
+        for item in upcoming_events:
+            try:
+                url = b2match + item.find("a")['href']
+            except:
+                pass
+            try:
+                event_title = item.find(class_="event-card-title").get_text()
+            except:
+                pass
+            try:
+                event_date_ = item.find(class_="event-card-date").get_text()
+                event_date_ = event_date_.upper()
+                dt = re.findall("((([0-9]{2})| ([0-9]{1}))\ (\w+)\,\ [0-9]{4})", event_date_)
+
+                print(dt[0][0])
+            except:
+                pass
+            """try:
+                event_date = datetime.datetime.strptime(event_date_, '%d %m ,%Y ')
+            except:
+                event_date = datetime.datetime.strptime(event_date_, '%d - %d %m ,%Y ')
+            """
+            event_date = datetime.datetime.strptime(dt[0][0], '%d %B, %Y')
+
+            # newEvent = B2match_event(url,date,event_title,event_location,event_text)
+            # all_events_list.append(newEvent)
+            url = get_the_participent_urls(url)
+            upComing = False
+            CurrentDate = datetime.datetime.now()
+            if CurrentDate < event_date:
+                print("hello hello hello")
+                upComing = True
+            print(event_date)
+            print(CurrentDate)
+            print(upComing)
+            event = Event(event_name=event_title, event_url=url, event_date=event_date, is_upcoming=upComing)
+            newEvents.append(event)
+            print(url)
+            # event.save()
+
+        curr_page = "/?page="
+        i = 2
+        while 1:
+            upcoming_events_page = requests.get(b2match + curr_page + str(i))
+            upcoming_events_soup = BeautifulSoup(
+                upcoming_events_page.content, 'html.parser')
+            upcoming_events = upcoming_events_soup.find_all(
+                class_="event-card-wrapper col-sm-6 col-md-4")
+            print(i)
+            for item in upcoming_events:
+                try:
+                    url = b2match + item.find("a")['href']
+                except:
+                    pass
+                try:
+                    event_title = item.find(
+                        class_="event-card-title").get_text()
+                except:
+                    pass
+
+                # newEvent = B2match_event(url,date,event_title,event_location,event_text)
+                # all_events_list.append(newEvent)
+                try:
+                    event_date_ = item.find(class_="event-card-date").get_text()
+                    event_date_ = event_date_.upper()
+                    dt = re.findall("((([0-9]{2})| ([0-9]{1}))\ (\w+)\,\ [0-9]{4})", event_date_)
+
+                    print(dt[0][0])
+
+                except:
+                    pass
+                """try:
+                    event_date = datetime.datetime.strptime(event_date_, '%d %m ,%Y ')
+                except:
+                    event_date = datetime.datetime.strptime(event_date_, '%d - %d %m ,%Y ')
+                """
+                event_date = datetime.datetime.strptime(dt[0][0], '%d %B, %Y')
+                try:
+                    url = get_the_participent_urls(url)
+                    upComing = False
+                    CurrentDate = datetime.datetime.now()
+                    if CurrentDate < event_date:
+                        print("hello hello hello")
+
+                        upComing = True
+                    print(event_date)
+                    print(CurrentDate)
+                    print(upComing)
+                    event = Event(event_name=event_title, event_url=url, event_date=event_date, is_upcoming=upComing)
+                    newEvents.append(event)
+                    # event.save()
+                except:
+                    pass
+
+                # all_events_list.append({"naem": event_title, "date": date, "location": event_location, "url": url, "event_text": event_text})
+
+            if (curr_page + str(i) == upcoming_events_last_page):
+                break
+
+            i += 1
+        myEvents = list(Event.objects.filter(is_upcoming=True))
+
+        toupdate = []
+        eventNoLongerUpcoming = []
+        print(len(myEvents))
+        print(len(newEvents))
+        newEvents2 = []
+        for e in newEvents:
+            newEvents2.append(e.event_name)
+
+        for event in myEvents:
+            if event.event_name not in newEvents2:
+                eventNoLongerUpcoming.append(event)
+            else:
+                toupdate.append(event)
+        print(toupdate)
+        print("\n\n")
+        print(eventNoLongerUpcoming)
+
+        changeEventStatus(eventNoLongerUpcoming)
+
+        deleteEventsTree(toupdate)
+
+        for e in toupdate:
+            e.delete()
+
+        for e in newEvents:
+            e.save()
+        print("Adding new Participants....\n")
+        add_Participants_from_Upcoming_Event()
+
+        return Response([{'message': 'done, B2MATCH Reposutory updated'}], status=status.HTTP_200_OK)
 
 
 class ParticipantsViewSet(viewsets.ModelViewSet):
@@ -413,6 +1034,9 @@ class ParticipantsViewSet(viewsets.ModelViewSet):
 
     @action(detail=False, methods=['POST'])
     def add_Participants_from_Event(self, request):
+        """
+                method to define API to import all the participants from the events we have in our DB and save them to the local DB
+        """
         events = Event.objects.all()
         for event in events:
             print(event.event_name)
@@ -436,10 +1060,12 @@ class ParticipantsViewSet(viewsets.ModelViewSet):
                 print("xD" * 10)
                 try:
                     participant = Participants(participant_name=part_temp[0], participant_img_url=part_temp[1],
-                                               organization_name=part_temp[2], org_type=part_temp[4], org_url=part_temp[5],
+                                               organization_name=part_temp[2], org_type=part_temp[4],
+                                               org_url=part_temp[5],
                                                org_icon_url=part_temp[6], description=part_temp[8], location=location)
 
                     participant.save()
+                    event.event_part.add(participant)
                 except:
                     continue
                 print("xD" * 10)

@@ -1,23 +1,26 @@
 {
-  "name": "partner-finder",
+  "name": "project",
   "version": "0.1.0",
   "private": true,
   "dependencies": {
-    "@material-ui/core": "^4.8.3",
+    "3": "^2.1.0",
+    "5": "0.0.1",
+    "@material-ui/core": "^4.9.12",
+    "@material-ui/icons": "^4.9.1",
     "@testing-library/jest-dom": "^4.2.4",
-    "@testing-library/react": "^9.4.0",
+    "@testing-library/react": "^9.5.0",
     "@testing-library/user-event": "^7.2.1",
-    "elemental": "^0.6.1",
-    "material-table": "^1.55.0",
-    "react": "^16.12.0",
+    "container": "0.0.2",
+    "material-table": "^1.57.2",
+    "material-ui": "^0.20.2",
+    "react": "^16.13.1",
     "react-dnd": "^5.0.0",
     "react-dnd-html5-backend": "^3.0.2",
     "react-dom": "^16.12.0",
-    "react-input-autosize": "^2.2.2",
-    "react-scripts": "3.3.0",
+    "react-phone-number-input": "^3.0.22",
+    "react-scripts": "3.4.1",
     "react-select-country-list": "^2.1.2",
-    "react-tag-input": "^6.4.2",
-    "react-tagsinput": "^3.19.0"
+    "react-tag-input": "^6.4.2"
   },
   "scripts": {
     "start": "react-scripts start",
@@ -39,11 +42,5 @@
       "last 1 firefox version",
       "last 1 safari version"
     ]
-  },
-  "devDependencies": {
-    "css-loader": "^3.4.2",
-    "less": "^3.10.3",
-    "less-loader": "^5.0.0",
-    "style-loader": "^1.1.3"
   }
 }

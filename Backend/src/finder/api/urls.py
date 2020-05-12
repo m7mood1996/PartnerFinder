@@ -7,8 +7,7 @@ router = routers.DefaultRouter()
 router.register('organizations', OrganizationProfileViewSet)
 router.register('events', EventViewSet)
 router.register('participants', ParticipantsViewSet)
-
-
+router.register('genericSearch', OrganizationProfileViewSet)
 
 urlpatterns = [
     path('', include(router.urls))

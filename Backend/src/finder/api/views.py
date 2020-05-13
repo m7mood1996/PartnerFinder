@@ -31,7 +31,7 @@ def NLP_Processor(documents):
     """
     function to make new corpus for a certain set of documents
     :param documents: list of strings
-    :return: Corpus of the documents
+    :return: Corpus of the documents - list of lists of pairs (int, int) - (token id, token freq)
     """
     tokens = [process_Document(doc) for doc in documents]
 
@@ -42,7 +42,7 @@ def NLP_Processor(documents):
 
 def process_Document(document):
     """
-    function to process a certain document which tokenize and make lower case for the current document
+    function to process a certain document which tokenize, stem, and make lower case for the current document
     :param document: string
     :return: list of tokens
     """
@@ -96,7 +96,7 @@ def add_documents(index, documents):
     function to add new documents to existent index
     :param index: current index
     :param documents: list of strings
-    :return: new index
+    :return: updated index
     """
     corpus = NLP_Processor(documents)
     for doc in corpus:
@@ -131,11 +131,17 @@ def build_index(path):
 
 
 def get_document_from_org(org):
+    """
+    function to take string attributes which are description and tags and keywords from EU organization
+    :param org: EU organization object
+    :return: string of description and tags and keywords
+    """
     res = [org['description']]
     for tag in org['tagsAndKeywords']:
         res.append(tag)
 
     return ' '.join(res)
+
 
 def get_document_from_par(par, tags):
     res = [par.description]
@@ -159,7 +165,7 @@ def getPicsFromCollaborations(collaborations):
 
 def getNumOfProjects(pic):
     """
-    function to get number of projects for a certain organization
+    function to get number of projects for a certain EU organization
     :param pic: id of the organization
     :return: number of projects for this organization
     """
@@ -170,7 +176,6 @@ def getNumOfProjects(pic):
         response = requests.get(url)
     except requests.exceptions.RequestException as error:
         print("Error - ", error)
-        exit(0)
 
     return len(response.json()['publicProjects'])
 
@@ -187,15 +192,14 @@ def getOrganizationProfileFromEUByPIC(pic):
         response = requests.get(url)
     except requests.exceptions.RequestException as error:
         print("Error - ", error)
-        exit(0)
 
     return getRelatedAttributes(response.json()['organizationProfile'])
 
 
 def getRelatedAttributes(obj):
     """
-    method to get the related fields from an EU organization object
-    :param obj: obj from EU
+    function to get the related fields from an EU organization object
+    :param obj: EU organization
     :return: obj with the related fields
     """
     resObj = {}
@@ -366,7 +370,8 @@ def getParticipentDATA(url_):
     except:
         pass
 
-    childcount = int(driver.execute_script("return document.getElementsByClassName(\"personal-info-holder\")[0].childElementCount"))
+    childcount = int(
+        driver.execute_script("return document.getElementsByClassName(\"personal-info-holder\")[0].childElementCount"))
     list_ = []
     i = 0
 
@@ -482,6 +487,10 @@ def translateData(data):
 
 
 class Graph:
+    """
+    class to define undirected unweighted graph
+    """
+
     def __init__(self):
         self.graph = collections.defaultdict(set)
         self.vertices = set()
@@ -541,7 +550,7 @@ class OrganizationProfileViewSet(viewsets.ModelViewSet):
         """
         function to add new organization to the index
         :param index: current index
-        :param org: new organization
+        :param org: new EU organization
         :return: updated index
         """
 
@@ -556,15 +565,46 @@ class OrganizationProfileViewSet(viewsets.ModelViewSet):
     def addOrganization(self, org):
         """
         method to add new organization to the local db
-        :param org:
-        :return:
+        :param org: EU organization
+        :return: True/False
         """
+        ATTRIBUTES = {'description', 'tagsAndKeywords', 'dataStatus',
+                      'numberOfProjects', 'consorsiumRoles'}
         response = True
         org['collaborations'] = len(org['collaborations'])
         org = translateData(org)
         try:
-            OrganizationProfile.objects.get(pic=org['pic'])
-            response = False
+            obj = OrganizationProfile.objects.get(pic=org['pic'])
+            updated = False
+            for atr in ATTRIBUTES:
+                if atr != 'tagsAndKeywords':
+                    if org[atr] != getattr(obj, atr):
+                        setattr(obj, atr, org[atr])
+                        updated = True
+
+            oldTags = Tag.objects.filter(organizations=obj)
+            tags = set()
+            for tag in oldTags:
+                tags.add(tag.tag)
+            newTags = set()
+            if len(tags) != len(org['tagsAndKeywords']):
+                updated = True
+                for tag in org['tagsAndKeywords']:
+                    if tag not in tags:
+                        newTags.add(tag)
+
+            for tag in newTags:
+                try:
+                    currTag = Tag.objects.get(tag=tag)
+                    currTag.organizations.add(obj)
+                except:
+                    currTag = Tag(tag=tag)
+                    currTag.save()
+                    currTag.organizations.add(obj)
+
+            if updated:
+                obj.save()
+                response = True
         except:
             if 'address' in org:
                 if 'country' in org['address'] and 'city' in org['address']:
@@ -588,15 +628,16 @@ class OrganizationProfileViewSet(viewsets.ModelViewSet):
 
         return response
 
-    # TODO: write method to update organizations
     @action(detail=False, methods=['GET'])
     def updateOrganizations(self, request):
+        """
+        method to define API to update organizations in the local DB
+        :param request: HTTP request
+        :return: HTTP Response
+        """
 
-        OrganizationProfile.objects.all().delete()
+        print("********** START UPDATING EU DB **********")
         MapIds.objects.all().delete()
-        Address.objects.all().delete()
-        Tag.objects.all().delete()
-
         response = {'Message': 'Error while updating the organizations!'}
         try:
             index = load_index('EU_Index')
@@ -833,9 +874,7 @@ def changeEventStatus(eventNoLongerUpcoming):
         e.save()
 
 
-
 def deleteEventsTree(toupdate):
-
     for event in toupdate:
         currEvent = Event.objects.get(event_name=event.event_name)
         # get all the participant from each Event
@@ -845,7 +884,6 @@ def deleteEventsTree(toupdate):
             tags = part.tagsAndKeywordsP.all()
             for tag in tags:
                 if tag.participant.all().count() < 2:
-
                     tag.delete()
 
             part.delete()
@@ -1043,7 +1081,6 @@ class EventViewSet(viewsets.ModelViewSet):
                 except:
                     pass
 
-
             if (curr_page + str(i) == upcoming_events_last_page):
                 break
 
@@ -1083,7 +1120,6 @@ class ParticipantsViewSet(viewsets.ModelViewSet):
         permissions.AllowAny
     ]
     serializer_class = ParticipantsSerializer
-
 
     def add_par_to_index(self, index, par, tags):
         """
@@ -1140,13 +1176,15 @@ class ParticipantsViewSet(viewsets.ModelViewSet):
                         currTag.participant.add(participant)
 
                 try:
-                    index = load_index('/Users/mahmoodnael/PycharmProjects/PartnerFinderApril/Backend/src/B2MATCH_Index')
+                    index = load_index(
+                        '/Users/mahmoodnael/PycharmProjects/PartnerFinderApril/Backend/src/B2MATCH_Index')
                     print("index loaded......")
                 except:
                     index = None
 
                 if index is None:
-                    index = build_index('/Users/mahmoodnael/PycharmProjects/PartnerFinderApril/Backend/src/B2MATCH_Index')
+                    index = build_index(
+                        '/Users/mahmoodnael/PycharmProjects/PartnerFinderApril/Backend/src/B2MATCH_Index')
                     print("index built....")
 
                 index = self.add_par_to_index(index, participant, part_temp[7])

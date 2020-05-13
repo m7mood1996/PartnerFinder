@@ -7,6 +7,9 @@ __pycache__/
 # C extensions
 *.so
 
+Backend/src/EU_Index
+Backend/src/EU_Index.*
+
 # Distribution / packaging
 .Python
 build/

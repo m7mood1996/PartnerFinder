@@ -59,6 +59,11 @@ class Location(models.Model):
         return self.location
 
 
+class MapIDsB2match(models.Model):
+    originalID = models.IntegerField(unique=True)
+    indexID = models.IntegerField(unique=True)
+
+
 class Participants(models.Model):
     """
         Participants from B2MATCH events contains: name, organization name, location, organization url,

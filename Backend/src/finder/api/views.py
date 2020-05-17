@@ -5,7 +5,8 @@ from rest_framework import viewsets, permissions, status
 from rest_framework.response import Response
 from rest_framework.decorators import action
 from time import sleep
-from ..models import OrganizationProfile, Address, Tag, Event, TagP, Participants, Location, MapIds, MapIDsB2match
+from ..models import OrganizationProfile, Address, Tag, Event, TagP, Participants, Location, MapIds, MapIDsB2match, \
+    MapIDsB2matchUpcoming
 from .serializers import OrganizationProfileSerializer, AddressSerializer, TagSerializer, EventSerializer, \
     ParticipantsSerializer, LocationSerializer, TagPSerializer
 import json

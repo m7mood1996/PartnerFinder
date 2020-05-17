@@ -1,6 +1,12 @@
 from rest_framework import serializers
 
-from ..models import OrganizationProfile, Address, Tag, Event, Participants, Location, TagP
+from ..models import OrganizationProfile, Address, Tag, Event, Participants, Location, TagP, MapIds
+
+
+class MapIdsSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = MapIds
+        fields = '__all__'
 
 
 class AddressSerializer(serializers.ModelSerializer):
@@ -25,7 +31,6 @@ class OrganizationProfileSerializer(serializers.ModelSerializer):
 
 
 class EventSerializer(serializers.ModelSerializer):
-
     class Meta:
         model = Event
         fields = ['_id', 'event_name', 'event_url']

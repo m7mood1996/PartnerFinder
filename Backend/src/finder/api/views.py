@@ -5,8 +5,7 @@ from rest_framework import viewsets, permissions, status
 from rest_framework.response import Response
 from rest_framework.decorators import action
 from time import sleep
-from ..models import OrganizationProfile, Address, Tag, Event, TagP, Participants, Location, MapIds, MapIDsB2match, \
-    MapIDsB2matchUpcoming
+from ..models import OrganizationProfile, Address, Tag, Event, TagP, Participants, Location, MapIds, MapIDsB2match
 from .serializers import OrganizationProfileSerializer, AddressSerializer, TagSerializer, EventSerializer, \
     ParticipantsSerializer, LocationSerializer, TagPSerializer
 import json
@@ -97,7 +96,7 @@ def add_documents(index, documents):
     function to add new documents to existent index
     :param index: current index
     :param documents: list of strings
-    :return: new index
+    :return: updated index
     """
     corpus = NLP_Processor(documents)
     for doc in corpus:
@@ -131,8 +130,12 @@ def build_index(path):
     return gensim.similarities.Similarity(path, tfidf[corpus], num_features=0)  # build the index
 
 
-
 def get_document_from_org(org):
+    """
+    function to take string attributes which are description and tags and keywords from EU organization
+    :param org: EU organization object
+    :return: string of description and tags and keywords
+    """
     res = [org['description']]
     for tag in org['tagsAndKeywords']:
         res.append(tag)
@@ -161,7 +164,7 @@ def getPicsFromCollaborations(collaborations):
 
 def getNumOfProjects(pic):
     """
-    function to get number of projects for a certain organization
+    function to get number of projects for a certain EU organization
     :param pic: id of the organization
     :return: number of projects for this organization
     """
@@ -196,8 +199,8 @@ def getOrganizationProfileFromEUByPIC(pic):
 
 def getRelatedAttributes(obj):
     """
-    method to get the related fields from an EU organization object
-    :param obj: obj from EU
+    function to get the related fields from an EU organization object
+    :param obj: EU organization
     :return: obj with the related fields
     """
     resObj = {}
@@ -483,7 +486,6 @@ def getParticipentDATA(url_):
     return name, img_src, org_name, location, org_type, org_url, org_logo, tags, org_description
 
 
-
 def translateData(data):
     """
     function to translate non english data in object into english
@@ -501,6 +503,10 @@ def translateData(data):
 
 
 class Graph:
+    """
+    class to define undirected unweighted graph
+    """
+
     def __init__(self):
         self.graph = collections.defaultdict(set)
         self.vertices = set()
@@ -560,7 +566,7 @@ class OrganizationProfileViewSet(viewsets.ModelViewSet):
         """
         function to add new organization to the index
         :param index: current index
-        :param org: new organization
+        :param org: new EU organization
         :return: updated index
         """
 
@@ -575,15 +581,46 @@ class OrganizationProfileViewSet(viewsets.ModelViewSet):
     def addOrganization(self, org):
         """
         method to add new organization to the local db
-        :param org:
-        :return:
+        :param org: EU organization
+        :return: True/False
         """
+        ATTRIBUTES = {'description', 'tagsAndKeywords', 'dataStatus',
+                      'numberOfProjects', 'consorsiumRoles'}
         response = True
         org['collaborations'] = len(org['collaborations'])
         org = translateData(org)
         try:
-            OrganizationProfile.objects.get(pic=org['pic'])
-            response = False
+            obj = OrganizationProfile.objects.get(pic=org['pic'])
+            updated = False
+            for atr in ATTRIBUTES:
+                if atr != 'tagsAndKeywords':
+                    if org[atr] != getattr(obj, atr):
+                        setattr(obj, atr, org[atr])
+                        updated = True
+
+            oldTags = Tag.objects.filter(organizations=obj)
+            tags = set()
+            for tag in oldTags:
+                tags.add(tag.tag)
+            newTags = set()
+            if len(tags) != len(org['tagsAndKeywords']):
+                updated = True
+                for tag in org['tagsAndKeywords']:
+                    if tag not in tags:
+                        newTags.add(tag)
+
+            for tag in newTags:
+                try:
+                    currTag = Tag.objects.get(tag=tag)
+                    currTag.organizations.add(obj)
+                except:
+                    currTag = Tag(tag=tag)
+                    currTag.save()
+                    currTag.organizations.add(obj)
+
+            if updated:
+                obj.save()
+                response = True
         except:
             if 'address' in org:
                 if 'country' in org['address'] and 'city' in org['address']:
@@ -610,6 +647,11 @@ class OrganizationProfileViewSet(viewsets.ModelViewSet):
     # TODO: write method to update organizations
     @action(detail=False, methods=['GET'])
     def updateOrganizations(self, request):
+        """
+        method to define API to update organizations in the local DB
+        :param request: HTTP request
+        :return: HTTP Response
+        """
 
         OrganizationProfile.objects.all().delete()
         MapIds.objects.all().delete()

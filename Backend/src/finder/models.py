@@ -64,6 +64,11 @@ class MapIDsB2match(models.Model):
     indexID = models.IntegerField(unique=True)
 
 
+class MapIDsB2matchUpcoming(models.Model):
+    originalID = models.IntegerField(unique=True)
+    indexID = models.IntegerField(unique=True)
+
+
 class Participants(models.Model):
     """
         Participants from B2MATCH events contains: name, organization name, location, organization url,
@@ -89,8 +94,7 @@ class Participants(models.Model):
 
 class TagP(models.Model):
     tag = models.CharField(max_length=200, blank=True, null=True)
-    participant = models.ManyToManyField(
-        Participants, blank=True, related_name='tagsAndKeywordsP')
+    participant = models.ManyToManyField( Participants, blank=True, related_name='tagsAndKeywordsP')
 
     def __str__(self):
         return self.tag

@@ -5,7 +5,8 @@ from rest_framework import viewsets, permissions, status
 from rest_framework.response import Response
 from rest_framework.decorators import action
 from time import sleep
-from ..models import OrganizationProfile, Address, Tag, Event, TagP, Participants, Location, MapIds, MapIDsB2match
+from ..models import OrganizationProfile, Address, Tag, Event, TagP, Participants, Location, MapIds, MapIDsB2match, \
+    MapIDsB2matchUpcoming
 from .serializers import OrganizationProfileSerializer, AddressSerializer, TagSerializer, EventSerializer, \
     ParticipantsSerializer, LocationSerializer, TagPSerializer
 import json
@@ -128,6 +129,7 @@ def build_index(path):
     tfidf = gensim.models.TfidfModel(corpus)
 
     return gensim.similarities.Similarity(path, tfidf[corpus], num_features=0)  # build the index
+
 
 
 def get_document_from_org(org):
@@ -268,6 +270,22 @@ def add_Participants_from_Upcoming_Event():
                     currTag = TagP(tag=i)
                     currTag.save()
                     currTag.participant.add(participant)
+            try:
+                # this is the path for the index
+
+                index = load_index(
+                    '/Users/mahmoodnael/PycharmProjects/PartnerFinderApril/Backend/src/B2MATCH_upcoming_Index')
+                print("upcoming index loaded......")
+            except:
+                index = None
+
+            if index is None:
+                # this is the path for the index
+                index = build_index(
+                    '/Users/mahmoodnael/PycharmProjects/PartnerFinderApril/Backend/src/B2MATCH_upcoming_Index')
+                print("upcoming index built....")
+
+            index = add_par_to_index(index, participant, part_temp[7], True)
 
 
 def get_the_participent_urls(event_url):
@@ -463,6 +481,7 @@ def getParticipentDATA(url_):
     elif org_type == None:
         org_type = ""
     return name, img_src, org_name, location, org_type, org_url, org_logo, tags, org_description
+
 
 
 def translateData(data):
@@ -826,11 +845,31 @@ class TagViewSet(viewsets.ModelViewSet):
     serializer_class = TagSerializer
 
 
+def getTagsForPart(part):
+    myTags = []
+    tags =TagP.objects.filter(participants=part).tag
+    for tagp in tags:
+        myTags.append(tagp.tag)
+    return myTags
+
+
+def addEventsParToMainIndex(event):
+    partsipants = event.event_part
+
+    index = load_index('/Users/mahmoodnael/PycharmProjects/PartnerFinderApril/Backend/src/B2MATCH_Index')
+    for part in partsipants:
+        tags = getTagsForPart(part)
+        des = get_document_from_par(part,tags)
+        index = add_par_to_index(index, part, des, False)
+
+
 def changeEventStatus(eventNoLongerUpcoming):
     for event in eventNoLongerUpcoming:
         e = Event.objects.get(event_name=event.event_name)
         e.is_upcoming = True
         e.save()
+        addEventsParToMainIndex(e)
+
 
 
 
@@ -849,6 +888,7 @@ def deleteEventsTree(toupdate):
                     tag.delete()
 
             part.delete()
+    MapIDsB2matchUpcoming.objects.all().delete()
 
 
 class EventViewSet(viewsets.ModelViewSet):
@@ -965,6 +1005,9 @@ class EventViewSet(viewsets.ModelViewSet):
         """
                 updating upcoming events in the database <not tested yet>
         """
+        print("updating....")
+        index = load_index('/Users/mahmoodnael/PycharmProjects/PartnerFinderApril/Backend/src/B2MATCH_upcoming_Index')
+        index.destroy()
         newEvents = []
         upcoming_event_b2match = "https://events.b2match.com"
         b2match = "https://events.b2match.com"
@@ -1085,7 +1128,7 @@ class ParticipantsViewSet(viewsets.ModelViewSet):
     serializer_class = ParticipantsSerializer
 
 
-    def add_par_to_index(self, index, par, tags):
+    def add_par_to_index(self, index, par, tags,upcoming):
         """
         function to add new participant to the index
         :param index: current index
@@ -1096,7 +1139,10 @@ class ParticipantsViewSet(viewsets.ModelViewSet):
         originalID = par.id
 
         indexID = len(index)
-        newMap = MapIDsB2match(originalID=originalID, indexID=indexID)
+        if not upcoming:
+            newMap = MapIDsB2match(originalID=originalID, indexID=indexID)
+        else:
+            newMap = MapIDsB2matchUpcoming(originalID=originalID, indexID=indexID)
         newMap.save()
         index = add_documents(index, [doc])
         return index
@@ -1138,17 +1184,56 @@ class ParticipantsViewSet(viewsets.ModelViewSet):
                         currTag = TagP(tag=i)
                         currTag.save()
                         currTag.participant.add(participant)
+                if not event.is_upcoming:
+                    try:
+                        # this is the path for the index
+                        index = load_index('/Users/mahmoodnael/PycharmProjects/PartnerFinderApril/Backend/src/B2MATCH_Index')
+                        print("index loaded......")
+                    except:
+                        index = None
 
-                try:
-                    index = load_index('/Users/mahmoodnael/PycharmProjects/PartnerFinderApril/Backend/src/B2MATCH_Index')
-                    print("index loaded......")
-                except:
-                    index = None
+                    if index is None:
+                        # this is the path for the index
+                        index = build_index('/Users/mahmoodnael/PycharmProjects/PartnerFinderApril/Backend/src/B2MATCH_Index')
+                        print("index built....")
 
-                if index is None:
-                    index = build_index('/Users/mahmoodnael/PycharmProjects/PartnerFinderApril/Backend/src/B2MATCH_Index')
-                    print("index built....")
+                    index = self.add_par_to_index(index, participant, part_temp[7], False)
+                elif event.is_upcoming:
+                    try:
+                        # this is the path for the index
 
-                index = self.add_par_to_index(index, participant, part_temp[7])
+                        index = load_index(
+                            '/Users/mahmoodnael/PycharmProjects/PartnerFinderApril/Backend/src/B2MATCH_upcoming_Index')
+                        print("upcoming index loaded......")
+                    except:
+                        index = None
+
+                    if index is None:
+                        # this is the path for the index
+                        index = build_index(
+                            '/Users/mahmoodnael/PycharmProjects/PartnerFinderApril/Backend/src/B2MATCH_upcoming_Index')
+                        print("upcoming index built....")
+
+                    index = self.add_par_to_index(index, participant, part_temp[7],True)
 
         return Response({'message': 'done see DataBase'}, status=status.HTTP_200_OK)
+
+
+def add_par_to_index(index, par, tags, upcoming):
+    """
+    function to add new participant to the index
+    :param index: current index
+    :param par: new participant
+    :return: updated index
+    """
+    doc = get_document_from_par(par, tags)
+    originalID = par.id
+
+    indexID = len(index)
+    if not upcoming:
+        newMap = MapIDsB2match(originalID=originalID, indexID=indexID)
+    else:
+        newMap = MapIDsB2matchUpcoming(originalID=originalID, indexID=indexID)
+    newMap.save()
+    index = add_documents(index, [doc])
+    return index

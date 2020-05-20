@@ -35,7 +35,7 @@ def NLP_Processor(documents):
     :return: Corpus of the documents
     """
     tokens = [process_Document(doc) for doc in documents]
-
+    print(tokens)
     dictionary = get_ids(tokens)
 
     return build_corpus(dictionary, tokens)
@@ -278,16 +278,18 @@ def add_Participants_from_Upcoming_Event():
             try:
                 # this is the path for the index
 
-                index = load_index(
-                    '/Users/mahmoodnael/PycharmProjects/PartnerFinderApril/Backend/src/B2MATCH_upcoming_Index')
+                #index = load_index('/Users/mahmoodnael/PycharmProjects/PartnerFinderApril/Backend/src/B2MATCH_upcoming_Index')
+                index = load_index('B2MATCH_upcoming_Index')
+
                 print("upcoming index loaded......")
             except:
                 index = None
 
             if index is None:
                 # this is the path for the index
-                index = build_index(
-                    '/Users/mahmoodnael/PycharmProjects/PartnerFinderApril/Backend/src/B2MATCH_upcoming_Index')
+                #index = build_index('/Users/mahmoodnael/PycharmProjects/PartnerFinderApril/Backend/src/B2MATCH_upcoming_Index')
+                index = build_index('B2MATCH_upcoming_Index')
+
                 print("upcoming index built....")
 
             index = add_par_to_index(index, participant, part_temp[7], True)
@@ -314,9 +316,9 @@ def getParticipentFromUrl(url_):
 
     """
     ##### for MacOS
-    driver = webdriver.Chrome()
+    #driver = webdriver.Chrome()
     ##### for Windows
-    # driver = webdriver.Chrome('C:\\bin\chromedriver.exe')
+    driver = webdriver.Chrome('C:\\bin\chromedriver.exe')
     driver.get(url_)
     sleep(1)
     num_of_part = int(driver.execute_script(
@@ -368,9 +370,9 @@ def getParticipentDATA(url_):
     """
     translator = Translator()
     ### for macOS
-    driver = webdriver.Chrome()
+    #driver = webdriver.Chrome()
     ### for Windows
-    # driver = webdriver.Chrome('C:\\bin\chromedriver.exe')
+    driver = webdriver.Chrome('C:\\bin\chromedriver.exe')
 
     driver.get(url_)
     sleep(1)
@@ -835,7 +837,11 @@ class OrganizationProfileViewSet(viewsets.ModelViewSet):
             return allPart
 
         for participant in allPart:
-            currLocation = participant.location.location.lower().split(" ", 1)[1]
+
+            try:
+                currLocation = participant.location.location.lower().split(" ", 1)[1]
+            except:
+                currLocation = participant.location.location.lower()
             if currLocation in countries:
                 res.append(participant)
         return res
@@ -844,13 +850,38 @@ class OrganizationProfileViewSet(viewsets.ModelViewSet):
         """
         method to get all organizations with at least one tag from the list of tags.
         """
-        tags = set(tags)
-        res = []
-        allTags = TagP.objects.all()
-        for tag in allTags:
-            if tag.tag in tags:
-                res.extend(tag.participant.all())
-        return res
+        tags = ' '.join(tags)
+        index1 = load_index('B2MATCH_Index')  # B2match_index
+        index2 = load_index('B2MATCH_upcoming_Index')  # B2match_upcoming_index
+        corpus = NLP_Processor([tags])
+        print(corpus)
+        res1 = index1[corpus]
+        res2 = index2[corpus]
+        print(res1,res2)
+
+        res1 = process_query_result(res1)
+        res2 = process_query_result(res2)
+
+        res1 = sorted(res1, key=lambda pair: pair[1], reverse=True)
+        res1 = res1[:101]
+        res2 = sorted(res2, key=lambda pair: pair[1], reverse=True)
+        res2 = res2[:101]
+
+        res1 = [pair for pair in res1 if pair[1] > 0.3]
+        res1 = [MapIDsB2match.objects.get(indexID=pair[0]) for pair in res1]
+        res2 = [pair for pair in res2 if pair[1] > 0.3]
+        res2 = [MapIDsB2matchUpcoming.objects.get(indexID=pair[0]) for pair in res2]
+
+        finalRes = []
+        for mapId in res1:
+            finalRes.append(Participants.objects.get(pk=mapId.originalID))
+
+        for mapId in res2:
+            finalRes.append(Participants.objects.get(pk=mapId.originalID))
+
+        print(finalRes[0].description)
+        print(len(finalRes))
+        return finalRes
 
     def getB2MATCHPartByCountriesAndTags(self, tags, countries):
         apaarticipantsByCountries = self.getB2MatchParByCountry(countries)
@@ -903,7 +934,8 @@ def getTagsForPart(part):
 def addEventsParToMainIndex(event):
     partsipants = event.event_part
 
-    index = load_index('/Users/mahmoodnael/PycharmProjects/PartnerFinderApril/Backend/src/B2MATCH_Index')
+    #index = load_index('/Users/mahmoodnael/PycharmProjects/PartnerFinderApril/Backend/src/B2MATCH_Index')
+    index = load_index('B2MATCH_Index')
     for part in partsipants:
         tags = getTagsForPart(part)
         des = get_document_from_par(part, tags)
@@ -1049,7 +1081,8 @@ class EventViewSet(viewsets.ModelViewSet):
                 updating upcoming events in the database <not tested yet>
         """
         print("updating....")
-        index = load_index('/Users/mahmoodnael/PycharmProjects/PartnerFinderApril/Backend/src/B2MATCH_upcoming_Index')
+        #index = load_index('/Users/mahmoodnael/PycharmProjects/PartnerFinderApril/Backend/src/B2MATCH_upcoming_Index')
+        index = load_index('B2MATCH_upcoming_Index')
         index.destroy()
         newEvents = []
         upcoming_event_b2match = "https://events.b2match.com"
@@ -1202,8 +1235,10 @@ class ParticipantsViewSet(viewsets.ModelViewSet):
             except:
                 continue
             for item in url_arr:
-
-                part_temp = getParticipentDATA(item)
+                try:
+                    part_temp = getParticipentDATA(item)
+                except:
+                    continue
                 location = Location(location=part_temp[3])
                 location.save()
                 try:
@@ -1245,16 +1280,16 @@ class ParticipantsViewSet(viewsets.ModelViewSet):
                     try:
                         # this is the path for the index
 
-                        index = load_index(
-                            '/Users/mahmoodnael/PycharmProjects/PartnerFinderApril/Backend/src/B2MATCH_upcoming_Index')
+                        #index = load_index('/Users/mahmoodnael/PycharmProjects/PartnerFinderApril/Backend/src/B2MATCH_upcoming_Index')
+                        index = load_index('B2MATCH_upcoming_Index')
                         print("upcoming index loaded......")
                     except:
                         index = None
 
                     if index is None:
                         # this is the path for the index
-                        index = build_index(
-                            '/Users/mahmoodnael/PycharmProjects/PartnerFinderApril/Backend/src/B2MATCH_upcoming_Index')
+                        #index = build_index('/Users/mahmoodnael/PycharmProjects/PartnerFinderApril/Backend/src/B2MATCH_upcoming_Index')
+                        index = build_index('B2MATCH_upcoming_Index')
                         print("upcoming index built....")
 
                     index = self.add_par_to_index(index, participant, part_temp[7], True)

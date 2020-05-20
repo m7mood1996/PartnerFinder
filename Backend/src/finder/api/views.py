@@ -143,6 +143,7 @@ def get_document_from_org(org):
 
     return ' '.join(res)
 
+
 def get_document_from_par(par, tags):
     res = [par.description]
     for tag in tags:
@@ -388,7 +389,8 @@ def getParticipentDATA(url_):
     except:
         pass
 
-    childcount = int(driver.execute_script("return document.getElementsByClassName(\"personal-info-holder\")[0].childElementCount"))
+    childcount = int(
+        driver.execute_script("return document.getElementsByClassName(\"personal-info-holder\")[0].childElementCount"))
     list_ = []
     i = 0
 
@@ -654,10 +656,11 @@ class OrganizationProfileViewSet(viewsets.ModelViewSet):
         :return: HTTP Response
         """
 
-        OrganizationProfile.objects.all().delete()
+        print("*" * 50)
+        print("START UPDATING EU DB")
+        print("*" * 50)
+
         MapIds.objects.all().delete()
-        Address.objects.all().delete()
-        Tag.objects.all().delete()
 
         response = {'Message': 'Error while updating the organizations!'}
         try:
@@ -716,7 +719,7 @@ class OrganizationProfileViewSet(viewsets.ModelViewSet):
 
         res = process_query_result(res)
         res = sorted(res, key=lambda pair: pair[1], reverse=True)
-        res = res[:101]
+        res = res[:100]
         res = [pair for pair in res if pair[1] > 0.3]
         res = [MapIds.objects.get(indexID=pair[0]) for pair in res]
 
@@ -792,7 +795,6 @@ class OrganizationProfileViewSet(viewsets.ModelViewSet):
         :return:
         """
 
-
         data = request.query_params['data']
         data = json.loads(data)
         countries = data['countries']
@@ -806,7 +808,8 @@ class OrganizationProfileViewSet(viewsets.ModelViewSet):
             EU.append({'pic': val.pic, 'legalName': val.legalName, 'businessName': val.businessName,
                        'address': {'country': val.address.country, 'city': val.address.city},
                        'description': val.description, 'classificationType': val.classificationType,
-                       'dataStatus': val.dataStatus, 'numberOfProjects': val.numberOfProjects, 'consorsiumRoles': val.consorsiumRoles})
+                       'dataStatus': val.dataStatus, 'numberOfProjects': val.numberOfProjects,
+                       'consorsiumRoles': val.consorsiumRoles})
 
         for val in B2MATCHRes:
             B2MATCH.append({'participant_name': val.participant_name, 'organization_name': val.organization_name,
@@ -891,7 +894,7 @@ class TagViewSet(viewsets.ModelViewSet):
 
 def getTagsForPart(part):
     myTags = []
-    tags =TagP.objects.filter(participants=part).tag
+    tags = TagP.objects.filter(participants=part).tag
     for tagp in tags:
         myTags.append(tagp.tag)
     return myTags
@@ -903,7 +906,7 @@ def addEventsParToMainIndex(event):
     index = load_index('/Users/mahmoodnael/PycharmProjects/PartnerFinderApril/Backend/src/B2MATCH_Index')
     for part in partsipants:
         tags = getTagsForPart(part)
-        des = get_document_from_par(part,tags)
+        des = get_document_from_par(part, tags)
         index = add_par_to_index(index, part, des, False)
 
 
@@ -915,10 +918,7 @@ def changeEventStatus(eventNoLongerUpcoming):
         addEventsParToMainIndex(e)
 
 
-
-
 def deleteEventsTree(toupdate):
-
     for event in toupdate:
         currEvent = Event.objects.get(event_name=event.event_name)
         # get all the participant from each Event
@@ -928,7 +928,6 @@ def deleteEventsTree(toupdate):
             tags = part.tagsAndKeywordsP.all()
             for tag in tags:
                 if tag.participant.all().count() < 2:
-
                     tag.delete()
 
             part.delete()
@@ -1130,7 +1129,6 @@ class EventViewSet(viewsets.ModelViewSet):
                 except:
                     pass
 
-
             if (curr_page + str(i) == upcoming_events_last_page):
                 break
 
@@ -1171,8 +1169,7 @@ class ParticipantsViewSet(viewsets.ModelViewSet):
     ]
     serializer_class = ParticipantsSerializer
 
-
-    def add_par_to_index(self, index, par, tags,upcoming):
+    def add_par_to_index(self, index, par, tags, upcoming):
         """
         function to add new participant to the index
         :param index: current index
@@ -1231,14 +1228,16 @@ class ParticipantsViewSet(viewsets.ModelViewSet):
                 if not event.is_upcoming:
                     try:
                         # this is the path for the index
-                        index = load_index('/Users/mahmoodnael/PycharmProjects/PartnerFinderApril/Backend/src/B2MATCH_Index')
+                        index = load_index(
+                            '/Users/mahmoodnael/PycharmProjects/PartnerFinderApril/Backend/src/B2MATCH_Index')
                         print("index loaded......")
                     except:
                         index = None
 
                     if index is None:
                         # this is the path for the index
-                        index = build_index('/Users/mahmoodnael/PycharmProjects/PartnerFinderApril/Backend/src/B2MATCH_Index')
+                        index = build_index(
+                            '/Users/mahmoodnael/PycharmProjects/PartnerFinderApril/Backend/src/B2MATCH_Index')
                         print("index built....")
 
                     index = self.add_par_to_index(index, participant, part_temp[7], False)
@@ -1258,7 +1257,7 @@ class ParticipantsViewSet(viewsets.ModelViewSet):
                             '/Users/mahmoodnael/PycharmProjects/PartnerFinderApril/Backend/src/B2MATCH_upcoming_Index')
                         print("upcoming index built....")
 
-                    index = self.add_par_to_index(index, participant, part_temp[7],True)
+                    index = self.add_par_to_index(index, participant, part_temp[7], True)
 
         return Response({'message': 'done see DataBase'}, status=status.HTTP_200_OK)
 

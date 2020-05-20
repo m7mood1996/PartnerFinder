@@ -1263,16 +1263,18 @@ class ParticipantsViewSet(viewsets.ModelViewSet):
                 if not event.is_upcoming:
                     try:
                         # this is the path for the index
-                        index = load_index(
-                            '/Users/mahmoodnael/PycharmProjects/PartnerFinderApril/Backend/src/B2MATCH_Index')
+                        # index = load_index(
+                        #     '/Users/mahmoodnael/PycharmProjects/PartnerFinderApril/Backend/src/B2MATCH_Index')
+                        index = load_index('B2MATCH_Index')
                         print("index loaded......")
                     except:
                         index = None
 
                     if index is None:
                         # this is the path for the index
-                        index = build_index(
-                            '/Users/mahmoodnael/PycharmProjects/PartnerFinderApril/Backend/src/B2MATCH_Index')
+                        # index = build_index(
+                        #     '/Users/mahmoodnael/PycharmProjects/PartnerFinderApril/Backend/src/B2MATCH_Index')
+                        index = build_index('B2MATCH_Index')
                         print("index built....")
 
                     index = self.add_par_to_index(index, participant, part_temp[7], False)

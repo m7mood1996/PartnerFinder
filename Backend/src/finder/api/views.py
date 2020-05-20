@@ -5,21 +5,150 @@ from rest_framework import viewsets, permissions, status
 from rest_framework.response import Response
 from rest_framework.decorators import action
 from time import sleep
-from ..models import OrganizationProfile, Address, Tag, Event, TagP, Participants, Location
+from ..models import OrganizationProfile, Address, Tag, Event, TagP, Participants, Location, MapIds, MapIDsB2match, \
+    MapIDsB2matchUpcoming
 from .serializers import OrganizationProfileSerializer, AddressSerializer, TagSerializer, EventSerializer, \
     ParticipantsSerializer, LocationSerializer, TagPSerializer
 import json
 import requests
+import sys
 
 from bs4 import BeautifulSoup
 from selenium import webdriver
 from googletrans import Translator
+from nltk.corpus import stopwords
+from nltk.stem import PorterStemmer
+import gensim
+from nltk.tokenize import word_tokenize
 
 import re
 
 LIST_OF_ATTRIBUTES = {'pic', 'businessName', 'legalName', 'classificationType', 'description',
                       'address', 'tagsAndKeywords', 'dataStatus', 'numberOfProjects', 'consorsiumRoles',
                       'collaborations'}
+
+
+def NLP_Processor(documents):
+    """
+    function to make new corpus for a certain set of documents
+    :param documents: list of strings
+    :return: Corpus of the documents
+    """
+    tokens = [process_Document(doc) for doc in documents]
+    print(tokens)
+    dictionary = get_ids(tokens)
+
+    return build_corpus(dictionary, tokens)
+
+
+def process_Document(document):
+    """
+    function to process a certain document which tokenize and make lower case for the current document
+    :param document: string
+    :return: list of tokens
+    """
+    ps = PorterStemmer()
+    stop_words = set(stopwords.words('english'))
+    return [ps.stem(word.lower()) for word in word_tokenize(document) if
+            not word in stop_words]  # tokenizing and normalize tokens
+
+
+def get_ids(tokens):
+    """
+    a function to map each token into a unique id
+    :param tokens: list of lists of tokens
+    :return: Dictionary object
+    """
+
+    return gensim.corpora.Dictionary(tokens)  # mapping termId : term
+
+
+def build_corpus(dictionary, tokens):
+    """
+    a function to build a corpus, which is mapping each token id to its frequency
+    :param dictionary: object for mapping token -> token id
+    :param tokens: list of lists of tokens
+    :return: list of lists of tuples (id, frequency)
+    """
+
+    return [dictionary.doc2bow(lst) for lst in tokens]  # for each doc map termId : term frequency
+
+
+def process_query_result(result):
+    """
+    a function to process similarity result, it will map each document similarity percentage with the document
+    id
+    :param result: list of lists of percentages
+    :return: pair of (doc id, doc similarity percentage)
+    """
+
+    if len(result) == 0:
+        return []
+    result = result[0]
+    pairs = []
+    for idx, sim_perc in enumerate(result):
+        pairs.append((idx, sim_perc))
+
+    return pairs
+
+
+def add_documents(index, documents):
+    """
+    function to add new documents to existent index
+    :param index: current index
+    :param documents: list of strings
+    :return: updated index
+    """
+    corpus = NLP_Processor(documents)
+    for doc in corpus:
+        index.num_features += len(doc)
+    index.num_features += 1000
+    index.add_documents(corpus)
+    index.save()
+    return index
+
+
+def load_index(path):
+    """
+    function to load index from a specific directory in disk
+    :param path: path to directory
+    :return: Similarity Object
+    """
+
+    return gensim.similarities.Similarity.load(path)
+
+
+def build_index(path):
+    """
+    build an empty index in disk
+    :param path: path of the directory
+    :return: Similarity object "index"
+    """
+
+    corpus = NLP_Processor([])
+    tfidf = gensim.models.TfidfModel(corpus)
+
+    return gensim.similarities.Similarity(path, tfidf[corpus], num_features=0)  # build the index
+
+
+def get_document_from_org(org):
+    """
+    function to take string attributes which are description and tags and keywords from EU organization
+    :param org: EU organization object
+    :return: string of description and tags and keywords
+    """
+    res = [org['description']]
+    for tag in org['tagsAndKeywords']:
+        res.append(tag)
+
+    return ' '.join(res)
+
+def get_document_from_par(par, tags):
+    res = [par.description]
+    for tag in tags:
+        res.append(tag)
+
+    return ' '.join(res)
 
 
 def getPicsFromCollaborations(collaborations):
@@ -36,7 +165,7 @@ def getPicsFromCollaborations(collaborations):
 
 def getNumOfProjects(pic):
     """
-    function to get number of projects for certain organization
+    function to get number of projects for a certain EU organization
     :param pic: id of the organization
     :return: number of projects for this organization
     """
@@ -71,8 +200,8 @@ def getOrganizationProfileFromEUByPIC(pic):
 
 def getRelatedAttributes(obj):
     """
-    method to get the related fields from an EU organization object
-    :param obj: obj from EU
+    function to get the related fields from an EU organization object
+    :param obj: EU organization
     :return: obj with the related fields
     """
     resObj = {}
@@ -112,25 +241,19 @@ def add_Participants_from_Upcoming_Event():
     """
     events = Event.objects.filter(is_upcoming=True)
     for event in events:
-        print(event.event_name)
-        print(event.event_url)
+
         try:
             url_arr = getParticipentFromUrl(
                 event.event_url + "/participants")
         except:
             continue
 
-        print(url_arr, "\t\t URL ARRAY")
         for item in url_arr:
-            print("the url op participent is \t" + item)
 
-            print("in the try \t" + item)
             part_temp = getParticipentDATA(item)
 
-            print("xD" * 10)
             location = Location(location=part_temp[3])
             location.save()
-            print("xD" * 10)
             try:
                 participant = Participants(participant_name=part_temp[0], participant_img_url=part_temp[1],
                                            organization_name=part_temp[2], org_type=part_temp[4],
@@ -139,16 +262,11 @@ def add_Participants_from_Upcoming_Event():
 
                 participant.save()
                 event.event_part.add(participant)
+
             except:
                 continue
-            print("xD" * 10)
-            print("xD" * 10)
-            print(location)
-            print("xD" * 10)
-            print(
-                part_temp[7], "kkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkk" * 3)
+
             for i in part_temp[7]:
-                print(i)
                 try:
                     currTag = TagP.objects.get(tag=i)
                     currTag.participant.add(participant)
@@ -156,7 +274,24 @@ def add_Participants_from_Upcoming_Event():
                     currTag = TagP(tag=i)
                     currTag.save()
                     currTag.participant.add(participant)
-        print("what!!!!")
+            try:
+                # this is the path for the index
+
+                #index = load_index('/Users/mahmoodnael/PycharmProjects/PartnerFinderApril/Backend/src/B2MATCH_upcoming_Index')
+                index = load_index('B2MATCH_upcoming_Index')
+
+                print("upcoming index loaded......")
+            except:
+                index = None
+
+            if index is None:
+                # this is the path for the index
+                #index = build_index('/Users/mahmoodnael/PycharmProjects/PartnerFinderApril/Backend/src/B2MATCH_upcoming_Index')
+                index = build_index('B2MATCH_upcoming_Index')
+
+                print("upcoming index built....")
+
+            index = add_par_to_index(index, participant, part_temp[7], True)
 
 
 def get_the_participent_urls(event_url):
@@ -168,7 +303,6 @@ def get_the_participent_urls(event_url):
         all_events_soup = BeautifulSoup(event_page.content, 'html.parser')
         itemes = all_events_soup.find_all(class_="break-word")
         par_page = itemes[0].find("a")['href']
-        # print(par_page, "\t ", event_url)
 
         return par_page
     except:
@@ -181,9 +315,9 @@ def getParticipentFromUrl(url_):
 
     """
     ##### for MacOS
-    driver = webdriver.Chrome()
+    #driver = webdriver.Chrome()
     ##### for Windows
-    # driver = webdriver.Chrome('C:\\bin\chromedriver.exe')
+    driver = webdriver.Chrome('C:\\bin\chromedriver.exe')
     driver.get(url_)
     sleep(1)
     num_of_part = int(driver.execute_script(
@@ -197,13 +331,11 @@ def getParticipentFromUrl(url_):
     i = 0
     res = ""
     sleep(1)
-    # print(num_of_part)
     j = 0
     while (j < num_of_part):
 
         while i < 8:
             res = str(script + str(i) + script2)
-            # print(res)
             try:
                 par.append(driver.execute_script(
                     str(script + str(i) + script2)))
@@ -224,23 +356,9 @@ def getParticipentFromUrl(url_):
         soup = BeautifulSoup(item, 'html.parser')
         url = url_ + '/' + (soup.find("a")['href']).split('/')[-1]
         participent_url_arr.append(url)
-    # print(num_of_part)
-    # res = driver.execute_script("return document.getElementsByClassName(\"card card-participant card-hover flex-row\")[3].outerHTML")
-    # print(res)
+
     driver.quit()
 
-    # soup = BeautifulSoup(res, 'html.parser')
-    ##------------------------ changes end here. Rest of the things are same. ------------------ ##
-    # print(res)
-    # box = soup.find(class_="card card-participant card-hover flex-row")
-    """all_hackathons = box.find_all('div', {'class': 'challenge-card-modern'})
-    for hackathon in all_hackathons:
-        h_type = hackathon.find(
-            'div', {'class': 'challenge-type'}).text.replace('\n', '')
-        name = hackathon.find(
-            'div', {'class': 'challenge-name'}).text.replace('\n', '')
-        date = hackathon.find('div', {'class': 'date'}).text.replace('\n', '')
-    """
     return participent_url_arr
 
 
@@ -251,9 +369,9 @@ def getParticipentDATA(url_):
     """
     translator = Translator()
     ### for macOS
-    driver = webdriver.Chrome()
+    #driver = webdriver.Chrome()
     ### for Windows
-    # driver = webdriver.Chrome('C:\\bin\chromedriver.exe')
+    driver = webdriver.Chrome('C:\\bin\chromedriver.exe')
 
     driver.get(url_)
     sleep(1)
@@ -263,26 +381,20 @@ def getParticipentDATA(url_):
     img_src = None
     participant_name = None
     try:
-        print("in img find \t")
+
         img_src = soup.find("img")['src']
     except:
         pass
     try:
-        print("in participant_name find \t")
-
-        participant_name = driver.execute_script(
-            "return document.getElementsByClassName(\"name\")[0].innerText")
+        participant_name = driver.execute_script("return document.getElementsByClassName(\"name\")[0].innerText")
     except:
         pass
 
-    childcount = int(driver.execute_script(
-        "return document.getElementsByClassName(\"personal-info-holder\")[0].childElementCount"))
+    childcount = int(driver.execute_script("return document.getElementsByClassName(\"personal-info-holder\")[0].childElementCount"))
     list_ = []
     i = 0
 
-    temp0 = driver.execute_script(
-        'return document.getElementsByClassName("personal-info-holder")[0].innerText')
-    print(temp0)
+    temp0 = driver.execute_script('return document.getElementsByClassName("personal-info-holder")[0].innerText')
     temp1 = None
     if childcount == 3:
         temp1 = driver.execute_script(
@@ -296,6 +408,7 @@ def getParticipentDATA(url_):
         name = ""
     try:
         org_name = temp0[1]
+        org_name = org_name.split("at")[-1]
     except:
         org_name = ""
     try:
@@ -306,8 +419,6 @@ def getParticipentDATA(url_):
         org_url = temp1
     except:
         org_url = ""
-
-    # print(translator.translate(name).text,',',translator.translate( org_name).text,',',translator.translate(location).text,',',org_url)
 
     org_type = None
     try:
@@ -331,10 +442,8 @@ def getParticipentDATA(url_):
         pass
     try:
         src = translator.translate(org_description).src
-        print(src)
     except:
         src = "en"
-    print(src)
     tags = []
     try:
         tag_count = int(driver.execute_script(
@@ -357,26 +466,17 @@ def getParticipentDATA(url_):
         except:
             tags.append(recc_tag)
             i += 1
-    print('\nwhat was that')
-    """print(org_type)
-    print(org_url)
-    print(org_logo)
-    print(translator.translate(org_description).text)
-    src =translator.translate(org_description).src
-    for item in tags:
-        print(translator.translate(item, src=src).text)
-    print('\n')"""
+
     try:
         desc = translator.translate(org_description).text
     except:
         desc = ""
-    print("befor the last")
 
     try:
         org_type_t = translator.translate(org_type).text
     except:
         org_type_t = ""
-    print("the last")
+
     driver.quit()
     if desc != "":
         org_description = desc
@@ -406,6 +506,10 @@ def translateData(data):
 
 
 class Graph:
+    """
+    class to define undirected unweighted graph
+    """
+
     def __init__(self):
         self.graph = collections.defaultdict(set)
         self.vertices = set()
@@ -461,18 +565,65 @@ class OrganizationProfileViewSet(viewsets.ModelViewSet):
 
         return Response(response, status=status.HTTP_200_OK)
 
+    def add_org_to_index(self, index, org):
+        """
+        function to add new organization to the index
+        :param index: current index
+        :param org: new EU organization
+        :return: updated index
+        """
+
+        doc = get_document_from_org(org)
+        originalID = org['pic']
+        indexID = len(index)
+        newMap = MapIds(originalID=originalID, indexID=indexID)
+        newMap.save()
+        index = add_documents(index, [doc])
+        return index
+
     def addOrganization(self, org):
         """
-        method to add new organization with specific pic
-        :param pic:
-        :return:
+        method to add new organization to the local db
+        :param org: EU organization
+        :return: True/False
         """
+        ATTRIBUTES = {'description', 'tagsAndKeywords', 'dataStatus',
+                      'numberOfProjects', 'consorsiumRoles'}
         response = True
         org['collaborations'] = len(org['collaborations'])
         org = translateData(org)
         try:
-            OrganizationProfile.objects.get(pic=org['pic'])
-            response = False
+            obj = OrganizationProfile.objects.get(pic=org['pic'])
+            updated = False
+            for atr in ATTRIBUTES:
+                if atr != 'tagsAndKeywords':
+                    if org[atr] != getattr(obj, atr):
+                        setattr(obj, atr, org[atr])
+                        updated = True
+
+            oldTags = Tag.objects.filter(organizations=obj)
+            tags = set()
+            for tag in oldTags:
+                tags.add(tag.tag)
+            newTags = set()
+            if len(tags) != len(org['tagsAndKeywords']):
+                updated = True
+                for tag in org['tagsAndKeywords']:
+                    if tag not in tags:
+                        newTags.add(tag)
+
+            for tag in newTags:
+                try:
+                    currTag = Tag.objects.get(tag=tag)
+                    currTag.organizations.add(obj)
+                except:
+                    currTag = Tag(tag=tag)
+                    currTag.save()
+                    currTag.organizations.add(obj)
+
+            if updated:
+                obj.save()
+                response = True
         except:
             if 'address' in org:
                 if 'country' in org['address'] and 'city' in org['address']:
@@ -496,13 +647,32 @@ class OrganizationProfileViewSet(viewsets.ModelViewSet):
 
         return response
 
-    # @action(detail=False, methods=['GET'])
-    # def deleteOrgs(self, request):
-
     # TODO: write method to update organizations
     @action(detail=False, methods=['GET'])
     def updateOrganizations(self, request):
+        """
+        method to define API to update organizations in the local DB
+        :param request: HTTP request
+        :return: HTTP Response
+        """
+
+        OrganizationProfile.objects.all().delete()
+        MapIds.objects.all().delete()
+        Address.objects.all().delete()
+        Tag.objects.all().delete()
+
         response = {'Message': 'Error while updating the organizations!'}
+        try:
+            index = load_index('EU_Index')
+        except:
+            index = None
+
+        if index is None:
+            index = build_index('EU_Index')
+        else:
+            index.destroy()
+            index = build_index('EU_Index')
+
         allOrgs = OrganizationProfile.objects.all()
         allOrgs = {org.pic: org for org in allOrgs}
         status = {}
@@ -527,26 +697,40 @@ class OrganizationProfileViewSet(viewsets.ModelViewSet):
                     visitngQueue.append(pic)
 
             self.addOrganization(currOrg)
+            index = self.add_org_to_index(index, currOrg)
             status[currPic] = 'visited'
 
         response = {'Message': 'Organizations updated successfully!'}
+
         return Response(response, status=status.HTTP_200_OK)
 
+<<<<<<< HEAD
     def getOrganizationsByTags(self, tags):
+=======
+    def getOrgsByTags(self, tags):
+>>>>>>> NLP_Processor
         """
         method to get all organizations with at least one tag from the list of tags.
         :param tags: list of tags
         :return: list of organizations objects
         """
 
-        tags = set(tags)
-        res = []
-        allTags = Tag.objects.all()
-        for tag in allTags:
-            if tag.tag in tags:
-                res.extend(tag.organizations.all())
+        tags = ' '.join(tags)
+        index = load_index('EU_Index')
+        corpus = NLP_Processor([tags])
+        res = index[corpus]
 
-        return res
+        res = process_query_result(res)
+        res = sorted(res, key=lambda pair: pair[1], reverse=True)
+        res = res[:101]
+        res = [pair for pair in res if pair[1] > 0.3]
+        res = [MapIds.objects.get(indexID=pair[0]) for pair in res]
+
+        finalRes = []
+        for mapId in res:
+            finalRes.append(OrganizationProfile.objects.get(pic=mapId.originalID))
+
+        return finalRes
 
     def getOrganizationsByCountries(self, countries):
         """
@@ -580,11 +764,9 @@ class OrganizationProfileViewSet(viewsets.ModelViewSet):
         :return: list of organizations objects
         """
         orgsByCountries = self.getOrganizationsByCountries(countries)
-        orgsByTags = self.getOrganizationsByTags(tags)
+        orgsByTags = self.getOrgsByTags(tags)
 
         res = self.getOrgsIntersection(orgsByCountries, orgsByTags)
-
-        # TODO: write method to rank the orgs by tags
 
         return res
 
@@ -656,7 +838,11 @@ class OrganizationProfileViewSet(viewsets.ModelViewSet):
             return allPart
 
         for participant in allPart:
-            currLocation = participant.location.location.lower().split(" ", 1)[1]
+
+            try:
+                currLocation = participant.location.location.lower().split(" ", 1)[1]
+            except:
+                currLocation = participant.location.location.lower()
             if currLocation in countries:
                 res.append(participant)
         return res
@@ -665,13 +851,38 @@ class OrganizationProfileViewSet(viewsets.ModelViewSet):
         """
         method to get all organizations with at least one tag from the list of tags.
         """
-        tags = set(tags)
-        res = []
-        allTags = TagP.objects.all()
-        for tag in allTags:
-            if tag.tag in tags:
-                res.extend(tag.participant.all())
-        return res
+        tags = ' '.join(tags)
+        index1 = load_index('B2MATCH_Index')  # B2match_index
+        index2 = load_index('B2MATCH_upcoming_Index')  # B2match_upcoming_index
+        corpus = NLP_Processor([tags])
+        print(corpus)
+        res1 = index1[corpus]
+        res2 = index2[corpus]
+        print(res1,res2)
+
+        res1 = process_query_result(res1)
+        res2 = process_query_result(res2)
+
+        res1 = sorted(res1, key=lambda pair: pair[1], reverse=True)
+        res1 = res1[:101]
+        res2 = sorted(res2, key=lambda pair: pair[1], reverse=True)
+        res2 = res2[:101]
+
+        res1 = [pair for pair in res1 if pair[1] > 0.3]
+        res1 = [MapIDsB2match.objects.get(indexID=pair[0]) for pair in res1]
+        res2 = [pair for pair in res2 if pair[1] > 0.3]
+        res2 = [MapIDsB2matchUpcoming.objects.get(indexID=pair[0]) for pair in res2]
+
+        finalRes = []
+        for mapId in res1:
+            finalRes.append(Participants.objects.get(pk=mapId.originalID))
+
+        for mapId in res2:
+            finalRes.append(Participants.objects.get(pk=mapId.originalID))
+
+        print(finalRes[0].description)
+        print(len(finalRes))
+        return finalRes
 
     def getB2MATCHPartByCountriesAndTags(self, tags, countries):
         apaarticipantsByCountries = self.getB2MatchParByCountry(countries)
@@ -694,7 +905,6 @@ class OrganizationProfileViewSet(viewsets.ModelViewSet):
             if par.participant_name in seenPart and par.participant_name not in addedPar:
                 res.append(par)
                 addedPar.add(par.participant_name)
-        print(res)
         return res
 
 
@@ -714,19 +924,37 @@ class TagViewSet(viewsets.ModelViewSet):
     serializer_class = TagSerializer
 
 
+def getTagsForPart(part):
+    myTags = []
+    tags =TagP.objects.filter(participants=part).tag
+    for tagp in tags:
+        myTags.append(tagp.tag)
+    return myTags
+
+
+def addEventsParToMainIndex(event):
+    partsipants = event.event_part
+
+    #index = load_index('/Users/mahmoodnael/PycharmProjects/PartnerFinderApril/Backend/src/B2MATCH_Index')
+    index = load_index('B2MATCH_Index')
+    for part in partsipants:
+        tags = getTagsForPart(part)
+        des = get_document_from_par(part,tags)
+        index = add_par_to_index(index, part, des, False)
+
+
 def changeEventStatus(eventNoLongerUpcoming):
-    print("updating......\n")
     for event in eventNoLongerUpcoming:
         e = Event.objects.get(event_name=event.event_name)
         e.is_upcoming = True
         e.save()
-        print("[EVN]\t\t")
-        print(e)
-        print("\n")
+        addEventsParToMainIndex(e)
+
+
 
 
 def deleteEventsTree(toupdate):
-    print("deleting......\n")
+
     for event in toupdate:
         currEvent = Event.objects.get(event_name=event.event_name)
         # get all the participant from each Event
@@ -736,14 +964,11 @@ def deleteEventsTree(toupdate):
             tags = part.tagsAndKeywordsP.all()
             for tag in tags:
                 if tag.participant.all().count() < 2:
-                    print("[Tag]\t\t")
-                    print(tag)
-                    print("\n")
+
                     tag.delete()
-            print("[Par]\t\t")
-            print(part)
-            print("\n")
+
             part.delete()
+    MapIDsB2matchUpcoming.objects.all().delete()
 
 
 class EventViewSet(viewsets.ModelViewSet):
@@ -784,30 +1009,19 @@ class EventViewSet(viewsets.ModelViewSet):
                 event_date_ = event_date_.upper()
                 dt = re.findall("((([0-9]{2})| ([0-9]{1}))\ (\w+)\,\ [0-9]{4})", event_date_)
 
-                print(dt[0][0])
+
             except:
                 pass
-            """try:
-                event_date = datetime.datetime.strptime(event_date_, '%d %m ,%Y ')
-            except:
-                event_date = datetime.datetime.strptime(event_date_, '%d - %d %m ,%Y ')
-            """
+
             event_date = datetime.datetime.strptime(dt[0][0], '%d %B, %Y')
 
-            # newEvent = B2match_event(url,date,event_title,event_location,event_text)
-            # all_events_list.append(newEvent)
             url = get_the_participent_urls(url)
             upComing = False
             CurrentDate = datetime.datetime.now()
             if CurrentDate < event_date:
-                print("hello hello hello")
-
                 upComing = True
-            print(event_date)
-            print(CurrentDate)
-            print(upComing)
+
             event = Event(event_name=event_title, event_url=url, event_date=event_date, is_upcoming=upComing)
-            print(url)
             event.save()
 
         curr_page = "/?all=true&page="
@@ -818,7 +1032,6 @@ class EventViewSet(viewsets.ModelViewSet):
                 all_events_page.content, 'html.parser')
             all_events = all_events_soup.find_all(
                 class_="event-card-wrapper col-sm-6 col-md-4")
-            print(i)
             for item in all_events:
                 try:
                     url = b2match + item.find("a")['href']
@@ -837,27 +1050,18 @@ class EventViewSet(viewsets.ModelViewSet):
                     event_date_ = event_date_.upper()
                     dt = re.findall("((([0-9]{2})| ([0-9]{1}))\ (\w+)\,\ [0-9]{4})", event_date_)
 
-                    print(dt[0][0])
 
                 except:
                     pass
-                """try:
-                    event_date = datetime.datetime.strptime(event_date_, '%d %m ,%Y ')
-                except:
-                    event_date = datetime.datetime.strptime(event_date_, '%d - %d %m ,%Y ')
-                """
+
                 event_date = datetime.datetime.strptime(dt[0][0], '%d %B, %Y')
                 try:
                     url = get_the_participent_urls(url)
                     upComing = False
                     CurrentDate = datetime.datetime.now()
                     if CurrentDate < event_date:
-                        print("hello hello hello")
-
                         upComing = True
-                    print(event_date)
-                    print(CurrentDate)
-                    print(upComing)
+
                     event = Event(event_name=event_title, event_url=url, event_date=event_date, is_upcoming=upComing)
                     event.save()
                 except:
@@ -881,6 +1085,10 @@ class EventViewSet(viewsets.ModelViewSet):
         """
                 updating upcoming events in the database <not tested yet>
         """
+        print("updating....")
+        #index = load_index('/Users/mahmoodnael/PycharmProjects/PartnerFinderApril/Backend/src/B2MATCH_upcoming_Index')
+        index = load_index('B2MATCH_upcoming_Index')
+        index.destroy()
         newEvents = []
         upcoming_event_b2match = "https://events.b2match.com"
         b2match = "https://events.b2match.com"
@@ -904,32 +1112,19 @@ class EventViewSet(viewsets.ModelViewSet):
                 event_date_ = item.find(class_="event-card-date").get_text()
                 event_date_ = event_date_.upper()
                 dt = re.findall("((([0-9]{2})| ([0-9]{1}))\ (\w+)\,\ [0-9]{4})", event_date_)
-
-                print(dt[0][0])
             except:
                 pass
-            """try:
-                event_date = datetime.datetime.strptime(event_date_, '%d %m ,%Y ')
-            except:
-                event_date = datetime.datetime.strptime(event_date_, '%d - %d %m ,%Y ')
-            """
+
             event_date = datetime.datetime.strptime(dt[0][0], '%d %B, %Y')
 
-            # newEvent = B2match_event(url,date,event_title,event_location,event_text)
-            # all_events_list.append(newEvent)
             url = get_the_participent_urls(url)
             upComing = False
             CurrentDate = datetime.datetime.now()
             if CurrentDate < event_date:
-                print("hello hello hello")
                 upComing = True
-            print(event_date)
-            print(CurrentDate)
-            print(upComing)
+
             event = Event(event_name=event_title, event_url=url, event_date=event_date, is_upcoming=upComing)
             newEvents.append(event)
-            print(url)
-            # event.save()
 
         curr_page = "/?page="
         i = 2
@@ -939,7 +1134,6 @@ class EventViewSet(viewsets.ModelViewSet):
                 upcoming_events_page.content, 'html.parser')
             upcoming_events = upcoming_events_soup.find_all(
                 class_="event-card-wrapper col-sm-6 col-md-4")
-            print(i)
             for item in upcoming_events:
                 try:
                     url = b2match + item.find("a")['href']
@@ -958,34 +1152,21 @@ class EventViewSet(viewsets.ModelViewSet):
                     event_date_ = event_date_.upper()
                     dt = re.findall("((([0-9]{2})| ([0-9]{1}))\ (\w+)\,\ [0-9]{4})", event_date_)
 
-                    print(dt[0][0])
-
                 except:
                     pass
-                """try:
-                    event_date = datetime.datetime.strptime(event_date_, '%d %m ,%Y ')
-                except:
-                    event_date = datetime.datetime.strptime(event_date_, '%d - %d %m ,%Y ')
-                """
+
                 event_date = datetime.datetime.strptime(dt[0][0], '%d %B, %Y')
                 try:
                     url = get_the_participent_urls(url)
                     upComing = False
                     CurrentDate = datetime.datetime.now()
                     if CurrentDate < event_date:
-                        print("hello hello hello")
-
                         upComing = True
-                    print(event_date)
-                    print(CurrentDate)
-                    print(upComing)
                     event = Event(event_name=event_title, event_url=url, event_date=event_date, is_upcoming=upComing)
                     newEvents.append(event)
-                    # event.save()
                 except:
                     pass
 
-                # all_events_list.append({"naem": event_title, "date": date, "location": event_location, "url": url, "event_text": event_text})
 
             if (curr_page + str(i) == upcoming_events_last_page):
                 break
@@ -995,8 +1176,6 @@ class EventViewSet(viewsets.ModelViewSet):
 
         toupdate = []
         eventNoLongerUpcoming = []
-        print(len(myEvents))
-        print(len(newEvents))
         newEvents2 = []
         for e in newEvents:
             newEvents2.append(e.event_name)
@@ -1006,9 +1185,6 @@ class EventViewSet(viewsets.ModelViewSet):
                 eventNoLongerUpcoming.append(event)
             else:
                 toupdate.append(event)
-        print(toupdate)
-        print("\n\n")
-        print(eventNoLongerUpcoming)
 
         changeEventStatus(eventNoLongerUpcoming)
 
@@ -1032,6 +1208,26 @@ class ParticipantsViewSet(viewsets.ModelViewSet):
     ]
     serializer_class = ParticipantsSerializer
 
+
+    def add_par_to_index(self, index, par, tags,upcoming):
+        """
+        function to add new participant to the index
+        :param index: current index
+        :param par: new participant
+        :return: updated index
+        """
+        doc = get_document_from_par(par, tags)
+        originalID = par.id
+
+        indexID = len(index)
+        if not upcoming:
+            newMap = MapIDsB2match(originalID=originalID, indexID=indexID)
+        else:
+            newMap = MapIDsB2matchUpcoming(originalID=originalID, indexID=indexID)
+        newMap.save()
+        index = add_documents(index, [doc])
+        return index
+
     @action(detail=False, methods=['POST'])
     def add_Participants_from_Event(self, request):
         """
@@ -1039,25 +1235,19 @@ class ParticipantsViewSet(viewsets.ModelViewSet):
         """
         events = Event.objects.all()
         for event in events:
-            print(event.event_name)
-            print(event.event_url)
+
             try:
                 url_arr = getParticipentFromUrl(
                     event.event_url + "/participants")
             except:
                 continue
-
-            print(url_arr, "\t\t URL ARRAY")
             for item in url_arr:
-                print("the url op participent is \t" + item)
-
-                print("in the try \t" + item)
-                part_temp = getParticipentDATA(item)
-
-                print("xD" * 10)
+                try:
+                    part_temp = getParticipentDATA(item)
+                except:
+                    continue
                 location = Location(location=part_temp[3])
                 location.save()
-                print("xD" * 10)
                 try:
                     participant = Participants(participant_name=part_temp[0], participant_img_url=part_temp[1],
                                                organization_name=part_temp[2], org_type=part_temp[4],
@@ -1068,14 +1258,8 @@ class ParticipantsViewSet(viewsets.ModelViewSet):
                     event.event_part.add(participant)
                 except:
                     continue
-                print("xD" * 10)
-                print("xD" * 10)
-                print(location)
-                print("xD" * 10)
-                print(
-                    part_temp[7], "kkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkk" * 3)
+
                 for i in part_temp[7]:
-                    print(i)
                     try:
                         currTag = TagP.objects.get(tag=i)
                         currTag.participant.add(participant)
@@ -1083,67 +1267,58 @@ class ParticipantsViewSet(viewsets.ModelViewSet):
                         currTag = TagP(tag=i)
                         currTag.save()
                         currTag.participant.add(participant)
-            print("what!!!!")
-        # print(events.event_name)
-        # print(events.event_url)
-        # url_arr =getParticipentFromUrl(events.event_url + "/participants")
-        # url_arr = getParticipentFromUrl('https://technology-business-cooperation-days-2020.b2match.io/participants')
-        """
-        for item in url_arr:
-            print("the url op participent is \t" + item)
-            try:
-                part_temp = getParticipentDATA(item)
-            except:
-                continue
+                if not event.is_upcoming:
+                    try:
+                        # this is the path for the index
+                        #index = load_index('/Users/mahmoodnael/PycharmProjects/PartnerFinderApril/Backend/src/B2MATCH_Index')
+                        index = load_index('B2MATCH_Index')
+                        print("index loaded......")
+                    except:
+                        index = None
 
-            print("xD" * 10)
-            location = Location(location=part_temp[3])
-            location.save()
-            print("xD" * 10)
-            participant = Participants(participant_name=part_temp[0], participant_img_url=part_temp[1],
-                                       organization_name=part_temp[2], org_type=part_temp[4], org_url=part_temp[5],
-                                       org_icon_url=part_temp[6], description=part_temp[8], location=location)
+                    if index is None:
+                        # this is the path for the index
+                        #index = build_index('/Users/mahmoodnael/PycharmProjects/PartnerFinderApril/Backend/src/B2MATCH_Index')
+                        index = build_index('B2MATCH_Index')
+                        print("index built....")
 
-            participant.save()
+                    index = self.add_par_to_index(index, participant, part_temp[7], False)
+                elif event.is_upcoming:
+                    try:
+                        # this is the path for the index
 
-            print("xD" * 10)
-            print("xD" * 10)
-            print(location)
-            print("xD" * 10)"""
-        """
-            print(
-                part_temp[7], "kkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkk" * 3)
-            for i in part_temp[7]:
-                print(i)
-                try:
-                    currTag = TagP.objects.get(tag=i)
-                    currTag.participant.add(participant)
-                except:
-                    currTag = TagP(tag=i)
-                    currTag.save()
-                    currTag.participant.add(participant)
-            """
-        """
-                  try:
-                      tag = TagP.objects.get(tag=i)
-                  except:
-                      tag = TagP(tag=i)
-                      tag.save()
-                  try:
-                      participant.tags.add(tag=tag)
+                        #index = load_index('/Users/mahmoodnael/PycharmProjects/PartnerFinderApril/Backend/src/B2MATCH_upcoming_Index')
+                        index = load_index('B2MATCH_upcoming_Index')
+                        print("upcoming index loaded......")
+                    except:
+                        index = None
 
-                  except:
-                      pass"""
-        # print("hello", part_temp[3])
+                    if index is None:
+                        # this is the path for the index
+                        #index = build_index('/Users/mahmoodnael/PycharmProjects/PartnerFinderApril/Backend/src/B2MATCH_upcoming_Index')
+                        index = build_index('B2MATCH_upcoming_Index')
+                        print("upcoming index built....")
 
-        """try:
-                location = Location.objects.get(location=part_temp[3])
-            except:"""
-        # print("xD"*10,participant)
-        #    location.save()
-        # location.participant.add(participent=participent)
-
-        # print("what!!!!")
-        # participent.location.add(location)
+                    index = self.add_par_to_index(index, participant, part_temp[7],True)
 
         return Response({'message': 'done see DataBase'}, status=status.HTTP_200_OK)
+
+
+def add_par_to_index(index, par, tags, upcoming):
+    """
+    function to add new participant to the index
+    :param index: current index
+    :param par: new participant
+    :return: updated index
+    """
+    doc = get_document_from_par(par, tags)
+    originalID = par.id
+
+    indexID = len(index)
+    if not upcoming:
+        newMap = MapIDsB2match(originalID=originalID, indexID=indexID)
+    else:
+        newMap = MapIDsB2matchUpcoming(originalID=originalID, indexID=indexID)
+    newMap.save()
+    index = add_documents(index, [doc])
+    return index

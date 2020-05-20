@@ -9,6 +9,10 @@ __pycache__/
 
 Backend/src/EU_Index
 Backend/src/EU_Index.*
+Backend/src/B2MATCH_Index
+Backend/src/B2MATCH_Index.*
+Backend/src/B2MATCH_upcoming_Index
+Backend/src/B2MATCH_upcoming_Index.*
 
 # Distribution / packaging
 .Python

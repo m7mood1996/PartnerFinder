@@ -705,10 +705,14 @@ class OrganizationProfileViewSet(viewsets.ModelViewSet):
         return Response(response, status=status.HTTP_200_OK)
 
 <<<<<<< HEAD
+<<<<<<< HEAD
     def getOrganizationsByTags(self, tags):
 =======
     def getOrgsByTags(self, tags):
 >>>>>>> NLP_Processor
+=======
+    def getOrgsByTags(self, tags):
+>>>>>>> 245c476a04e0179c3b0119c7696214a245db9bc1
         """
         method to get all organizations with at least one tag from the list of tags.
         :param tags: list of tags

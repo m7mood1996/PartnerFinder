@@ -50,6 +50,35 @@ class Tag(models.Model):
     def __str__(self):
         return self.tag
 
+class Call(models.Model):
+    """
+    class to define the data model of EU grants call.
+    """
+    ccm2Id = models.IntegerField(unique=True)
+    deadlineDate = models.IntegerField()
+    type = models.IntegerField()
+    identifier = models.CharField(max_length=200)
+    status = models.CharField(max_length=200)
+    sumbissionProcedure = models.CharField(max_length=200)
+    callTitle = models.CharField(max_length=200)
+    title = models.CharField(max_length=500)
+    hasConsortium = models.BooleanField(default=False)
+
+    def __str__(self):
+        return self.title
+
+
+class CallTag(models.Model):
+    """
+    class to define the data model of the EU calls tags.
+    """
+    tag = models.CharField(max_length=200, blank=True, null=True)
+    calls = models.ManyToManyField(
+        Call, blank=True, related_name='tagsAndKeywords')
+
+    def __str__(self):
+        return self.tag
+
 
 class Location(models.Model):
     location = models.CharField(max_length=200, blank=True)

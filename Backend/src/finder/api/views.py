@@ -6,12 +6,11 @@ from rest_framework.response import Response
 from rest_framework.decorators import action
 from time import sleep
 from ..models import OrganizationProfile, Address, Tag, Event, TagP, Participants, Location, MapIds, MapIDsB2match, \
-    MapIDsB2matchUpcoming
+    MapIDsB2matchUpcoming, Call, CallTag
 from .serializers import OrganizationProfileSerializer, AddressSerializer, TagSerializer, EventSerializer, \
     ParticipantsSerializer, LocationSerializer, TagPSerializer, CallSerializer, CallTagSerializer
 import json
 import requests
-import sys
 
 from bs4 import BeautifulSoup
 from selenium import webdriver
@@ -20,12 +19,10 @@ from nltk.corpus import stopwords
 from nltk.stem import PorterStemmer
 import gensim
 from nltk.tokenize import word_tokenize
-
+from datetime import datetime
+from dateutil.relativedelta import relativedelta
+import time
 import re
-
-LIST_OF_ATTRIBUTES = {'pic', 'businessName', 'legalName', 'classificationType', 'description',
-                      'address', 'tagsAndKeywords', 'dataStatus', 'numberOfProjects', 'consorsiumRoles',
-                      'collaborations'}
 
 
 # ----------------------- NLP Processor Funcs --------------------------------------
@@ -155,7 +152,12 @@ def get_document_from_par(par, tags):
 
 # ----------------------------------------------------------------------------------
 
-# ----------------------- Gathering/Updating EU data Funcs ----------------------------------
+# ----------------------- Gathering/Updating EU data Funcs -------------------------
+LIST_OF_ATTRIBUTES = {'pic', 'businessName', 'legalName', 'classificationType', 'description',
+                      'address', 'tagsAndKeywords', 'dataStatus', 'numberOfProjects', 'consorsiumRoles',
+                      'collaborations'}
+
+
 def getPicsFromCollaborations(collaborations):
     """
     function to get list of pics from list of organizations
@@ -747,7 +749,6 @@ class OrganizationProfileViewSet(viewsets.ModelViewSet):
 
         return Response(response, status=status.HTTP_200_OK)
 
-    # TODO: write method to update organizations
     @action(detail=False, methods=['GET'])
     def updateOrganizations(self, request):
         """
@@ -774,13 +775,9 @@ class OrganizationProfileViewSet(viewsets.ModelViewSet):
             index.destroy()
             index = build_index('EU_Index')
 
-        allOrgs = OrganizationProfile.objects.all()
-        allOrgs = {org.pic: org for org in allOrgs}
         status = {}
         graph = Graph()
         visitngQueue = collections.deque()
-        for pic in allOrgs:
-            status[pic] = 'notVisited'
         startOrg = '999993953'
         visitngQueue.append(startOrg)
         status[startOrg] = 'visiting'
@@ -939,8 +936,255 @@ class TagViewSet(viewsets.ModelViewSet):
     serializer_class = TagSerializer
 
 
+# ----------------------- Gathering open EU calls Funcs ----------------------------
+
+LIST_OF_CALLS_ATTRIBUTES = {'type', 'status', 'ccm2Id', 'identifier', 'title', 'callTitle',
+                            'deadlineDatesLong', 'tags', 'keywords', 'sumbissionProcedure'}
+
+REST_ATTRIBUTES = {'description', 'conditions', 'ccm2Id', 'focusArea', 'supportInfo', 'actions'}
+
+
+def get_related_attributes(obj):
+    """
+    function to get related attributes from call object
+    :param obj: call object
+    :return: new object with the related attributes
+    """
+    resObj = {}
+    for atr in LIST_OF_CALLS_ATTRIBUTES:
+        if atr in obj:
+            resObj[atr] = obj[atr]
+        else:
+            resObj[atr] = ''
+
+    return resObj
+
+
+def get_rest_attributes(obj):
+    """
+    function to get specific attributes for call object from another API
+    :param obj: call object
+    :return: new call object with additional attributes
+    """
+    id = obj['identifier'].lower()
+    url = 'https://ec.europa.eu/info/funding-tenders/opportunities/data/topicDetails/' + id + '.json'
+
+    try:
+        response = requests.get(url)
+        response = response.json()['TopicDetails']
+        for atr in REST_ATTRIBUTES:
+            if atr in response:
+                obj[atr] = response[atr]
+            else:
+                obj[atr] = ''
+        return obj
+    except:
+        return {}
+
+
+def get_call_to_save(obj):
+    """
+
+    :param obj:
+    :return:
+    """
+    finalObj = {}
+    for atr in LIST_OF_CALLS_ATTRIBUTES:
+        try:
+            if atr == 'tags' or atr == 'keywords':
+                if 'tagsAndKeywords' in finalObj:
+                    finalObj['tagsAndKeywords'].extend(obj[atr])
+                else:
+                    finalObj['tagsAndKeywords'] = [tag for tag in obj[atr]]
+            elif atr == 'sumbissionProcedure' or atr == 'status':
+                finalObj[atr] = obj[atr]['abbreviation']
+            elif atr == 'deadlineDatesLong':
+                finalObj[atr] = (max(obj['deadlineDatesLong']) // 1000)
+            else:
+                finalObj[atr] = obj[atr]
+        except:
+            finalObj[atr] = ''
+
+    return finalObj
+
+
+def is_valid_date(date):
+    """
+    function to check if the deadline is more than three months from now
+    :param date: deadline date
+    :return: True/False
+    """
+    try:
+        date //= 1000
+        three_months = datetime.now() + relativedelta(months=+3)
+        print(datetime.fromtimestamp(date))
+        three_months = time.mktime(three_months.timetuple())
+        return date >= three_months
+    except:
+        return False
+
+
+def is_valid_status(obj):
+    """
+    function to check if the status of a certain call is not closed yet
+    :param obj: call object
+    :return: True/False
+    """
+    try:
+        return obj['status']['abbreviation'] != 'Closed'
+    except:
+        return False
+
+
+def is_relevant_action(obj):
+    """
+    function to check if the demand tags are being included in the call object actions
+    :param obj: call object
+    :return: True/False
+    """
+    tags = ['ia', 'ria']
+    try:
+        for action in obj['actions']:
+            types = action['types']
+            curr_tags = []
+            for type in types:
+                type = type.lower()
+                type.replace('-', '')
+                type.replace(' ', '')
+                curr_tags.extend(type.lower())
+            curr_tags = ''.join(curr_tags)
+            for tag in tags:
+                if tag in curr_tags:
+                    return True
+    except:
+        return False
+
+
+def get_proposal_calls():
+    """
+    function to get all proposal calls for grants that are open and have at least three months deadline
+    :return: list of object of open calls
+    """
+    url = 'https://ec.europa.eu/info/funding-tenders/opportunities/data/referenceData/grantsTenders.json'
+
+    try:
+        response = requests.get(url)
+    except requests.exceptions.RequestException as err:
+        print(err)
+        return []
+
+    res = response.json()['fundingData']['GrantTenderObj']
+    grants = []
+    for obj in res:
+        if 'type' in obj and obj['type'] == 1:
+            obj = get_related_attributes(obj)
+            obj = get_rest_attributes(obj)
+            try:
+                check_dates = [is_valid_date(date) for date in obj['deadlineDatesLong']]
+            except:
+                continue
+
+            if any(check_dates) and is_valid_status(obj) and is_relevant_action(obj):
+                obj = get_call_to_save(obj)
+                grants.append(obj)
+                print("ADDED")
+                for atr in obj:
+                    print(atr, ':', obj[atr])
+
+    return grants
+
+
+def add_call_to_DB(call):
+    """
+    method to add new call to the local db
+    :param call: EU call
+    :return: True/False
+    """
+
+    response = True
+    call = translateData(call)
+    try:
+        Call.objects.get(ccm2Id=call['pic'])
+        response = False
+    except:
+        newCall = Call(type=call['type'], status=call['status'], ccm2Id=call['ccm2Id'],
+                       identifier=call['identifier'], title=call['title'],
+                       callTitle=call['callTitle'], deadlineDate=call['deadlineDatesLong'],
+                       sumbissionProcedure=call['sumbissionProcedure'], hasConsortium=call['hasConsortium'])
+        newCall.save()
+        for tag in call['tagsAndKeywords']:
+            try:
+                currTag = CallTag.objects.get(tag=tag)
+                currTag.calls.add(newCall)
+            except:
+                currTag = CallTag(tag=tag)
+                currTag.save()
+                currTag.calls.add(newCall)
+
+    return response
+
+
+def has_consortium(call):
+    """
+    function to check if there is a consortium for a specific EU call
+    :param call: EU call
+    :return: new call with new field hasConsortium: True/False
+    """
+
+    orgs = getOrgsByCountriesAndTags(call['tagsAndKeywords'], [])
+
+    countries = set()
+    for org in orgs:
+        countries.add(org.address.country)
+
+    call['hasConsortium'] = True if len(countries) >= 3 else False
+
+    return call
+
+
+# ----------------------------------------------------------------------------------
+
+class CallViewSet(viewsets.ModelViewSet):
+    queryset = Call.objects.all()
+    permission_classes = [
+        permissions.AllowAny
+    ]
+    serializer_class = CallSerializer
+
+    @action(detail=False, methods=['GET'])
+    def consortium_builder(self, request):
+        """
+        method to build a consortium for EU grants calls that have at least three months
+        it checks if there is a potential partners from at least three different countries
+        if yes it sends an alert to the user
+        :param request: HTTP request
+        :return: HTTP Response
+        """
+
+        print("*" * 50)
+        print("START BUILDING CONSORTIUM")
+        print("*" * 50)
+        response = {'Message': 'Error while building the consortium!'}
+
+        Call.objects.all().delete()
+        CallTag.objects.all().delete()
+        calls = get_proposal_calls()
+
+        calls_to_send = []
+
+        for call in calls:
+            call = has_consortium(call)
+            if call['hasConsortium']:
+                calls_to_send.append({'title': call['title']})
+                add_call_to_DB(call)
+
+        response = {'Message': 'Finished building consortium successfully!', 'Calls': calls_to_send}
+
+        return Response(response, status=status.HTTP_200_OK)
+
+
 class CallTagViewSet(viewsets.ModelViewSet):
-    queryset = Tag.objects.all()
+    queryset = CallTag.objects.all()
     permission_classes = [
         permissions.AllowAny
     ]

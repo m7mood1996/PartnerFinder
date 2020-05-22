@@ -8,6 +8,7 @@ router.register('organizations', OrganizationProfileViewSet)
 router.register('events', EventViewSet)
 router.register('participants', ParticipantsViewSet)
 router.register('genericSearch', OrganizationProfileViewSet)
+router.register('Calls', CallViewSet)
 
 urlpatterns = [
     path('', include(router.urls))

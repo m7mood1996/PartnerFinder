@@ -1,4 +1,3 @@
-# from django.db import models
 from djongo import models
 
 
@@ -15,6 +14,10 @@ class Address(models.Model):
 
 
 class MapIds(models.Model):
+    """
+    class to define the data model of mapping between organization id and document id that
+    relates to this organization in the inverted index
+    """
     originalID = models.IntegerField(unique=True)
     indexID = models.IntegerField(unique=True)
 
@@ -46,6 +49,35 @@ class Tag(models.Model):
     tag = models.CharField(max_length=200, blank=True, null=True)
     organizations = models.ManyToManyField(
         OrganizationProfile, blank=True, related_name='tagsAndKeywords')
+
+    def __str__(self):
+        return self.tag
+
+
+class Call(models.Model):
+    """
+    class to define the data model of proposal call from the EU DB
+    """
+    ccm2Id = models.IntegerField(unique=True)
+    deadlineDatesLong = models.IntegerField()
+    type = models.IntegerField()
+    identifier = models.CharField(max_length=200)
+    status = models.CharField(max_length=100)
+    sumbissionProcedure = models.CharField(max_length=100)
+    title = models.CharField(max_length=500)
+    callTitle = models.CharField(max_length=500)
+
+    def __str__(self):
+        return self.title
+
+
+class CallTag(models.Model):
+    """
+    class to define the data model of the EU calls tags.
+    """
+    tag = models.CharField(max_length=200, blank=True, null=True)
+    calls = models.ManyToManyField(
+        Call, blank=True, related_name='tagsAndKeywords')
 
     def __str__(self):
         return self.tag
@@ -94,7 +126,7 @@ class Participants(models.Model):
 
 class TagP(models.Model):
     tag = models.CharField(max_length=200, blank=True, null=True)
-    participant = models.ManyToManyField( Participants, blank=True, related_name='tagsAndKeywordsP')
+    participant = models.ManyToManyField(Participants, blank=True, related_name='tagsAndKeywordsP')
 
     def __str__(self):
         return self.tag

@@ -301,7 +301,6 @@ def addOrganizationToDB(org):
                   'numberOfProjects', 'consorsiumRoles'}
     response = True
     org['collaborations'] = len(org['collaborations'])
-    org = translateData(org)
     try:
         obj = OrganizationProfile.objects.get(pic=org['pic'])
         updated = False
@@ -712,43 +711,6 @@ class OrganizationProfileViewSet(viewsets.ModelViewSet):
     ]
     serializer_class = OrganizationProfileSerializer
 
-    @action(detail=False, methods=['POST'])
-    def createOrganization(self, request):
-
-        """
-        method to define API to create new organization and save it to the local DB
-        """
-
-        response = {'Message': 'Organization Created Successfully!'}
-
-        data = json.loads(request.data['data'])
-        data = translateData(data)
-
-        try:
-            OrganizationProfile.objects.get(pic=data['pic'])
-            response = {
-                'Message': 'Organization with the same PIC is already exists!'}
-        except:
-            if 'address' in data:
-                if 'country' in data['address'] and 'city' in data['address']:
-                    newAddress = Address(
-                        country=data['address']['country'], city=data['address']['city'])
-                    newAddress.save()
-            org = OrganizationProfile(pic=data['pic'], legalName=data['legalName'], businessName=data['businessName'],
-                                      classificationType=data['classificationType'], description=data['description'],
-                                      address=newAddress)
-            org.save()
-            for tag in data['tagsAndKeywords']:
-                try:
-                    currTag = Tag.objects.get(tag=tag)
-                    currTag.organizations.add(org)
-                except:
-                    currTag = Tag(tag=tag)
-                    currTag.save()
-                    currTag.organizations.add(org)
-
-        return Response(response, status=status.HTTP_200_OK)
-
     @action(detail=False, methods=['GET'])
     def updateOrganizations(self, request):
         """
@@ -794,6 +756,7 @@ class OrganizationProfileViewSet(viewsets.ModelViewSet):
                     status[pic] = 'visiting'
                     visitngQueue.append(pic)
 
+            currOrg = translateData(currOrg)
             addOrganizationToDB(currOrg)
             index = add_org_to_index(index, currOrg)
             status[currPic] = 'visited'
@@ -936,7 +899,7 @@ class TagViewSet(viewsets.ModelViewSet):
     serializer_class = TagSerializer
 
 
-# ----------------------- Gathering open EU calls Funcs ----------------------------
+# ----------------------- Consortium builder for open EU calls Funcs ---------------
 
 LIST_OF_CALLS_ATTRIBUTES = {'type', 'status', 'ccm2Id', 'identifier', 'title', 'callTitle',
                             'deadlineDatesLong', 'tags', 'keywords', 'sumbissionProcedure'}

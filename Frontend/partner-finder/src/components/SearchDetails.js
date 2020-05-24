@@ -1,21 +1,15 @@
 import React from 'react'
 import TextField from '@material-ui/core/TextField';
-import { makeStyles } from "@material-ui/core/styles";
 import Select from '@material-ui/core/Select';
 import Typography from '@material-ui/core/Typography'
 import InputLabel from '@material-ui/core/InputLabel';
 import MenuItem from '@material-ui/core/MenuItem';
 import FormControl from '@material-ui/core/FormControl';
-import Switch from '@material-ui/core/Switch';
-import FormGroup from '@material-ui/core/FormGroup';
-import FormControlLabel from '@material-ui/core/FormControlLabel';
 import Grid from "@material-ui/core/Grid";
-import Input from "@material-ui/core/Input";
 import { Button } from '@material-ui/core';
 import countryList from 'react-select-country-list'
 import 'react-phone-number-input/style.css'
 import PhoneInput from 'react-phone-number-input'
-import { formatPhoneNumber } from 'react-phone-number-input'
 import { WithContext as ReactTags } from 'react-tag-input';
 import SearchResults from './SearchResults';
 
@@ -282,6 +276,7 @@ function SearchDetails() {
                         <Grid container spacing={2} alignItems="center"  >
                             <Grid item>
                                 <TextField
+                                    style={{'width' : '40%'}}
                                     id="fields"
                                     label=""
                                     type="number"
@@ -345,8 +340,8 @@ function SearchDetails() {
                     </div>
                 </div>
             </div>
-            <div className="SearchButton">
-                <Button color="primary" round variant="contained" id="Search" onClick={() => searchCompany()}>Search</Button>
+            <div className="Buttons">
+                <Button color="primary" round variant="contained" id="ButtonText" onClick={() => searchCompany()}>Search</Button>
             </div>
             {data.length === 0 ? null :
                 <div style={{ 'margin-top': '10px' }}>

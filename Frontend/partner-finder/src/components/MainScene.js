@@ -1,5 +1,7 @@
 import React from 'react'
 import SearchDetails from './SearchDetails'
+import AlertsSettings from './AlertsSettings'
+import Updates from './Updates'
 import PropTypes from "prop-types";
 import { makeStyles } from "@material-ui/core/styles";
 import AppBar from "@material-ui/core/AppBar";
@@ -87,10 +89,10 @@ MainScene.propTypes = {
         <SearchDetails/>
         </MainScene>
         <MainScene value={value} index={1}>
-          BlaBla
+        <AlertsSettings/>
         </MainScene>
         <MainScene value={value} index={2}>
-          
+        <Updates/>
         </MainScene>
       </div>
     );

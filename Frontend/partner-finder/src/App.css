@@ -72,15 +72,54 @@ body {
   font-size: 9.5px;
 }
 
+.alert_email {
+  display: grid;
+  grid-template-columns: 0.16fr 0.2fr 0.2fr 0.13fr 0.2fr;
+}
+.res_score {
+  display: grid;
+  grid-template-columns: 0.1fr 0.2fr;
+}
+.first_sc {
+  color: black;
+  display: grid;
+  grid-template-columns: 0.12fr 0.1fr 0.12fr 0.1fr 0.12fr 0.1fr 0.12fr 0.1fr;
+}
+.second_sc {
+  color: black;
+  display: grid;
+  grid-template-columns: 0.12fr 0.1fr 0.12fr 0.1fr 0.12fr 0.1fr 0.12fr 0.1fr;
+}
+.third_sc {
+  color: black;
+  display: grid;
+  grid-template-columns:  0.12fr 0.1fr 0.12fr 0.1fr 0.12fr 0.1fr 0.12fr 0.1fr;
+}
+.fourth_sc {
+  color: black;
+  display: grid;
+  grid-template-columns: 0.12fr 0.1fr 0.12fr 0.1fr 0.12fr 0.1fr 0.12fr 0.1fr;
+}
+.line {
+  border-top : 5px solid black;
+  width : 80%;
+  margin-left : 130px;
+  margin-top: 20px;
+}
+.first_ty {
+  color: black;
+  display: grid;
+  grid-template-columns: 0.29fr 0.3fr 0.15fr 0.3fr 0.15fr 0.3fr;
+}
 .Projects {
   display: grid;
   grid-template-columns: auto;
 }
-.SearchButton {
+.Buttons {
   margin-top: 42px;
   text-align: center;
 }
-#Search {
+#ButtonText {
   width: 125px;
 }
 

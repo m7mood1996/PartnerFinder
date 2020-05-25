@@ -8,7 +8,7 @@ from time import sleep
 from ..models import OrganizationProfile, Address, Tag, Event, TagP, Participants, Location, MapIds, MapIDsB2match, \
     MapIDsB2matchUpcoming
 from .serializers import OrganizationProfileSerializer, AddressSerializer, TagSerializer, EventSerializer, \
-    ParticipantsSerializer, LocationSerializer, TagPSerializer
+    ParticipantsSerializer, LocationSerializer, TagPSerializer, CallSerializer, CallTagSerializer
 import json
 import requests
 import sys
@@ -28,6 +28,7 @@ LIST_OF_ATTRIBUTES = {'pic', 'businessName', 'legalName', 'classificationType', 
                       'collaborations'}
 
 
+# ----------------------- NLP Processor Funcs --------------------------------------
 def NLP_Processor(documents):
     """
     function to make new corpus for a certain set of documents
@@ -35,7 +36,7 @@ def NLP_Processor(documents):
     :return: Corpus of the documents
     """
     tokens = [process_Document(doc) for doc in documents]
-
+    print(tokens)
     dictionary = get_ids(tokens)
 
     return build_corpus(dictionary, tokens)
@@ -143,6 +144,7 @@ def get_document_from_org(org):
 
     return ' '.join(res)
 
+
 def get_document_from_par(par, tags):
     res = [par.description]
     for tag in tags:
@@ -151,6 +153,9 @@ def get_document_from_par(par, tags):
     return ' '.join(res)
 
 
+# ----------------------------------------------------------------------------------
+
+# ----------------------- Gathering/Updating EU data Funcs ----------------------------------
 def getPicsFromCollaborations(collaborations):
     """
     function to get list of pics from list of organizations
@@ -235,6 +240,214 @@ def getRelatedAttributes(obj):
     return resObj
 
 
+def translateData(data):
+    """
+    function to translate non english data in object into english
+    :param data: object
+    :return: translated object
+    """
+    translator = Translator()
+    for key in data:
+        if type(data[key]) == str:
+            try:
+                data[key] = translator.translate(data[key]).text
+            except:
+                continue
+    return data
+
+
+class Graph:
+    """
+    class to define undirected unweighted graph
+    """
+
+    def __init__(self):
+        self.graph = collections.defaultdict(set)
+        self.vertices = set()
+
+    def add(self, u, v):
+        self.vertices.add(u)
+        self.vertices.add(v)
+        self.graph[u].add(v)
+        self.graph[v].add(u)
+
+
+def add_org_to_index(index, org):
+    """
+    function to add new organization to the index
+    :param index: current index
+    :param org: new EU organization
+    :return: updated index
+    """
+
+    doc = get_document_from_org(org)
+    originalID = org['pic']
+    indexID = len(index)
+    newMap = MapIds(originalID=originalID, indexID=indexID)
+    newMap.save()
+    index = add_documents(index, [doc])
+    return index
+
+
+def addOrganizationToDB(org):
+    """
+    method to add new organization to the local db
+    :param org: EU organization
+    :return: True/False
+    """
+    ATTRIBUTES = {'description', 'tagsAndKeywords', 'dataStatus',
+                  'numberOfProjects', 'consorsiumRoles'}
+    response = True
+    org['collaborations'] = len(org['collaborations'])
+    org = translateData(org)
+    try:
+        obj = OrganizationProfile.objects.get(pic=org['pic'])
+        updated = False
+        for atr in ATTRIBUTES:
+            if atr != 'tagsAndKeywords':
+                if org[atr] != getattr(obj, atr):
+                    setattr(obj, atr, org[atr])
+                    updated = True
+
+        oldTags = Tag.objects.filter(organizations=obj)
+        tags = set()
+        for tag in oldTags:
+            tags.add(tag.tag)
+        newTags = set()
+        if len(tags) != len(org['tagsAndKeywords']):
+            updated = True
+            for tag in org['tagsAndKeywords']:
+                if tag not in tags:
+                    newTags.add(tag)
+
+        for tag in newTags:
+            try:
+                currTag = Tag.objects.get(tag=tag)
+                currTag.organizations.add(obj)
+            except:
+                currTag = Tag(tag=tag)
+                currTag.save()
+                currTag.organizations.add(obj)
+
+        if updated:
+            obj.save()
+            response = True
+    except:
+        if 'address' in org:
+            if 'country' in org['address'] and 'city' in org['address']:
+                newAddress = Address(
+                    country=org['address']['country'], city=org['address']['city'])
+                newAddress.save()
+        newOrg = OrganizationProfile(pic=org['pic'], legalName=org['legalName'], businessName=org['businessName'],
+                                     classificationType=org['classificationType'], description=org['description'],
+                                     address=newAddress, dataStatus=org['dataStatus'],
+                                     numberOfProjects=org['numberOfProjects'],
+                                     consorsiumRoles=org['consorsiumRoles'], collaborations=org['collaborations'])
+        newOrg.save()
+        for tag in org['tagsAndKeywords']:
+            try:
+                currTag = Tag.objects.get(tag=tag)
+                currTag.organizations.add(newOrg)
+            except:
+                currTag = Tag(tag=tag)
+                currTag.save()
+                currTag.organizations.add(newOrg)
+
+    return response
+
+
+# ----------------------------------------------------------------------------------
+
+
+# ----------------------- Processing query in EU data Funcs ------------------------
+def getOrgsByTags(tags):
+    """
+    method to get all organizations with at least one tag from the list of tags.
+    :param tags: list of tags
+    :return: list of organizations objects
+    """
+
+    tags = ' '.join(tags)
+    index = load_index('EU_Index')
+    corpus = NLP_Processor([tags])
+    res = index[corpus]
+
+    res = process_query_result(res)
+    res = sorted(res, key=lambda pair: pair[1], reverse=True)
+    res = res[:100]
+    res = [pair for pair in res if pair[1] > 0.3]
+    res = [MapIds.objects.get(indexID=pair[0]) for pair in res]
+
+    finalRes = []
+    for mapId in res:
+        finalRes.append(OrganizationProfile.objects.get(pic=mapId.originalID))
+
+    return finalRes
+
+
+def getOrganizationsByCountries(countries):
+    """
+    method to get all organizations that locates in one of the countries list.
+    :param countries: list of countries
+    :return: list of organizations objects
+    """
+
+    countries = [val.lower() for val in countries]
+
+    countries = set(countries)
+    res = []
+    allOrgs = OrganizationProfile.objects.all()
+
+    if not countries:
+        return allOrgs
+
+    for org in allOrgs:
+        currCountry = org.address.country.lower()
+        if currCountry in countries:
+            res.append(org)
+
+    return res
+
+
+def getOrgsIntersection(orgs1, orgs2):
+    """
+    private method to get intersection between two lists of organizations
+    :param orgs1: first list
+    :param orgs2: second list
+    :return: intersection list
+    """
+    res, seenPICS = [], set()
+
+    for org in orgs1:
+        seenPICS.add(org.pic)
+
+    addedPICS = set()
+    for org in orgs2:
+        if org.pic in seenPICS and org.pic not in addedPICS:
+            res.append(org)
+            addedPICS.add(org.pic)
+
+    return res
+
+
+def getOrgsByCountriesAndTags(tags, countries):
+    """
+    private method to get organizations from the database that have a certain tags
+    or located in one of the countries list.
+    :param tags: list of tags
+    :param countries: list of countries
+    :return: list of organizations objects
+    """
+    orgsByCountries = getOrganizationsByCountries(countries)
+    orgsByTags = getOrgsByTags(tags)
+
+    res = getOrgsIntersection(orgsByCountries, orgsByTags)
+
+    return res
+
+
+# ----------------------------------------------------------------------------------
+
 def add_Participants_from_Upcoming_Event():
     """
             method to define API to import all the participants from the events we have in our DB and save them to the local DB
@@ -277,16 +490,18 @@ def add_Participants_from_Upcoming_Event():
             try:
                 # this is the path for the index
 
-                index = load_index(
-                    '/Users/mahmoodnael/PycharmProjects/PartnerFinderApril/Backend/src/B2MATCH_upcoming_Index')
+                # index = load_index('/Users/mahmoodnael/PycharmProjects/PartnerFinderApril/Backend/src/B2MATCH_upcoming_Index')
+                index = load_index('B2MATCH_upcoming_Index')
+
                 print("upcoming index loaded......")
             except:
                 index = None
 
             if index is None:
                 # this is the path for the index
-                index = build_index(
-                    '/Users/mahmoodnael/PycharmProjects/PartnerFinderApril/Backend/src/B2MATCH_upcoming_Index')
+                # index = build_index('/Users/mahmoodnael/PycharmProjects/PartnerFinderApril/Backend/src/B2MATCH_upcoming_Index')
+                index = build_index('B2MATCH_upcoming_Index')
+
                 print("upcoming index built....")
 
             index = add_par_to_index(index, participant, part_temp[7], True)
@@ -313,9 +528,9 @@ def getParticipentFromUrl(url_):
 
     """
     ##### for MacOS
-    driver = webdriver.Chrome()
+    # driver = webdriver.Chrome()
     ##### for Windows
-    # driver = webdriver.Chrome('C:\\bin\chromedriver.exe')
+    driver = webdriver.Chrome('C:\\bin\chromedriver.exe')
     driver.get(url_)
     sleep(1)
     num_of_part = int(driver.execute_script(
@@ -367,9 +582,9 @@ def getParticipentDATA(url_):
     """
     translator = Translator()
     ### for macOS
-    driver = webdriver.Chrome()
+    # driver = webdriver.Chrome()
     ### for Windows
-    # driver = webdriver.Chrome('C:\\bin\chromedriver.exe')
+    driver = webdriver.Chrome('C:\\bin\chromedriver.exe')
 
     driver.get(url_)
     sleep(1)
@@ -388,7 +603,8 @@ def getParticipentDATA(url_):
     except:
         pass
 
-    childcount = int(driver.execute_script("return document.getElementsByClassName(\"personal-info-holder\")[0].childElementCount"))
+    childcount = int(
+        driver.execute_script("return document.getElementsByClassName(\"personal-info-holder\")[0].childElementCount"))
     list_ = []
     i = 0
 
@@ -487,38 +703,6 @@ def getParticipentDATA(url_):
     return name, img_src, org_name, location, org_type, org_url, org_logo, tags, org_description
 
 
-def translateData(data):
-    """
-    function to translate non english data in object into english
-    :param data: object
-    :return: translated object
-    """
-    translator = Translator()
-    for key in data:
-        if type(data[key]) == str:
-            try:
-                data[key] = translator.translate(data[key]).text
-            except:
-                continue
-    return data
-
-
-class Graph:
-    """
-    class to define undirected unweighted graph
-    """
-
-    def __init__(self):
-        self.graph = collections.defaultdict(set)
-        self.vertices = set()
-
-    def add(self, u, v):
-        self.vertices.add(u)
-        self.vertices.add(v)
-        self.graph[u].add(v)
-        self.graph[v].add(u)
-
-
 class OrganizationProfileViewSet(viewsets.ModelViewSet):
     queryset = OrganizationProfile.objects.all()
     permission_classes = [
@@ -563,88 +747,6 @@ class OrganizationProfileViewSet(viewsets.ModelViewSet):
 
         return Response(response, status=status.HTTP_200_OK)
 
-    def add_org_to_index(self, index, org):
-        """
-        function to add new organization to the index
-        :param index: current index
-        :param org: new EU organization
-        :return: updated index
-        """
-
-        doc = get_document_from_org(org)
-        originalID = org['pic']
-        indexID = len(index)
-        newMap = MapIds(originalID=originalID, indexID=indexID)
-        newMap.save()
-        index = add_documents(index, [doc])
-        return index
-
-    def addOrganization(self, org):
-        """
-        method to add new organization to the local db
-        :param org: EU organization
-        :return: True/False
-        """
-        ATTRIBUTES = {'description', 'tagsAndKeywords', 'dataStatus',
-                      'numberOfProjects', 'consorsiumRoles'}
-        response = True
-        org['collaborations'] = len(org['collaborations'])
-        org = translateData(org)
-        try:
-            obj = OrganizationProfile.objects.get(pic=org['pic'])
-            updated = False
-            for atr in ATTRIBUTES:
-                if atr != 'tagsAndKeywords':
-                    if org[atr] != getattr(obj, atr):
-                        setattr(obj, atr, org[atr])
-                        updated = True
-
-            oldTags = Tag.objects.filter(organizations=obj)
-            tags = set()
-            for tag in oldTags:
-                tags.add(tag.tag)
-            newTags = set()
-            if len(tags) != len(org['tagsAndKeywords']):
-                updated = True
-                for tag in org['tagsAndKeywords']:
-                    if tag not in tags:
-                        newTags.add(tag)
-
-            for tag in newTags:
-                try:
-                    currTag = Tag.objects.get(tag=tag)
-                    currTag.organizations.add(obj)
-                except:
-                    currTag = Tag(tag=tag)
-                    currTag.save()
-                    currTag.organizations.add(obj)
-
-            if updated:
-                obj.save()
-                response = True
-        except:
-            if 'address' in org:
-                if 'country' in org['address'] and 'city' in org['address']:
-                    newAddress = Address(
-                        country=org['address']['country'], city=org['address']['city'])
-                    newAddress.save()
-            newOrg = OrganizationProfile(pic=org['pic'], legalName=org['legalName'], businessName=org['businessName'],
-                                         classificationType=org['classificationType'], description=org['description'],
-                                         address=newAddress, dataStatus=org['dataStatus'],
-                                         numberOfProjects=org['numberOfProjects'],
-                                         consorsiumRoles=org['consorsiumRoles'], collaborations=org['collaborations'])
-            newOrg.save()
-            for tag in org['tagsAndKeywords']:
-                try:
-                    currTag = Tag.objects.get(tag=tag)
-                    currTag.organizations.add(newOrg)
-                except:
-                    currTag = Tag(tag=tag)
-                    currTag.save()
-                    currTag.organizations.add(newOrg)
-
-        return response
-
     # TODO: write method to update organizations
     @action(detail=False, methods=['GET'])
     def updateOrganizations(self, request):
@@ -654,10 +756,11 @@ class OrganizationProfileViewSet(viewsets.ModelViewSet):
         :return: HTTP Response
         """
 
-        OrganizationProfile.objects.all().delete()
+        print("*" * 50)
+        print("START UPDATING EU DB")
+        print("*" * 50)
+
         MapIds.objects.all().delete()
-        Address.objects.all().delete()
-        Tag.objects.all().delete()
 
         response = {'Message': 'Error while updating the organizations!'}
         try:
@@ -694,95 +797,13 @@ class OrganizationProfileViewSet(viewsets.ModelViewSet):
                     status[pic] = 'visiting'
                     visitngQueue.append(pic)
 
-            self.addOrganization(currOrg)
-            index = self.add_org_to_index(index, currOrg)
+            addOrganizationToDB(currOrg)
+            index = add_org_to_index(index, currOrg)
             status[currPic] = 'visited'
 
         response = {'Message': 'Organizations updated successfully!'}
 
         return Response(response, status=status.HTTP_200_OK)
-
-    def getOrgsByTags(self, tags):
-        """
-        method to get all organizations with at least one tag from the list of tags.
-        :param tags: list of tags
-        :return: list of organizations objects
-        """
-
-        tags = ' '.join(tags)
-        index = load_index('EU_Index')
-        corpus = NLP_Processor([tags])
-        res = index[corpus]
-
-        res = process_query_result(res)
-        res = sorted(res, key=lambda pair: pair[1], reverse=True)
-        res = res[:101]
-        res = [pair for pair in res if pair[1] > 0.3]
-        res = [MapIds.objects.get(indexID=pair[0]) for pair in res]
-
-        finalRes = []
-        for mapId in res:
-            finalRes.append(OrganizationProfile.objects.get(pic=mapId.originalID))
-
-        return finalRes
-
-    def getOrganizationsByCountries(self, countries):
-        """
-        method to get all organizations that locates in one of the countries list.
-        :param countries: list of countries
-        :return: list of organizations objects
-        """
-
-        countries = [val.lower() for val in countries]
-
-        countries = set(countries)
-        res = []
-        allOrgs = OrganizationProfile.objects.all()
-
-        if not countries:
-            return allOrgs
-
-        for org in allOrgs:
-            currCountry = org.address.country.lower()
-            if currCountry in countries:
-                res.append(org)
-
-        return res
-
-    def getOrgsByCountriesAndTags(self, tags, countries):
-        """
-        private method to get organizations from the database that have a certain tags
-        or located in one of the countries list.
-        :param tags: list of tags
-        :param countries: list of countries
-        :return: list of organizations objects
-        """
-        orgsByCountries = self.getOrganizationsByCountries(countries)
-        orgsByTags = self.getOrgsByTags(tags)
-
-        res = self.getOrgsIntersection(orgsByCountries, orgsByTags)
-
-        return res
-
-    def getOrgsIntersection(self, orgs1, orgs2):
-        """
-        private method to get intersection between two lists of organizations
-        :param orgs1: first list
-        :param orgs2: second list
-        :return: intersection list
-        """
-        res, seenPICS = [], set()
-
-        for org in orgs1:
-            seenPICS.add(org.pic)
-
-        addedPICS = set()
-        for org in orgs2:
-            if org.pic in seenPICS and org.pic not in addedPICS:
-                res.append(org)
-                addedPICS.add(org.pic)
-
-        return res
 
     @action(detail=False, methods=['GET'])
     def searchByCountriesAndTags(self, request):
@@ -792,12 +813,11 @@ class OrganizationProfileViewSet(viewsets.ModelViewSet):
         :return:
         """
 
-
         data = request.query_params['data']
         data = json.loads(data)
         countries = data['countries']
         tags = data['tags']
-        EURes = self.getOrgsByCountriesAndTags(tags, countries)
+        EURes = getOrgsByCountriesAndTags(tags, countries)
         B2MATCHRes = self.getB2MATCHPartByCountriesAndTags(tags, countries)
 
         B2MATCH = []
@@ -806,7 +826,8 @@ class OrganizationProfileViewSet(viewsets.ModelViewSet):
             EU.append({'pic': val.pic, 'legalName': val.legalName, 'businessName': val.businessName,
                        'address': {'country': val.address.country, 'city': val.address.city},
                        'description': val.description, 'classificationType': val.classificationType,
-                       'dataStatus': val.dataStatus, 'numberOfProjects': val.numberOfProjects, 'consorsiumRoles': val.consorsiumRoles})
+                       'dataStatus': val.dataStatus, 'numberOfProjects': val.numberOfProjects,
+                       'consorsiumRoles': val.consorsiumRoles})
 
         for val in B2MATCHRes:
             B2MATCH.append({'participant_name': val.participant_name, 'organization_name': val.organization_name,
@@ -832,7 +853,11 @@ class OrganizationProfileViewSet(viewsets.ModelViewSet):
             return allPart
 
         for participant in allPart:
-            currLocation = participant.location.location.lower().split(" ", 1)[1]
+
+            try:
+                currLocation = participant.location.location.lower().split(" ", 1)[1]
+            except:
+                currLocation = participant.location.location.lower()
             if currLocation in countries:
                 res.append(participant)
         return res
@@ -841,13 +866,38 @@ class OrganizationProfileViewSet(viewsets.ModelViewSet):
         """
         method to get all organizations with at least one tag from the list of tags.
         """
-        tags = set(tags)
-        res = []
-        allTags = TagP.objects.all()
-        for tag in allTags:
-            if tag.tag in tags:
-                res.extend(tag.participant.all())
-        return res
+        tags = ' '.join(tags)
+        index1 = load_index('B2MATCH_Index')  # B2match_index
+        index2 = load_index('B2MATCH_upcoming_Index')  # B2match_upcoming_index
+        corpus = NLP_Processor([tags])
+        print(corpus)
+        res1 = index1[corpus]
+        res2 = index2[corpus]
+        print(res1, res2)
+
+        res1 = process_query_result(res1)
+        res2 = process_query_result(res2)
+
+        res1 = sorted(res1, key=lambda pair: pair[1], reverse=True)
+        res1 = res1[:101]
+        res2 = sorted(res2, key=lambda pair: pair[1], reverse=True)
+        res2 = res2[:101]
+
+        res1 = [pair for pair in res1 if pair[1] > 0.3]
+        res1 = [MapIDsB2match.objects.get(indexID=pair[0]) for pair in res1]
+        res2 = [pair for pair in res2 if pair[1] > 0.3]
+        res2 = [MapIDsB2matchUpcoming.objects.get(indexID=pair[0]) for pair in res2]
+
+        finalRes = []
+        for mapId in res1:
+            finalRes.append(Participants.objects.get(pk=mapId.originalID))
+
+        for mapId in res2:
+            finalRes.append(Participants.objects.get(pk=mapId.originalID))
+
+        print(finalRes[0].description)
+        print(len(finalRes))
+        return finalRes
 
     def getB2MATCHPartByCountriesAndTags(self, tags, countries):
         apaarticipantsByCountries = self.getB2MatchParByCountry(countries)
@@ -889,9 +939,17 @@ class TagViewSet(viewsets.ModelViewSet):
     serializer_class = TagSerializer
 
 
+class CallTagViewSet(viewsets.ModelViewSet):
+    queryset = Tag.objects.all()
+    permission_classes = [
+        permissions.AllowAny
+    ]
+    serializer_class = CallTagSerializer
+
+
 def getTagsForPart(part):
     myTags = []
-    tags =TagP.objects.filter(participants=part).tag
+    tags = TagP.objects.filter(participants=part).tag
     for tagp in tags:
         myTags.append(tagp.tag)
     return myTags
@@ -900,10 +958,11 @@ def getTagsForPart(part):
 def addEventsParToMainIndex(event):
     partsipants = event.event_part
 
-    index = load_index('/Users/mahmoodnael/PycharmProjects/PartnerFinderApril/Backend/src/B2MATCH_Index')
+    # index = load_index('/Users/mahmoodnael/PycharmProjects/PartnerFinderApril/Backend/src/B2MATCH_Index')
+    index = load_index('B2MATCH_Index')
     for part in partsipants:
         tags = getTagsForPart(part)
-        des = get_document_from_par(part,tags)
+        des = get_document_from_par(part, tags)
         index = add_par_to_index(index, part, des, False)
 
 
@@ -915,10 +974,7 @@ def changeEventStatus(eventNoLongerUpcoming):
         addEventsParToMainIndex(e)
 
 
-
-
 def deleteEventsTree(toupdate):
-
     for event in toupdate:
         currEvent = Event.objects.get(event_name=event.event_name)
         # get all the participant from each Event
@@ -928,7 +984,6 @@ def deleteEventsTree(toupdate):
             tags = part.tagsAndKeywordsP.all()
             for tag in tags:
                 if tag.participant.all().count() < 2:
-
                     tag.delete()
 
             part.delete()
@@ -1050,7 +1105,8 @@ class EventViewSet(viewsets.ModelViewSet):
                 updating upcoming events in the database <not tested yet>
         """
         print("updating....")
-        index = load_index('/Users/mahmoodnael/PycharmProjects/PartnerFinderApril/Backend/src/B2MATCH_upcoming_Index')
+        # index = load_index('/Users/mahmoodnael/PycharmProjects/PartnerFinderApril/Backend/src/B2MATCH_upcoming_Index')
+        index = load_index('B2MATCH_upcoming_Index')
         index.destroy()
         newEvents = []
         upcoming_event_b2match = "https://events.b2match.com"
@@ -1130,7 +1186,6 @@ class EventViewSet(viewsets.ModelViewSet):
                 except:
                     pass
 
-
             if (curr_page + str(i) == upcoming_events_last_page):
                 break
 
@@ -1171,8 +1226,7 @@ class ParticipantsViewSet(viewsets.ModelViewSet):
     ]
     serializer_class = ParticipantsSerializer
 
-
-    def add_par_to_index(self, index, par, tags,upcoming):
+    def add_par_to_index(self, index, par, tags, upcoming):
         """
         function to add new participant to the index
         :param index: current index
@@ -1205,8 +1259,10 @@ class ParticipantsViewSet(viewsets.ModelViewSet):
             except:
                 continue
             for item in url_arr:
-
-                part_temp = getParticipentDATA(item)
+                try:
+                    part_temp = getParticipentDATA(item)
+                except:
+                    continue
                 location = Location(location=part_temp[3])
                 location.save()
                 try:
@@ -1231,14 +1287,18 @@ class ParticipantsViewSet(viewsets.ModelViewSet):
                 if not event.is_upcoming:
                     try:
                         # this is the path for the index
-                        index = load_index('/Users/mahmoodnael/PycharmProjects/PartnerFinderApril/Backend/src/B2MATCH_Index')
+                        # index = load_index(
+                        #     '/Users/mahmoodnael/PycharmProjects/PartnerFinderApril/Backend/src/B2MATCH_Index')
+                        index = load_index('B2MATCH_Index')
                         print("index loaded......")
                     except:
                         index = None
 
                     if index is None:
                         # this is the path for the index
-                        index = build_index('/Users/mahmoodnael/PycharmProjects/PartnerFinderApril/Backend/src/B2MATCH_Index')
+                        # index = build_index(
+                        #     '/Users/mahmoodnael/PycharmProjects/PartnerFinderApril/Backend/src/B2MATCH_Index')
+                        index = build_index('B2MATCH_Index')
                         print("index built....")
 
                     index = self.add_par_to_index(index, participant, part_temp[7], False)
@@ -1246,19 +1306,19 @@ class ParticipantsViewSet(viewsets.ModelViewSet):
                     try:
                         # this is the path for the index
 
-                        index = load_index(
-                            '/Users/mahmoodnael/PycharmProjects/PartnerFinderApril/Backend/src/B2MATCH_upcoming_Index')
+                        # index = load_index('/Users/mahmoodnael/PycharmProjects/PartnerFinderApril/Backend/src/B2MATCH_upcoming_Index')
+                        index = load_index('B2MATCH_upcoming_Index')
                         print("upcoming index loaded......")
                     except:
                         index = None
 
                     if index is None:
                         # this is the path for the index
-                        index = build_index(
-                            '/Users/mahmoodnael/PycharmProjects/PartnerFinderApril/Backend/src/B2MATCH_upcoming_Index')
+                        # index = build_index('/Users/mahmoodnael/PycharmProjects/PartnerFinderApril/Backend/src/B2MATCH_upcoming_Index')
+                        index = build_index('B2MATCH_upcoming_Index')
                         print("upcoming index built....")
 
-                    index = self.add_par_to_index(index, participant, part_temp[7],True)
+                    index = self.add_par_to_index(index, participant, part_temp[7], True)
 
         return Response({'message': 'done see DataBase'}, status=status.HTTP_200_OK)
 

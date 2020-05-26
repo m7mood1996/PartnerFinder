@@ -927,7 +927,7 @@ class AlertsSettingsViewSet(viewsets.ModelViewSet):
             alertsSettings = AlertsSettings(email=email, turned_on=turned_on, ID=1)
             alertsSettings.save()
 
-        response = {'Message': 'Settings Updated Successfully.'}
+        response = {'Message': 'Alerts Settings Updated Successfully.'}
 
         return Response(response, status=status.HTTP_200_OK)
 
@@ -975,7 +975,7 @@ class UpdateSettingsViewSet(viewsets.ModelViewSet):
             updateSettings = UpdateSettings(eu_last_update=euDate, b2match_last_update=b2matchDate, ID=1)
             updateSettings.save()
 
-        response = {'Message': 'Dates Updated Successfully.'}
+        response = {'Message': 'Updates Settings Updated Successfully.'}
 
         return Response(response, status=status.HTTP_200_OK)
 

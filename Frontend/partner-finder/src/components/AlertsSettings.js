@@ -29,6 +29,72 @@ function AlertsSettings() {
     const handleInputChange = event => {
         setNumber(event.target.value === "" ? "" : Number(event.target.value));
     }
+    const handleItaly = event => {
+        setNumber(event.target.value === "" ? "" : Number(event.target.value));
+    }
+    const handleFrance = event => {
+        setNumber(event.target.value === "" ? "" : Number(event.target.value));
+    }
+    const handleAustria = event => {
+        setNumber(event.target.value === "" ? "" : Number(event.target.value));
+    }
+    const handleGermany = event => {
+        setNumber(event.target.value === "" ? "" : Number(event.target.value));
+    }
+    const handleDenmark= event => {
+        setNumber(event.target.value === "" ? "" : Number(event.target.value));
+    }
+    const handleCzech = event => {
+        setNumber(event.target.value === "" ? "" : Number(event.target.value));
+    }
+    const handleFinland = event => {
+        setNumber(event.target.value === "" ? "" : Number(event.target.value));
+    }
+    const handleIreland = event => {
+        setNumber(event.target.value === "" ? "" : Number(event.target.value));
+    }
+    const handleIsrael = event => {
+        setNumber(event.target.value === "" ? "" : Number(event.target.value));
+    }
+    const handlePortugal = event => {
+        setNumber(event.target.value === "" ? "" : Number(event.target.value));
+    }
+    const handleUkranie = event => {
+        setNumber(event.target.value === "" ? "" : Number(event.target.value));
+    }
+    const handleUK = event => {
+        setNumber(event.target.value === "" ? "" : Number(event.target.value));
+    }
+    const handleTurkey = event => {
+        setNumber(event.target.value === "" ? "" : Number(event.target.value));
+    }
+    const handleSwitzerland = event => {
+        setNumber(event.target.value === "" ? "" : Number(event.target.value));
+    }
+    const handleSpain = event => {
+        setNumber(event.target.value === "" ? "" : Number(event.target.value));
+    }
+    const handleNorway = event => {
+        setNumber(event.target.value === "" ? "" : Number(event.target.value));
+    }
+    const handleAgency = event => {
+        setNumber(event.target.value === "" ? "" : Number(event.target.value));
+    }
+    const handleUni = event => {
+        setNumber(event.target.value === "" ? "" : Number(event.target.value));
+    }
+    const handleCompany= event => {
+        setNumber(event.target.value === "" ? "" : Number(event.target.value));
+    }
+    const handleRD = event => {
+        setNumber(event.target.value === "" ? "" : Number(event.target.value));
+    }
+    const handleStartUp = event => {
+        setNumber(event.target.value === "" ? "" : Number(event.target.value));
+    }
+    const handleOTH = event => {
+        setNumber(event.target.value === "" ? "" : Number(event.target.value));
+    }
     return (
         <React.Fragment>
          <div className="title">
@@ -95,7 +161,7 @@ function AlertsSettings() {
                                     id="fields"
                                     label=""
                                     type="number"
-                                    onChange={handleInputChange}
+                                    onChange={handleItaly}
                                     onBlur={handleBlur}
                                     InputLabelProps={{
                                         shrink: true,
@@ -112,7 +178,7 @@ function AlertsSettings() {
                             id="fields"
                             label=""
                             type="number"
-                            onChange={handleInputChange}
+                            onChange={handleFrance}
                             onBlur={handleBlur}
                             InputLabelProps={{
                                 shrink: true,
@@ -129,7 +195,7 @@ function AlertsSettings() {
                             id="fields"
                             label=""
                             type="number"
-                            onChange={handleInputChange}
+                            onChange={handleAustria}
                             onBlur={handleBlur}
                             InputLabelProps={{
                                 shrink: true,
@@ -146,7 +212,7 @@ function AlertsSettings() {
                             id="fields"
                             label=""
                             type="number"
-                            onChange={handleInputChange}
+                            onChange={handleGermany}
                             onBlur={handleBlur}
                             InputLabelProps={{
                                 shrink: true,
@@ -165,7 +231,7 @@ function AlertsSettings() {
                                     id="fields"
                                     label=""
                                     type="number"
-                                    onChange={handleInputChange}
+                                    onChange={handleDenmark}
                                     onBlur={handleBlur}
                                     InputLabelProps={{
                                         shrink: true,
@@ -182,7 +248,7 @@ function AlertsSettings() {
                             id="fields"
                             label=""
                             type="number"
-                            onChange={handleInputChange}
+                            onChange={handleCzech}
                             onBlur={handleBlur}
                             InputLabelProps={{
                                 shrink: true,
@@ -199,7 +265,7 @@ function AlertsSettings() {
                             id="fields"
                             label=""
                             type="number"
-                            onChange={handleInputChange}
+                            onChange={handleFinland}
                             onBlur={handleBlur}
                             InputLabelProps={{
                                 shrink: true,
@@ -216,7 +282,7 @@ function AlertsSettings() {
                             id="fields"
                             label=""
                             type="number"
-                            onChange={handleInputChange}
+                            onChange={handleIreland}
                             onBlur={handleBlur}
                             InputLabelProps={{
                                 shrink: true,
@@ -235,7 +301,7 @@ function AlertsSettings() {
                                     id="fields"
                                     label=""
                                     type="number"
-                                    onChange={handleInputChange}
+                                    onChange={handleIsrael}
                                     onBlur={handleBlur}
                                     InputLabelProps={{
                                         shrink: true,
@@ -252,7 +318,7 @@ function AlertsSettings() {
                             id="fields"
                             label=""
                             type="number"
-                            onChange={handleInputChange}
+                            onChange={handlePortugal}
                             onBlur={handleBlur}
                             InputLabelProps={{
                                 shrink: true,
@@ -269,7 +335,7 @@ function AlertsSettings() {
                             id="fields"
                             label=""
                             type="number"
-                            onChange={handleInputChange}
+                            onChange={handleUkranie}
                             onBlur={handleBlur}
                             InputLabelProps={{
                                 shrink: true,
@@ -286,7 +352,7 @@ function AlertsSettings() {
                             id="fields"
                             label=""
                             type="number"
-                            onChange={handleInputChange}
+                            onChange={handleUK}
                             onBlur={handleBlur}
                             InputLabelProps={{
                                 shrink: true,
@@ -305,7 +371,7 @@ function AlertsSettings() {
                                     id="fields"
                                     label=""
                                     type="number"
-                                    onChange={handleInputChange}
+                                    onChange={handleTurkey}
                                     onBlur={handleBlur}
                                     InputLabelProps={{
                                         shrink: true,
@@ -322,7 +388,7 @@ function AlertsSettings() {
                             id="fields"
                             label=""
                             type="number"
-                            onChange={handleInputChange}
+                            onChange={handleSwitzerland}
                             onBlur={handleBlur}
                             InputLabelProps={{
                                 shrink: true,
@@ -339,7 +405,7 @@ function AlertsSettings() {
                             id="fields"
                             label=""
                             type="number"
-                            onChange={handleInputChange}
+                            onChange={handleSpain}
                             onBlur={handleBlur}
                             InputLabelProps={{
                                 shrink: true,
@@ -356,7 +422,7 @@ function AlertsSettings() {
                             id="fields"
                             label=""
                             type="number"
-                            onChange={handleInputChange}
+                            onChange={handleNorway}
                             onBlur={handleBlur}
                             InputLabelProps={{
                                 shrink: true,
@@ -379,7 +445,7 @@ function AlertsSettings() {
                             id="fields"
                             label=""
                             type="number"
-                            onChange={handleInputChange}
+                            onChange={handleAgency}
                             onBlur={handleBlur}
                             InputLabelProps={{
                                 shrink: true,
@@ -396,7 +462,7 @@ function AlertsSettings() {
                             id="fields"
                             label=""
                             type="number"
-                            onChange={handleInputChange}
+                            onChange={handleUni}
                             onBlur={handleBlur}
                             InputLabelProps={{
                                 shrink: true,
@@ -413,7 +479,7 @@ function AlertsSettings() {
                             id="fields"
                             label=""
                             type="number"
-                            onChange={handleInputChange}
+                            onChange={handleCompany}
                             onBlur={handleBlur}
                             InputLabelProps={{
                                 shrink: true,
@@ -432,7 +498,7 @@ function AlertsSettings() {
                             id="fields"
                             label=""
                             type="number"
-                            onChange={handleInputChange}
+                            onChange={handleRD}
                             onBlur={handleBlur}
                             InputLabelProps={{
                                 shrink: true,
@@ -449,7 +515,7 @@ function AlertsSettings() {
                             id="fields"
                             label=""
                             type="number"
-                            onChange={handleInputChange}
+                            onChange={handleStartUp}
                             onBlur={handleBlur}
                             InputLabelProps={{
                                 shrink: true,
@@ -466,7 +532,7 @@ function AlertsSettings() {
                             id="fields"
                             label=""
                             type="number"
-                            onChange={handleInputChange}
+                            onChange={handleOTH}
                             onBlur={handleBlur}
                             InputLabelProps={{
                                 shrink: true,

@@ -39,6 +39,30 @@ class OrganizationProfile(models.Model):
         return str(self.pic)
 
 
+class AlertsSettings(models.Model):
+    """
+    class to define the data model of Alerts Settings.
+    """
+    email = models.EmailField(max_length=300, blank=True, default='ishai@freemindconsultants.com')
+    turned_on = models.BooleanField(default=False)
+    ID = models.IntegerField(unique=True, default=1)
+
+    def __str__(self):
+        return self.email
+
+
+class UpdateSettings(models.Model):
+    """
+    class to define the data model of Update Settings.
+    """
+    eu_last_update = models.IntegerField()
+    b2match_last_update = models.IntegerField()
+    ID = models.IntegerField(unique=True, default=1)
+
+    def __str__(self):
+        return self.eu_last_update + ' ' + self.b2match_last_update
+
+
 class Tag(models.Model):
     """
     class to define the data model of the tags in the DB.
@@ -49,6 +73,7 @@ class Tag(models.Model):
 
     def __str__(self):
         return self.tag
+
 
 class Call(models.Model):
     """
@@ -123,7 +148,7 @@ class Participants(models.Model):
 
 class TagP(models.Model):
     tag = models.CharField(max_length=200, blank=True, null=True)
-    participant = models.ManyToManyField( Participants, blank=True, related_name='tagsAndKeywordsP')
+    participant = models.ManyToManyField(Participants, blank=True, related_name='tagsAndKeywordsP')
 
     def __str__(self):
         return self.tag

@@ -30,6 +30,9 @@ import smtplib, ssl
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
 
+from celery.task.schedules import crontab
+from celery.decorators import periodic_task
+import celery.decorators
 # ----------------------- NLP Processor Funcs --------------------------------------
 def NLP_Processor(documents):
     """
@@ -916,6 +919,10 @@ class OrganizationProfileViewSet(viewsets.ModelViewSet):
     ]
     serializer_class = OrganizationProfileSerializer
 
+    # @periodic_task(run_every=(crontab(minute=0, hour=15, day_of_month='1-8', day_of_week='fri')),
+    #                name="update_organizations", ignore_result=True)
+    @periodic_task(run_every=(crontab()),
+                   name="updateOrganizations", ignore_result=True)
     @action(detail=False, methods=['GET'])
     def updateOrganizations(self, request):
         """
@@ -1269,9 +1276,6 @@ def get_proposal_calls():
             if any(check_dates) and is_valid_status(obj) and is_relevant_action(obj):
                 obj = get_call_to_save(obj)
                 grants.append(obj)
-                print("ADDED")
-                for atr in obj:
-                    print(atr, ':', obj[atr])
 
     return grants
 
@@ -1398,7 +1402,7 @@ class CallViewSet(viewsets.ModelViewSet):
         signature = 'Sincerly,<br>Consortium Builder Alerts'
         html = """\
         <html>
-          <head><h3>You have new proposal calls that might interests you</h3></head>
+          <head><h3>You have new proposal calls that might interest you</h3></head>
           <body>
             <ul> 
             {}

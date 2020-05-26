@@ -148,6 +148,12 @@ def get_document_from_org(org):
 
 
 def get_document_from_par(par, tags):
+    """
+    function to get the description and tags from participants
+    :param par: participant
+    :param tags: tags
+    :return: string of combination of participants description and tags
+    """
     res = [par.description]
     for tag in tags:
         res.append(tag)
@@ -156,6 +162,89 @@ def get_document_from_par(par, tags):
 
 
 # ----------------------------------------------------------------------------------
+
+
+def deleteEventsTree(toupdate):
+    """
+    function to delete events and its participants
+    :param toupdate:
+    :return:
+    """
+    for event in toupdate:
+        currEvent = Event.objects.get(event_name=event.event_name)
+        # get all the participant from each Event
+
+        participants = list(currEvent.event_part.all())
+        for part in participants:
+            tags = part.tagsAndKeywordsP.all()
+            for tag in tags:
+                if tag.participant.all().count() < 2:
+                    tag.delete()
+
+            part.delete()
+    MapIDsB2matchUpcoming.objects.all().delete()
+
+def add_par_to_index(index, par, tags, upcoming):
+    """
+    function to add new participant to the index
+    :param index: current index
+    :param par: new participant
+    :return: updated index
+    """
+    doc = get_document_from_par(par, tags)
+    originalID = par.id
+
+    indexID = len(index)
+    if not upcoming:
+        newMap = MapIDsB2match(originalID=originalID, indexID=indexID)
+    else:
+        newMap = MapIDsB2matchUpcoming(originalID=originalID, indexID=indexID)
+    newMap.save()
+    index = add_documents(index, [doc])
+    return index
+
+
+def getTagsForPart(part):
+    """
+    function to get the tags from participant
+    :param part: participant
+    :return: list of tags
+    """
+    myTags = []
+    tags = TagP.objects.filter(participants=part).tag
+    for tagp in tags:
+        myTags.append(tagp.tag)
+    return myTags
+
+
+def addEventsParToMainIndex(event):
+    """
+    function to add participant to the index
+    :param event:
+    :return:
+    """
+    partsipants = event.event_part
+
+    # index = load_index('/Users/mahmoodnael/PycharmProjects/PartnerFinderApril/Backend/src/B2MATCH_Index')
+    index = load_index('B2MATCH_Index')
+    for part in partsipants:
+        tags = getTagsForPart(part)
+        des = get_document_from_par(part, tags)
+        index = add_par_to_index(index, part, des, False)
+
+
+def changeEventStatus(eventNoLongerUpcoming):
+    """
+    function to change event status when its date pass
+    :param eventNoLongerUpcoming:
+    :return:
+    """
+    for event in eventNoLongerUpcoming:
+        e = Event.objects.get(event_name=event.event_name)
+        e.is_upcoming = True
+        e.save()
+        addEventsParToMainIndex(e)
+
 
 # ----------------------- Gathering/Updating EU data Funcs -------------------------
 LIST_OF_ATTRIBUTES = {'pic', 'businessName', 'legalName', 'classificationType', 'description',
@@ -456,8 +545,11 @@ def getOrgsByCountriesAndTags(tags, countries):
 
 def add_Participants_from_Upcoming_Event():
     """
-            method to define API to import all the participants from the events we have in our DB and save them to the local DB
+    function to define API to import all the participants from the events we have in our DB and save them to the local DB
+
+    :return:
     """
+
     events = Event.objects.filter(is_upcoming=True)
     for event in events:
 
@@ -515,8 +607,11 @@ def add_Participants_from_Upcoming_Event():
 
 def get_the_participent_urls(event_url):
     """
-            method to get the particepents urls from event url
+    function to get the participants urls from event url
+    :param event_url: events url
+    :return: participants url
     """
+
     try:
         event_page = requests.get(event_url)
         all_events_soup = BeautifulSoup(event_page.content, 'html.parser')
@@ -530,9 +625,11 @@ def get_the_participent_urls(event_url):
 
 def getParticipentFromUrl(url_):
     """
-            given particepant url extruct participent information
-
+    given participant url extruct participent information
+    :param url_: the event url
+    :return: participant url
     """
+
     ##### for MacOS
     # driver = webdriver.Chrome()
     ##### for Windows
@@ -583,8 +680,9 @@ def getParticipentFromUrl(url_):
 
 def getParticipentDATA(url_):
     """
-            after getint the participent info, do low level NLP and make up the participant object
-
+     after geting the participant info, do low level NLP and make up the participant object
+    :param url_: the main url of the participant
+    :return: participant information
     """
     translator = Translator()
     ### for macOS
@@ -709,6 +807,108 @@ def getParticipentDATA(url_):
     return name, img_src, org_name, location, org_type, org_url, org_logo, tags, org_description
 
 
+def getPartIntersection(par1, par2):
+    """
+    function to get the intersect of two lists of participants
+    :param par1: list of participants
+    :param par2: list of participants
+    :return: list of participant
+    """
+    res, seenPart = [], set()
+
+    for par in par1:
+        seenPart.add(par.participant_name)
+
+    addedPar = set()
+    for par in par2:
+        if par.participant_name in seenPart and par.participant_name not in addedPar:
+            res.append(par)
+            addedPar.add(par.participant_name)
+    return res
+
+
+def getParticipantsByTags(tags):
+    """
+    function to get all organizations with at least one tag from the list of tags.
+    :param tags: list of tags
+    :return: list of participants
+    """
+    tags = ' '.join(tags)
+    index1 = load_index('B2MATCH_Index')  # B2match_index
+    index2 = load_index('B2MATCH_upcoming_Index')  # B2match_upcoming_index
+    corpus = NLP_Processor([tags])
+    print(corpus)
+    res1 = index1[corpus]
+    res2 = index2[corpus]
+    print(res1, res2)
+
+    res1 = process_query_result(res1)
+    res2 = process_query_result(res2)
+
+    res1 = sorted(res1, key=lambda pair: pair[1], reverse=True)
+    res1 = res1[:101]
+    res2 = sorted(res2, key=lambda pair: pair[1], reverse=True)
+    res2 = res2[:101]
+
+    res1 = [pair for pair in res1 if pair[1] > 0.3]
+    res1 = [MapIDsB2match.objects.get(indexID=pair[0]) for pair in res1]
+    res2 = [pair for pair in res2 if pair[1] > 0.3]
+    res2 = [MapIDsB2matchUpcoming.objects.get(indexID=pair[0]) for pair in res2]
+
+    finalRes = []
+    for mapId in res1:
+        finalRes.append(Participants.objects.get(pk=mapId.originalID))
+
+    for mapId in res2:
+        finalRes.append(Participants.objects.get(pk=mapId.originalID))
+
+    print(finalRes[0].description)
+    print(len(finalRes))
+    return finalRes
+
+
+def getB2MatchParByCountry(countries):
+    """
+    function to get all Participants that locates in one of the countries list.
+    :param countries:  list of countries
+    :return: list of participants
+    """
+    countries = [val.lower() for val in countries]
+    countries = set(countries)
+    res = []
+    allPart = Participants.objects.all()
+
+    if not countries:
+        return allPart
+
+    for participant in allPart:
+
+        try:
+            currLocation = participant.location.location.lower().split(" ", 1)[1]
+        except:
+            currLocation = participant.location.location.lower()
+        if currLocation in countries:
+            res.append(participant)
+    return res
+
+
+def getB2MATCHPartByCountriesAndTags(tags, countries):
+    """
+    function to get list of participants from DB based on tags and countries
+    :param tags: list of tags to get participants
+    :param countries: list of countries to get participants
+    :return: list of participants
+    """
+    apaarticipantsByCountries = getB2MatchParByCountry(countries)
+    ParticipantsByTags = getParticipantsByTags(tags)
+
+    res = getPartIntersection(apaarticipantsByCountries, ParticipantsByTags)
+
+    # write method to rank the orgs by tags
+
+    return res
+
+
 class OrganizationProfileViewSet(viewsets.ModelViewSet):
     queryset = OrganizationProfile.objects.all()
     permission_classes = [
@@ -783,7 +983,7 @@ class OrganizationProfileViewSet(viewsets.ModelViewSet):
         countries = data['countries']
         tags = data['tags']
         EURes = getOrgsByCountriesAndTags(tags, countries)
-        B2MATCHRes = self.getB2MATCHPartByCountriesAndTags(tags, countries)
+        B2MATCHRes = getB2MATCHPartByCountriesAndTags(tags, countries)
 
         B2MATCH = []
         EU = []
@@ -804,88 +1004,6 @@ class OrganizationProfileViewSet(viewsets.ModelViewSet):
         response = {'EU': EU, 'B2MATCH': B2MATCH}
 
         return Response(response, status=status.HTTP_200_OK)
-
-    def getB2MatchParByCountry(self, countries):
-        """
-        method to get all Participants that locates in one of the countries list.
-        """
-        countries = [val.lower() for val in countries]
-        countries = set(countries)
-        res = []
-        allPart = Participants.objects.all()
-
-        if not countries:
-            return allPart
-
-        for participant in allPart:
-
-            try:
-                currLocation = participant.location.location.lower().split(" ", 1)[1]
-            except:
-                currLocation = participant.location.location.lower()
-            if currLocation in countries:
-                res.append(participant)
-        return res
-
-    def getParticipantsByTags(self, tags):
-        """
-        method to get all organizations with at least one tag from the list of tags.
-        """
-        tags = ' '.join(tags)
-        index1 = load_index('B2MATCH_Index')  # B2match_index
-        index2 = load_index('B2MATCH_upcoming_Index')  # B2match_upcoming_index
-        corpus = NLP_Processor([tags])
-        print(corpus)
-        res1 = index1[corpus]
-        res2 = index2[corpus]
-        print(res1, res2)
-
-        res1 = process_query_result(res1)
-        res2 = process_query_result(res2)
-
-        res1 = sorted(res1, key=lambda pair: pair[1], reverse=True)
-        res1 = res1[:101]
-        res2 = sorted(res2, key=lambda pair: pair[1], reverse=True)
-        res2 = res2[:101]
-
-        res1 = [pair for pair in res1 if pair[1] > 0.3]
-        res1 = [MapIDsB2match.objects.get(indexID=pair[0]) for pair in res1]
-        res2 = [pair for pair in res2 if pair[1] > 0.3]
-        res2 = [MapIDsB2matchUpcoming.objects.get(indexID=pair[0]) for pair in res2]
-
-        finalRes = []
-        for mapId in res1:
-            finalRes.append(Participants.objects.get(pk=mapId.originalID))
-
-        for mapId in res2:
-            finalRes.append(Participants.objects.get(pk=mapId.originalID))
-
-        print(finalRes[0].description)
-        print(len(finalRes))
-        return finalRes
-
-    def getB2MATCHPartByCountriesAndTags(self, tags, countries):
-        apaarticipantsByCountries = self.getB2MatchParByCountry(countries)
-        ParticipantsByTags = self.getParticipantsByTags(tags)
-
-        res = self.getPartIntersection(apaarticipantsByCountries, ParticipantsByTags)
-
-        # write method to rank the orgs by tags
-
-        return res
-
-    def getPartIntersection(self, par1, par2):
-        res, seenPart = [], set()
-
-        for par in par1:
-            seenPart.add(par.participant_name)
-
-        addedPar = set()
-        for par in par2:
-            if par.participant_name in seenPart and par.participant_name not in addedPar:
-                res.append(par)
-                addedPar.add(par.participant_name)
-        return res
 
 
 class AlertsSettingsViewSet(viewsets.ModelViewSet):
@@ -1310,48 +1428,6 @@ class CallTagViewSet(viewsets.ModelViewSet):
     serializer_class = CallTagSerializer
 
 
-def getTagsForPart(part):
-    myTags = []
-    tags = TagP.objects.filter(participants=part).tag
-    for tagp in tags:
-        myTags.append(tagp.tag)
-    return myTags
-
-
-def addEventsParToMainIndex(event):
-    partsipants = event.event_part
-
-    # index = load_index('/Users/mahmoodnael/PycharmProjects/PartnerFinderApril/Backend/src/B2MATCH_Index')
-    index = load_index('B2MATCH_Index')
-    for part in partsipants:
-        tags = getTagsForPart(part)
-        des = get_document_from_par(part, tags)
-        index = add_par_to_index(index, part, des, False)
-
-
-def changeEventStatus(eventNoLongerUpcoming):
-    for event in eventNoLongerUpcoming:
-        e = Event.objects.get(event_name=event.event_name)
-        e.is_upcoming = True
-        e.save()
-        addEventsParToMainIndex(e)
-
-
-def deleteEventsTree(toupdate):
-    for event in toupdate:
-        currEvent = Event.objects.get(event_name=event.event_name)
-        # get all the participant from each Event
-
-        participants = list(currEvent.event_part.all())
-        for part in participants:
-            tags = part.tagsAndKeywordsP.all()
-            for tag in tags:
-                if tag.participant.all().count() < 2:
-                    tag.delete()
-
-            part.delete()
-    MapIDsB2matchUpcoming.objects.all().delete()
-
 
 class EventViewSet(viewsets.ModelViewSet):
     queryset = Event.objects.all()
@@ -1582,24 +1658,6 @@ class EventViewSet(viewsets.ModelViewSet):
         return Response([{'message': 'done, B2MATCH Reposutory updated'}], status=status.HTTP_200_OK)
 
 
-def add_par_to_index(index, par, tags, upcoming):
-    """
-    function to add new participant to the index
-    :param index: current index
-    :param par: new participant
-    :return: updated index
-    """
-    doc = get_document_from_par(par, tags)
-    originalID = par.id
-
-    indexID = len(index)
-    if not upcoming:
-        newMap = MapIDsB2match(originalID=originalID, indexID=indexID)
-    else:
-        newMap = MapIDsB2matchUpcoming(originalID=originalID, indexID=indexID)
-    newMap.save()
-    index = add_documents(index, [doc])
-    return index
 
 
 class ParticipantsViewSet(viewsets.ModelViewSet):
@@ -1687,26 +1745,6 @@ class ParticipantsViewSet(viewsets.ModelViewSet):
         return Response({'message': 'done see DataBase'}, status=status.HTTP_200_OK)
 
 
-def add_par_to_index(index, par, tags, upcoming):
-    """
-    function to add new participant to the index
-    :param index: current index
-    :param par: new participant
-    :return: updated index
-    """
-    doc = get_document_from_par(par, tags)
-    originalID = par.id
-
-    indexID = len(index)
-    if not upcoming:
-        newMap = MapIDsB2match(originalID=originalID, indexID=indexID)
-    else:
-        newMap = MapIDsB2matchUpcoming(originalID=originalID, indexID=indexID)
-    newMap.save()
-    index = add_documents(index, [doc])
-    return index
-
-
 class ScoresViewSet(viewsets.ModelViewSet):
     queryset = Scores.objects.all()
     permission_classes = [
@@ -1719,12 +1757,15 @@ class ScoresViewSet(viewsets.ModelViewSet):
 
     @action(detail=False, methods=['POST'])
     def updatescores(self, request):
+        """
+        API to update scores in the data base
+        :param request: scores from user about RES, countries and orgs type
+        :return: the updated scores
+        """
         data = request.data['data']
         data = json.loads(data)
-        print("DATA", data)
 
         try:
-            print("in try")
             scores = Scores.objects.all()[0]
             scores.RES = data['RES']
             scores.Italy = data['Italy']
@@ -1751,7 +1792,6 @@ class ScoresViewSet(viewsets.ModelViewSet):
             scores.Others = data['Others']
 
         except:
-            print("in except")
             scores = Scores(RES=data['RES'],
                             Italy=data['Italy'], France=data['France'], Austria=data['Austria'],
                             Germany=data['Germany'],
@@ -1764,5 +1804,14 @@ class ScoresViewSet(viewsets.ModelViewSet):
                             )
         scores.save()
 
-        # response.append({'scores': scores})
-        return Response('response', status=status.HTTP_200_OK)
+        return Response(ScoresSerializer(scores).data, status=status.HTTP_200_OK)
+
+    @action(detail=False, methods=['GET'])
+    def getscores(self, request):
+        """
+        API to send current scoures
+        :param request:
+        :return:
+        """
+        scores = Scores.objects.all()[0]
+        return Response(ScoresSerializer(scores).data, status=status.HTTP_200_OK)

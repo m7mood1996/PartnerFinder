@@ -26,6 +26,9 @@ from dateutil.relativedelta import relativedelta
 import time
 import re
 
+import smtplib, ssl
+from email.mime.multipart import MIMEMultipart
+from email.mime.text import MIMEText
 
 # ----------------------- NLP Processor Funcs --------------------------------------
 def NLP_Processor(documents):
@@ -378,7 +381,7 @@ def getOrgsByTags(tags):
     res = process_query_result(res)
     res = sorted(res, key=lambda pair: pair[1], reverse=True)
     res = res[:100]
-    res = [pair for pair in res if pair[1] > 0.3]
+    res = [pair for pair in res if pair[1] > 0.6]
     res = [MapIds.objects.get(indexID=pair[0]) for pair in res]
 
     finalRes = []
@@ -1203,6 +1206,25 @@ def has_consortium(call):
     return call
 
 
+def send_mail(email, subject, message):
+    sender_mail = 'PartnerFinderAlerts@gmail.com'
+    password = 'Alerts_123'
+    ssl_port = 465
+    smtp_server = 'smtp.gmail.com'
+    receiver_mail = email
+    message['Subject'] = subject
+    # message = 'Subject: {}\n\n{}'.format(subject, body)
+
+    context = ssl.create_default_context()
+    try:
+        with smtplib.SMTP_SSL(smtp_server, ssl_port, context=context) as server:
+            server.login(sender_mail, password)
+            server.sendmail(sender_mail, receiver_mail, message.as_string())
+        print("SENT")
+    except Exception as e:
+        print("ERROR", e)
+
+
 # ----------------------------------------------------------------------------------
 
 class CallViewSet(viewsets.ModelViewSet):
@@ -1222,6 +1244,11 @@ class CallViewSet(viewsets.ModelViewSet):
         :return: HTTP Response
         """
 
+        alerts_settings = AlertsSettings.objects.all()[0]
+        response = {'Message': 'Please Turn Alerts ON!'}
+        if not alerts_settings.turned_on:
+            return Response(response, status=status.HTTP_200_OK)
+        email = alerts_settings.email
         print("*" * 50)
         print("START BUILDING CONSORTIUM")
         print("*" * 50)
@@ -1239,8 +1266,39 @@ class CallViewSet(viewsets.ModelViewSet):
                 calls_to_send.append({'title': call['title']})
                 add_call_to_DB(call)
 
-        response = {'Message': 'Finished building consortium successfully!', 'Calls': calls_to_send}
+        # calls = Call.objects.all()
+        # calls_to_send = []
+        # for call in calls:
+        #     calls_to_send.append(call.__dict__['title'])
 
+        body = MIMEMultipart('alternative')
+
+        calls = ''
+        for i, call in enumerate(calls_to_send):
+            calls += '<li><b>' + call['title'] + '</b></li>'
+
+        signature = 'Sincerly,<br>Consortium Builder Alerts'
+        html = """\
+        <html>
+          <head><h3>You have new proposal calls that might interests you</h3></head>
+          <body>
+            <ul> 
+            {}
+            </ul>
+            <br>
+            <br>
+            {}
+          </body>
+        </html>
+        """.format(calls, signature)
+
+
+        response = {'Message': 'Finished building consortium successfully!'}
+
+        content = MIMEText(html, 'html')
+        body.attach(content)
+
+        send_mail(email, "EU Proposal Calls Alert", body)
         return Response(response, status=status.HTTP_200_OK)
 
 
@@ -1656,10 +1714,8 @@ class ScoresViewSet(viewsets.ModelViewSet):
     ]
     serializer_class = ScoresSerializer
 
-
     def create(self, request, *args, **kwargs):
         return Response({'message': 'cant add event like that'}, status=status.HTTP_400_BAD_REQUEST)
-
 
     @action(detail=False, methods=['POST'])
     def updatescores(self, request):
@@ -1667,46 +1723,46 @@ class ScoresViewSet(viewsets.ModelViewSet):
         data = json.loads(data)
         print("DATA", data)
 
-
         try:
             print("in try")
             scores = Scores.objects.all()[0]
-            scores.RES=data['RES']
-            scores.Italy=data['Italy']
-            scores.France=data['France']
-            scores.Austria=data['Austria']
-            scores.Germany=data['Germany']
-            scores.Denmark=data['Denmark']
-            scores.Czech_Republic=data['Czech_Republic']
-            scores.Finland=data['Finland']
-            scores.Ireland=data['Ireland']
-            scores.Israel=data['Israel']
-            scores.Portugal=data['Portugal']
-            scores.Ukranie=data['Ukranie']
-            scores. United_Kingdom=data['United_Kingdom']
-            scores.Turkey=data['Turkey']
-            scores.Switzerland=data['Switzerland']
-            scores.Spain=data['Spain']
-            scores.Norway=data['Norway']
+            scores.RES = data['RES']
+            scores.Italy = data['Italy']
+            scores.France = data['France']
+            scores.Austria = data['Austria']
+            scores.Germany = data['Germany']
+            scores.Denmark = data['Denmark']
+            scores.Czech_Republic = data['Czech_Republic']
+            scores.Finland = data['Finland']
+            scores.Ireland = data['Ireland']
+            scores.Israel = data['Israel']
+            scores.Portugal = data['Portugal']
+            scores.Ukranie = data['Ukranie']
+            scores.United_Kingdom = data['United_Kingdom']
+            scores.Turkey = data['Turkey']
+            scores.Switzerland = data['Switzerland']
+            scores.Spain = data['Spain']
+            scores.Norway = data['Norway']
 
-            scores. Association_Agency=data['Association_Agency']
-            scores.University=data['University']
-            scores.R_D_Institution=data['R_D_Institution']
-            scores.Start_Up=data['Start_Up']
-            scores. Others=data['Others']
+            scores.Association_Agency = data['Association_Agency']
+            scores.University = data['University']
+            scores.R_D_Institution = data['R_D_Institution']
+            scores.Start_Up = data['Start_Up']
+            scores.Others = data['Others']
 
         except:
             print("in except")
             scores = Scores(RES=data['RES'],
-                            Italy=data['Italy'], France=data['France'], Austria=data['Austria'],Germany=data['Germany'],
+                            Italy=data['Italy'], France=data['France'], Austria=data['Austria'],
+                            Germany=data['Germany'],
                             Denmark=data['Denmark'], Czech_Republic=data['Czech_Republic'], Finland=data['Finland'],
                             Ireland=data['Ireland'], Israel=data['Israel'], Portugal=data['Portugal'],
                             Ukranie=data['Ukranie'], United_Kingdom=data['United_Kingdom'], Turkey=data['Turkey'],
-                            Switzerland=data['Switzerland'],Spain=data['Spain'],Norway=data['Norway'],
-                            Association_Agency=data['Association_Agency'],University=data['University'],
+                            Switzerland=data['Switzerland'], Spain=data['Spain'], Norway=data['Norway'],
+                            Association_Agency=data['Association_Agency'], University=data['University'],
                             R_D_Institution=data['R_D_Institution'], Start_Up=data['Start_Up'], Others=data['Others']
                             )
         scores.save()
 
-        #response.append({'scores': scores})
+        # response.append({'scores': scores})
         return Response('response', status=status.HTTP_200_OK)

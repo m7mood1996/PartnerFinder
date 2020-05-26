@@ -6,9 +6,11 @@ from rest_framework.response import Response
 from rest_framework.decorators import action
 from time import sleep
 from ..models import OrganizationProfile, Address, Tag, Event, TagP, Participants, Location, MapIds, MapIDsB2match, \
-    MapIDsB2matchUpcoming, Call, CallTag, Scores
+    MapIDsB2matchUpcoming, Call, CallTag, Scores, UpdateSettings, AlertsSettings
+
 from .serializers import OrganizationProfileSerializer, AddressSerializer, TagSerializer, EventSerializer, \
-    ParticipantsSerializer, LocationSerializer, TagPSerializer, CallSerializer, CallTagSerializer, ScoresSerializer
+    ParticipantsSerializer, LocationSerializer, TagPSerializer, CallSerializer, CallTagSerializer, \
+    AlertsSettingsSerializer, UpdateSettingsSerializer, ScoresSerializer
 import json
 import requests
 
@@ -881,6 +883,102 @@ class OrganizationProfileViewSet(viewsets.ModelViewSet):
                 res.append(par)
                 addedPar.add(par.participant_name)
         return res
+
+
+class AlertsSettingsViewSet(viewsets.ModelViewSet):
+    queryset = AlertsSettings.objects.all()
+    permission_classes = [
+        permissions.AllowAny
+    ]
+    serializer_class = AlertsSettingsSerializer
+
+    @action(detail=False, methods=['GET'])
+    def getSettings(self, request):
+        """
+        method to define API to get updates settings.
+        :param request: HTTP request
+        :return: HTTP Response
+        """
+        try:
+            alertsSettings = AlertsSettings.objects.all()[0]
+            response = {'email': alertsSettings.email, 'turned_on': alertsSettings.turned_on}
+        except:
+            response = {'email': '', 'turned_on': ''}
+
+        return Response(response, status=status.HTTP_200_OK)
+
+    @action(detail=False, methods=['POST'])
+    def setSettings(self, request):
+        """
+        method to define API to update the update settings.
+        :param request: HTTP request with update times
+        :return: HTTP response
+        """
+
+        data = request.data['data']
+        data = json.loads(data)
+        email = data['email']
+        turned_on = data['turned_on']
+
+        try:
+            AlertsSettings.objects.get(ID=1)
+            AlertsSettings.objects.filter(ID=1).update(email=email)
+            AlertsSettings.objects.filter(ID=1).update(turned_on=turned_on)
+        except:
+            alertsSettings = AlertsSettings(email=email, turned_on=turned_on, ID=1)
+            alertsSettings.save()
+
+        response = {'Message': 'Alerts Settings Updated Successfully.'}
+
+        return Response(response, status=status.HTTP_200_OK)
+
+
+class UpdateSettingsViewSet(viewsets.ModelViewSet):
+    queryset = UpdateSettings.objects.all()
+    permission_classes = [
+        permissions.AllowAny
+    ]
+    serializer_class = UpdateSettingsSerializer
+
+    @action(detail=False, methods=['GET'])
+    def getSettings(self, request):
+        """
+        method to define API to get updates settings.
+        :param request: HTTP request
+        :return: HTTP Response
+        """
+        try:
+            updateSettings = UpdateSettings.objects.all()[0]
+            response = {'EU': updateSettings.eu_last_update, 'B2MATCH': updateSettings.b2match_last_update}
+        except:
+            response = {'EU': '', 'B2MATCH': ''}
+
+        return Response(response, status=status.HTTP_200_OK)
+
+    @action(detail=False, methods=['POST'])
+    def setSettings(self, request):
+        """
+        method to define API to update the update settings.
+        :param request: HTTP request with update times
+        :return: HTTP response
+        """
+
+        data = request.data['data']
+        data = json.loads(data)
+        euDate = int(data['EU'])
+        b2matchDate = int(data['B2MATCH'])
+
+        try:
+            UpdateSettings.objects.get(ID=1)
+            UpdateSettings.objects.filter(ID=1).update(eu_last_update=euDate)
+            UpdateSettings.objects.filter(ID=1).update(b2match_last_update=b2matchDate)
+        except:
+            updateSettings = UpdateSettings(eu_last_update=euDate, b2match_last_update=b2matchDate, ID=1)
+            updateSettings.save()
+
+        response = {'Message': 'Updates Settings Updated Successfully.'}
+
+        return Response(response, status=status.HTTP_200_OK)
 
 
 class AddressViewSet(viewsets.ModelViewSet):

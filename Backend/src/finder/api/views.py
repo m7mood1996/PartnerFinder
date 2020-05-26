@@ -6,9 +6,9 @@ from rest_framework.response import Response
 from rest_framework.decorators import action
 from time import sleep
 from ..models import OrganizationProfile, Address, Tag, Event, TagP, Participants, Location, MapIds, MapIDsB2match, \
-    MapIDsB2matchUpcoming, Call, CallTag
+    MapIDsB2matchUpcoming, Call, CallTag, Scores
 from .serializers import OrganizationProfileSerializer, AddressSerializer, TagSerializer, EventSerializer, \
-    ParticipantsSerializer, LocationSerializer, TagPSerializer, CallSerializer, CallTagSerializer
+    ParticipantsSerializer, LocationSerializer, TagPSerializer, CallSerializer, CallTagSerializer, ScoresSerializer
 import json
 import requests
 
@@ -1426,31 +1426,32 @@ class EventViewSet(viewsets.ModelViewSet):
         return Response([{'message': 'done, B2MATCH Reposutory updated'}], status=status.HTTP_200_OK)
 
 
+def add_par_to_index(index, par, tags, upcoming):
+    """
+    function to add new participant to the index
+    :param index: current index
+    :param par: new participant
+    :return: updated index
+    """
+    doc = get_document_from_par(par, tags)
+    originalID = par.id
+
+    indexID = len(index)
+    if not upcoming:
+        newMap = MapIDsB2match(originalID=originalID, indexID=indexID)
+    else:
+        newMap = MapIDsB2matchUpcoming(originalID=originalID, indexID=indexID)
+    newMap.save()
+    index = add_documents(index, [doc])
+    return index
+
+
 class ParticipantsViewSet(viewsets.ModelViewSet):
     queryset = Participants.objects.all()
     permission_classes = [
         permissions.AllowAny
     ]
     serializer_class = ParticipantsSerializer
-
-    def add_par_to_index(self, index, par, tags, upcoming):
-        """
-        function to add new participant to the index
-        :param index: current index
-        :param par: new participant
-        :return: updated index
-        """
-        doc = get_document_from_par(par, tags)
-        originalID = par.id
-
-        indexID = len(index)
-        if not upcoming:
-            newMap = MapIDsB2match(originalID=originalID, indexID=indexID)
-        else:
-            newMap = MapIDsB2matchUpcoming(originalID=originalID, indexID=indexID)
-        newMap.save()
-        index = add_documents(index, [doc])
-        return index
 
     @action(detail=False, methods=['POST'])
     def add_Participants_from_Event(self, request):
@@ -1508,7 +1509,7 @@ class ParticipantsViewSet(viewsets.ModelViewSet):
                         index = build_index('B2MATCH_Index')
                         print("index built....")
 
-                    index = self.add_par_to_index(index, participant, part_temp[7], False)
+                    index = add_par_to_index(index, participant, part_temp[7], False)
                 elif event.is_upcoming:
                     try:
                         # this is the path for the index
@@ -1525,7 +1526,7 @@ class ParticipantsViewSet(viewsets.ModelViewSet):
                         index = build_index('B2MATCH_upcoming_Index')
                         print("upcoming index built....")
 
-                    index = self.add_par_to_index(index, participant, part_temp[7], True)
+                    index = add_par_to_index(index, participant, part_temp[7], True)
 
         return Response({'message': 'done see DataBase'}, status=status.HTTP_200_OK)
 
@@ -1548,3 +1549,66 @@ def add_par_to_index(index, par, tags, upcoming):
     newMap.save()
     index = add_documents(index, [doc])
     return index
+
+
+class ScoresViewSet(viewsets.ModelViewSet):
+    queryset = Scores.objects.all()
+    permission_classes = [
+        permissions.AllowAny
+    ]
+    serializer_class = ScoresSerializer
+
+
+    def create(self, request, *args, **kwargs):
+        return Response({'message': 'cant add event like that'}, status=status.HTTP_400_BAD_REQUEST)
+
+
+    @action(detail=False, methods=['POST'])
+    def updatescores(self, request):
+        data = request.data['data']
+        data = json.loads(data)
+        print("DATA", data)
+
+
+        try:
+            print("in try")
+            scores = Scores.objects.all()[0]
+            scores.RES=data['RES']
+            scores.Italy=data['Italy']
+            scores.France=data['France']
+            scores.Austria=data['Austria']
+            scores.Germany=data['Germany']
+            scores.Denmark=data['Denmark']
+            scores.Czech_Republic=data['Czech_Republic']
+            scores.Finland=data['Finland']
+            scores.Ireland=data['Ireland']
+            scores.Israel=data['Israel']
+            scores.Portugal=data['Portugal']
+            scores.Ukranie=data['Ukranie']
+            scores. United_Kingdom=data['United_Kingdom']
+            scores.Turkey=data['Turkey']
+            scores.Switzerland=data['Switzerland']
+            scores.Spain=data['Spain']
+            scores.Norway=data['Norway']
+
+            scores. Association_Agency=data['Association_Agency']
+            scores.University=data['University']
+            scores.R_D_Institution=data['R_D_Institution']
+            scores.Start_Up=data['Start_Up']
+            scores. Others=data['Others']
+
+        except:
+            print("in except")
+            scores = Scores(RES=data['RES'],
+                            Italy=data['Italy'], France=data['France'], Austria=data['Austria'],Germany=data['Germany'],
+                            Denmark=data['Denmark'], Czech_Republic=data['Czech_Republic'], Finland=data['Finland'],
+                            Ireland=data['Ireland'], Israel=data['Israel'], Portugal=data['Portugal'],
+                            Ukranie=data['Ukranie'], United_Kingdom=data['United_Kingdom'], Turkey=data['Turkey'],
+                            Switzerland=data['Switzerland'],Spain=data['Spain'],Norway=data['Norway'],
+                            Association_Agency=data['Association_Agency'],University=data['University'],
+                            R_D_Institution=data['R_D_Institution'], Start_Up=data['Start_Up'], Others=data['Others']
+                            )
+        scores.save()
+
+        #response.append({'scores': scores})
+        return Response('response', status=status.HTTP_200_OK)

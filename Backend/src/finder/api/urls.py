@@ -2,7 +2,7 @@ from rest_framework import routers
 
 from django.urls import path, include
 from .views import OrganizationProfileViewSet, EventViewSet, ParticipantsViewSet, CallViewSet, \
-    UpdateSettingsViewSet, AlertsSettingsViewSet
+    UpdateSettingsViewSet, AlertsSettingsViewSet, ScoresViewSet
 
 router = routers.DefaultRouter()
 router.register('organizations', OrganizationProfileViewSet)

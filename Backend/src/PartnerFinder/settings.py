@@ -41,6 +41,8 @@ INSTALLED_APPS = [
     'finder',
 
     'corsheaders',
+    'django_celery_beat',
+    'django_crontab'
 ]
 
 MIDDLEWARE = [

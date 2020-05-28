@@ -1,170 +1,31 @@
 import datetime
-import collections
 
 from rest_framework import viewsets, permissions, status
 from rest_framework.response import Response
 from rest_framework.decorators import action
 from time import sleep
-from ..models import OrganizationProfile, Address, Tag, Event, TagP, Participants, Location, MapIds, MapIDsB2match, \
-    MapIDsB2matchUpcoming, Call, CallTag, Scores, UpdateSettings, AlertsSettings
+from ..models import Event, TagP, Participants, Location, MapIDsB2match, \
+    MapIDsB2matchUpcoming, Scores, UpdateSettings, AlertsSettings
 
 from .serializers import OrganizationProfileSerializer, AddressSerializer, TagSerializer, EventSerializer, \
-    ParticipantsSerializer, LocationSerializer, TagPSerializer, CallSerializer, CallTagSerializer, \
+    ParticipantsSerializer, CallSerializer, CallTagSerializer, \
     AlertsSettingsSerializer, UpdateSettingsSerializer, ScoresSerializer
 import json
-import requests
 
 from bs4 import BeautifulSoup
 from selenium import webdriver
 from googletrans import Translator
-from nltk.corpus import stopwords
-from nltk.stem import PorterStemmer
-import gensim
-from nltk.tokenize import word_tokenize
+
+# from .NLP import *
+# from .Utils import *
+from .EU import *
+
 from datetime import datetime
-from dateutil.relativedelta import relativedelta
-import time
+
 import re
 
-import smtplib, ssl
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
-
-from celery.task.schedules import crontab
-from celery.decorators import periodic_task
-import celery.decorators
-# ----------------------- NLP Processor Funcs --------------------------------------
-def NLP_Processor(documents):
-    """
-    function to make new corpus for a certain set of documents
-    :param documents: list of strings
-    :return: Corpus of the documents
-    """
-    tokens = [process_Document(doc) for doc in documents]
-    print(tokens)
-    dictionary = get_ids(tokens)
-
-    return build_corpus(dictionary, tokens)
-
-
-def process_Document(document):
-    """
-    function to process a certain document which tokenize and make lower case for the current document
-    :param document: string
-    :return: list of tokens
-    """
-    ps = PorterStemmer()
-    stop_words = set(stopwords.words('english'))
-    return [ps.stem(word.lower()) for word in word_tokenize(document) if
-            not word in stop_words]  # tokenizing and normalize tokens
-
-
-def get_ids(tokens):
-    """
-    a function to map each token into a unique id
-    :param tokens: list of lists of tokens
-    :return: Dictionary object
-    """
-
-    return gensim.corpora.Dictionary(tokens)  # mapping termId : term
-
-
-def build_corpus(dictionary, tokens):
-    """
-    a function to build a corpus, which is mapping each token id to its frequency
-    :param dictionary: object for mapping token -> token id
-    :param tokens: list of lists of tokens
-    :return: list of lists of tuples (id, frequency)
-    """
-
-    return [dictionary.doc2bow(lst) for lst in tokens]  # for each doc map termId : term frequency
-
-
-def process_query_result(result):
-    """
-    a function to process similarity result, it will map each document similarity percentage with the document
-    id
-    :param result: list of lists of percentages
-    :return: pair of (doc id, doc similarity percentage)
-    """
-
-    if len(result) == 0:
-        return []
-    result = result[0]
-    pairs = []
-    for idx, sim_perc in enumerate(result):
-        pairs.append((idx, sim_perc))
-
-    return pairs
-
-
-def add_documents(index, documents):
-    """
-    function to add new documents to existent index
-    :param index: current index
-    :param documents: list of strings
-    :return: updated index
-    """
-    corpus = NLP_Processor(documents)
-    for doc in corpus:
-        index.num_features += len(doc)
-    index.num_features += 1000
-    index.add_documents(corpus)
-    index.save()
-    return index
-
-
-def load_index(path):
-    """
-    function to load index from a specific directory in disk
-    :param path: path to directory
-    :return: Similarity Object
-    """
-
-    return gensim.similarities.Similarity.load(path)
-
-
-def build_index(path):
-    """
-    build an empty index in disk
-    :param path: path of the directory
-    :return: Similarity object "index"
-    """
-
-    corpus = NLP_Processor([])
-    tfidf = gensim.models.TfidfModel(corpus)
-
-    return gensim.similarities.Similarity(path, tfidf[corpus], num_features=0)  # build the index
-
-
-def get_document_from_org(org):
-    """
-    function to take string attributes which are description and tags and keywords from EU organization
-    :param org: EU organization object
-    :return: string of description and tags and keywords
-    """
-    res = [org['description']]
-    for tag in org['tagsAndKeywords']:
-        res.append(tag)
-
-    return ' '.join(res)
-
-
-def get_document_from_par(par, tags):
-    """
-    function to get the description and tags from participants
-    :param par: participant
-    :param tags: tags
-    :return: string of combination of participants description and tags
-    """
-    res = [par.description]
-    for tag in tags:
-        res.append(tag)
-
-    return ' '.join(res)
-
-
-# ----------------------------------------------------------------------------------
 
 
 def deleteEventsTree(toupdate):
@@ -186,6 +47,7 @@ def deleteEventsTree(toupdate):
 
             part.delete()
     MapIDsB2matchUpcoming.objects.all().delete()
+
 
 def add_par_to_index(index, par, tags, upcoming):
     """
@@ -248,303 +110,6 @@ def changeEventStatus(eventNoLongerUpcoming):
         e.save()
         addEventsParToMainIndex(e)
 
-
-# ----------------------- Gathering/Updating EU data Funcs -------------------------
-LIST_OF_ATTRIBUTES = {'pic', 'businessName', 'legalName', 'classificationType', 'description',
-                      'address', 'tagsAndKeywords', 'dataStatus', 'numberOfProjects', 'consorsiumRoles',
-                      'collaborations'}
-
-
-def getPicsFromCollaborations(collaborations):
-    """
-    function to get list of pics from list of organizations
-    :param collaborations: list of organizations
-    :return: list of pics
-    """
-    pics = set()
-    for col in collaborations:
-        pics.add(col['pic'])
-    return pics
-
-
-def getNumOfProjects(pic):
-    """
-    function to get number of projects for a certain EU organization
-    :param pic: id of the organization
-    :return: number of projects for this organization
-    """
-
-    url = 'https://ec.europa.eu/info/funding-tenders/opportunities/api/orgProfile/publicProjects.json?pic=' + str(pic)
-    response = []
-    try:
-        response = requests.get(url)
-    except requests.exceptions.RequestException as error:
-        print("Error - ", error)
-        exit(0)
-
-    return len(response.json()['publicProjects'])
-
-
-def getOrganizationProfileFromEUByPIC(pic):
-    """
-    function to get organisation profile from the database of EU by pic number
-    :param pic: id of the organization
-    :return: organization profile in format of json
-    """
-    url = 'https://ec.europa.eu/info/funding-tenders/opportunities/api/orgProfile/data.json?pic=' + str(pic)
-    response = []
-    try:
-        response = requests.get(url)
-    except requests.exceptions.RequestException as error:
-        print("Error - ", error)
-        exit(0)
-
-    return getRelatedAttributes(response.json()['organizationProfile'])
-
-
-def getRelatedAttributes(obj):
-    """
-    function to get the related fields from an EU organization object
-    :param obj: EU organization
-    :return: obj with the related fields
-    """
-    resObj = {}
-    publicAttributes = obj['publicOrganizationData']
-
-    for attribute in LIST_OF_ATTRIBUTES:
-        if attribute in publicAttributes:
-            if attribute == 'address':
-                address = {'country': publicAttributes[attribute]['country'],
-                           'city': publicAttributes[attribute]['city']}
-                resObj[attribute] = address
-            else:
-                resObj[attribute] = publicAttributes[attribute]
-        elif attribute == 'tagsAndKeywords' and attribute in obj:
-            tags = obj[attribute]
-            listOfTags = []
-            for tag in tags:
-                if 'text' in tag:
-                    listOfTags.append(tag['text'])
-            resObj[attribute] = listOfTags
-        else:
-            if attribute in obj:
-                resObj[attribute] = obj[attribute]
-            else:
-                resObj[attribute] = ''
-
-    resObj['numberOfProjects'] = getNumOfProjects(obj['publicOrganizationData']['pic'])
-    resObj['consorsiumRoles'] = True if 'COORDINATOR' in resObj['consorsiumRoles'] else False
-    resObj['pic'] = int(resObj['pic'])
-
-    return resObj
-
-
-def translateData(data):
-    """
-    function to translate non english data in object into english
-    :param data: object
-    :return: translated object
-    """
-    translator = Translator()
-    for key in data:
-        if type(data[key]) == str:
-            try:
-                data[key] = translator.translate(data[key]).text
-            except:
-                continue
-    return data
-
-
-class Graph:
-    """
-    class to define undirected unweighted graph
-    """
-
-    def __init__(self):
-        self.graph = collections.defaultdict(set)
-        self.vertices = set()
-
-    def add(self, u, v):
-        self.vertices.add(u)
-        self.vertices.add(v)
-        self.graph[u].add(v)
-        self.graph[v].add(u)
-
-
-def add_org_to_index(index, org):
-    """
-    function to add new organization to the index
-    :param index: current index
-    :param org: new EU organization
-    :return: updated index
-    """
-
-    doc = get_document_from_org(org)
-    originalID = org['pic']
-    indexID = len(index)
-    newMap = MapIds(originalID=originalID, indexID=indexID)
-    newMap.save()
-    index = add_documents(index, [doc])
-    return index
-
-
-def addOrganizationToDB(org):
-    """
-    method to add new organization to the local db
-    :param org: EU organization
-    :return: True/False
-    """
-    ATTRIBUTES = {'description', 'tagsAndKeywords', 'dataStatus',
-                  'numberOfProjects', 'consorsiumRoles'}
-    response = True
-    org['collaborations'] = len(org['collaborations'])
-    try:
-        obj = OrganizationProfile.objects.get(pic=org['pic'])
-        updated = False
-        for atr in ATTRIBUTES:
-            if atr != 'tagsAndKeywords':
-                if org[atr] != getattr(obj, atr):
-                    setattr(obj, atr, org[atr])
-                    updated = True
-
-        oldTags = Tag.objects.filter(organizations=obj)
-        tags = set()
-        for tag in oldTags:
-            tags.add(tag.tag)
-        newTags = set()
-        if len(tags) != len(org['tagsAndKeywords']):
-            updated = True
-            for tag in org['tagsAndKeywords']:
-                if tag not in tags:
-                    newTags.add(tag)
-
-        for tag in newTags:
-            try:
-                currTag = Tag.objects.get(tag=tag)
-                currTag.organizations.add(obj)
-            except:
-                currTag = Tag(tag=tag)
-                currTag.save()
-                currTag.organizations.add(obj)
-
-        if updated:
-            obj.save()
-            response = True
-    except:
-        if 'address' in org:
-            if 'country' in org['address'] and 'city' in org['address']:
-                newAddress = Address(
-                    country=org['address']['country'], city=org['address']['city'])
-                newAddress.save()
-        newOrg = OrganizationProfile(pic=org['pic'], legalName=org['legalName'], businessName=org['businessName'],
-                                     classificationType=org['classificationType'], description=org['description'],
-                                     address=newAddress, dataStatus=org['dataStatus'],
-                                     numberOfProjects=org['numberOfProjects'],
-                                     consorsiumRoles=org['consorsiumRoles'], collaborations=org['collaborations'])
-        newOrg.save()
-        for tag in org['tagsAndKeywords']:
-            try:
-                currTag = Tag.objects.get(tag=tag)
-                currTag.organizations.add(newOrg)
-            except:
-                currTag = Tag(tag=tag)
-                currTag.save()
-                currTag.organizations.add(newOrg)
-
-    return response
-
-
-# ----------------------------------------------------------------------------------
-
-
-# ----------------------- Processing query in EU data Funcs ------------------------
-def getOrgsByTags(tags):
-    """
-    method to get all organizations with at least one tag from the list of tags.
-    :param tags: list of tags
-    :return: list of organizations objects
-    """
-
-    tags = ' '.join(tags)
-    index = load_index('EU_Index')
-    corpus = NLP_Processor([tags])
-    res = index[corpus]
-
-    res = process_query_result(res)
-    res = sorted(res, key=lambda pair: pair[1], reverse=True)
-    res = res[:100]
-    res = [pair for pair in res if pair[1] > 0.6]
-    res = [MapIds.objects.get(indexID=pair[0]) for pair in res]
-
-    finalRes = []
-    for mapId in res:
-        finalRes.append(OrganizationProfile.objects.get(pic=mapId.originalID))
-
-    return finalRes
-
-
-def getOrganizationsByCountries(countries):
-    """
-    method to get all organizations that locates in one of the countries list.
-    :param countries: list of countries
-    :return: list of organizations objects
-    """
-
-    countries = [val.lower() for val in countries]
-
-    countries = set(countries)
-    res = []
-    allOrgs = OrganizationProfile.objects.all()
-
-    if not countries:
-        return allOrgs
-
-    for org in allOrgs:
-        currCountry = org.address.country.lower()
-        if currCountry in countries:
-            res.append(org)
-
-    return res
-
-
-def getOrgsIntersection(orgs1, orgs2):
-    """
-    private method to get intersection between two lists of organizations
-    :param orgs1: first list
-    :param orgs2: second list
-    :return: intersection list
-    """
-    res, seenPICS = [], set()
-
-    for org in orgs1:
-        seenPICS.add(org.pic)
-
-    addedPICS = set()
-    for org in orgs2:
-        if org.pic in seenPICS and org.pic not in addedPICS:
-            res.append(org)
-            addedPICS.add(org.pic)
-
-    return res
-
-
-def getOrgsByCountriesAndTags(tags, countries):
-    """
-    private method to get organizations from the database that have a certain tags
-    or located in one of the countries list.
-    :param tags: list of tags
-    :param countries: list of countries
-    :return: list of organizations objects
-    """
-    orgsByCountries = getOrganizationsByCountries(countries)
-    orgsByTags = getOrgsByTags(tags)
-
-    res = getOrgsIntersection(orgsByCountries, orgsByTags)
-
-    return res
-
-
-# ----------------------------------------------------------------------------------
 
 def add_Participants_from_Upcoming_Event():
     """
@@ -633,9 +198,9 @@ def getParticipentFromUrl(url_):
     :return: participant url
     """
 
-    ##### for MacOS
+    # for MacOS
     # driver = webdriver.Chrome()
-    ##### for Windows
+    # for Windows
     driver = webdriver.Chrome('C:\\bin\chromedriver.exe')
     driver.get(url_)
     sleep(1)
@@ -688,9 +253,9 @@ def getParticipentDATA(url_):
     :return: participant information
     """
     translator = Translator()
-    ### for macOS
+    # for macOS
     # driver = webdriver.Chrome()
-    ### for Windows
+    # for Windows
     driver = webdriver.Chrome('C:\\bin\chromedriver.exe')
 
     driver.get(url_)
@@ -706,7 +271,8 @@ def getParticipentDATA(url_):
     except:
         pass
     try:
-        participant_name = driver.execute_script("return document.getElementsByClassName(\"name\")[0].innerText")
+        participant_name = driver.execute_script(
+            "return document.getElementsByClassName(\"name\")[0].innerText")
     except:
         pass
 
@@ -715,7 +281,8 @@ def getParticipentDATA(url_):
     list_ = []
     i = 0
 
-    temp0 = driver.execute_script('return document.getElementsByClassName("personal-info-holder")[0].innerText')
+    temp0 = driver.execute_script(
+        'return document.getElementsByClassName("personal-info-holder")[0].innerText')
     temp1 = None
     if childcount == 3:
         temp1 = driver.execute_script(
@@ -856,7 +423,8 @@ def getParticipantsByTags(tags):
     res1 = [pair for pair in res1 if pair[1] > 0.3]
     res1 = [MapIDsB2match.objects.get(indexID=pair[0]) for pair in res1]
     res2 = [pair for pair in res2 if pair[1] > 0.3]
-    res2 = [MapIDsB2matchUpcoming.objects.get(indexID=pair[0]) for pair in res2]
+    res2 = [MapIDsB2matchUpcoming.objects.get(
+        indexID=pair[0]) for pair in res2]
 
     finalRes = []
     for mapId in res1:
@@ -887,7 +455,8 @@ def getB2MatchParByCountry(countries):
     for participant in allPart:
 
         try:
-            currLocation = participant.location.location.lower().split(" ", 1)[1]
+            currLocation = participant.location.location.lower().split(" ", 1)[
+                1]
         except:
             currLocation = participant.location.location.lower()
         if currLocation in countries:
@@ -921,8 +490,8 @@ class OrganizationProfileViewSet(viewsets.ModelViewSet):
 
     # @periodic_task(run_every=(crontab(minute=0, hour=15, day_of_month='1-8', day_of_week='fri')),
     #                name="update_organizations", ignore_result=True)
-    @periodic_task(run_every=(crontab()),
-                   name="updateOrganizations", ignore_result=True)
+    # @periodic_task(run_every=(crontab()),
+    #                name="updateOrganizations", ignore_result=True)
     @action(detail=False, methods=['GET'])
     def updateOrganizations(self, request):
         """
@@ -959,7 +528,8 @@ class OrganizationProfileViewSet(viewsets.ModelViewSet):
             currPic = visitngQueue.popleft()
             try:
                 currOrg = getOrganizationProfileFromEUByPIC(currPic)
-                currAdjacent = getPicsFromCollaborations(currOrg['collaborations'])
+                currAdjacent = getPicsFromCollaborations(
+                    currOrg['collaborations'])
             except:
                 continue
             for pic in currAdjacent:
@@ -1029,7 +599,8 @@ class AlertsSettingsViewSet(viewsets.ModelViewSet):
         """
         try:
             alertsSettings = AlertsSettings.objects.all()[0]
-            response = {'email': alertsSettings.email, 'turned_on': alertsSettings.turned_on}
+            response = {'email': alertsSettings.email,
+                        'turned_on': alertsSettings.turned_on}
         except:
             response = {'email': '', 'turned_on': ''}
 
@@ -1053,7 +624,8 @@ class AlertsSettingsViewSet(viewsets.ModelViewSet):
             AlertsSettings.objects.filter(ID=1).update(email=email)
             AlertsSettings.objects.filter(ID=1).update(turned_on=turned_on)
         except:
-            alertsSettings = AlertsSettings(email=email, turned_on=turned_on, ID=1)
+            alertsSettings = AlertsSettings(
+                email=email, turned_on=turned_on, ID=1)
             alertsSettings.save()
 
         response = {'Message': 'Alerts Settings Updated Successfully.'}
@@ -1077,7 +649,8 @@ class UpdateSettingsViewSet(viewsets.ModelViewSet):
         """
         try:
             updateSettings = UpdateSettings.objects.all()[0]
-            response = {'EU': updateSettings.eu_last_update, 'B2MATCH': updateSettings.b2match_last_update}
+            response = {'EU': updateSettings.eu_last_update,
+                        'B2MATCH': updateSettings.b2match_last_update}
         except:
             response = {'EU': '', 'B2MATCH': ''}
 
@@ -1099,9 +672,11 @@ class UpdateSettingsViewSet(viewsets.ModelViewSet):
         try:
             UpdateSettings.objects.get(ID=1)
             UpdateSettings.objects.filter(ID=1).update(eu_last_update=euDate)
-            UpdateSettings.objects.filter(ID=1).update(b2match_last_update=b2matchDate)
+            UpdateSettings.objects.filter(ID=1).update(
+                b2match_last_update=b2matchDate)
         except:
-            updateSettings = UpdateSettings(eu_last_update=euDate, b2match_last_update=b2matchDate, ID=1)
+            updateSettings = UpdateSettings(
+                eu_last_update=euDate, b2match_last_update=b2matchDate, ID=1)
             updateSettings.save()
 
         response = {'Message': 'Updates Settings Updated Successfully.'}
@@ -1125,230 +700,6 @@ class TagViewSet(viewsets.ModelViewSet):
     serializer_class = TagSerializer
 
 
-# ----------------------- Consortium builder for open EU calls Funcs ---------------
-
-LIST_OF_CALLS_ATTRIBUTES = {'type', 'status', 'ccm2Id', 'identifier', 'title', 'callTitle',
-                            'deadlineDatesLong', 'tags', 'keywords', 'sumbissionProcedure'}
-
-REST_ATTRIBUTES = {'description', 'conditions', 'ccm2Id', 'focusArea', 'supportInfo', 'actions'}
-
-
-def get_related_attributes(obj):
-    """
-    function to get related attributes from call object
-    :param obj: call object
-    :return: new object with the related attributes
-    """
-    resObj = {}
-    for atr in LIST_OF_CALLS_ATTRIBUTES:
-        if atr in obj:
-            resObj[atr] = obj[atr]
-        else:
-            resObj[atr] = ''
-
-    return resObj
-
-
-def get_rest_attributes(obj):
-    """
-    function to get specific attributes for call object from another API
-    :param obj: call object
-    :return: new call object with additional attributes
-    """
-    id = obj['identifier'].lower()
-    url = 'https://ec.europa.eu/info/funding-tenders/opportunities/data/topicDetails/' + id + '.json'
-
-    try:
-        response = requests.get(url)
-        response = response.json()['TopicDetails']
-        for atr in REST_ATTRIBUTES:
-            if atr in response:
-                obj[atr] = response[atr]
-            else:
-                obj[atr] = ''
-        return obj
-    except:
-        return {}
-
-
-def get_call_to_save(obj):
-    """
-
-    :param obj:
-    :return:
-    """
-    finalObj = {}
-    for atr in LIST_OF_CALLS_ATTRIBUTES:
-        try:
-            if atr == 'tags' or atr == 'keywords':
-                if 'tagsAndKeywords' in finalObj:
-                    finalObj['tagsAndKeywords'].extend(obj[atr])
-                else:
-                    finalObj['tagsAndKeywords'] = [tag for tag in obj[atr]]
-            elif atr == 'sumbissionProcedure' or atr == 'status':
-                finalObj[atr] = obj[atr]['abbreviation']
-            elif atr == 'deadlineDatesLong':
-                finalObj[atr] = (max(obj['deadlineDatesLong']) // 1000)
-            else:
-                finalObj[atr] = obj[atr]
-        except:
-            finalObj[atr] = ''
-
-    return finalObj
-
-
-def is_valid_date(date):
-    """
-    function to check if the deadline is more than three months from now
-    :param date: deadline date
-    :return: True/False
-    """
-    try:
-        date //= 1000
-        three_months = datetime.now() + relativedelta(months=+3)
-        print(datetime.fromtimestamp(date))
-        three_months = time.mktime(three_months.timetuple())
-        return date >= three_months
-    except:
-        return False
-
-
-def is_valid_status(obj):
-    """
-    function to check if the status of a certain call is not closed yet
-    :param obj: call object
-    :return: True/False
-    """
-    try:
-        return obj['status']['abbreviation'] != 'Closed'
-    except:
-        return False
-
-
-def is_relevant_action(obj):
-    """
-    function to check if the demand tags are being included in the call object actions
-    :param obj: call object
-    :return: True/False
-    """
-    tags = ['ia', 'ria']
-    try:
-        for action in obj['actions']:
-            types = action['types']
-            curr_tags = []
-            for type in types:
-                type = type.lower()
-                type.replace('-', '')
-                type.replace(' ', '')
-                curr_tags.extend(type.lower())
-            curr_tags = ''.join(curr_tags)
-            for tag in tags:
-                if tag in curr_tags:
-                    return True
-    except:
-        return False
-
-
-def get_proposal_calls():
-    """
-    function to get all proposal calls for grants that are open and have at least three months deadline
-    :return: list of object of open calls
-    """
-    url = 'https://ec.europa.eu/info/funding-tenders/opportunities/data/referenceData/grantsTenders.json'
-
-    try:
-        response = requests.get(url)
-    except requests.exceptions.RequestException as err:
-        print(err)
-        return []
-
-    res = response.json()['fundingData']['GrantTenderObj']
-    grants = []
-    for obj in res:
-        if 'type' in obj and obj['type'] == 1:
-            obj = get_related_attributes(obj)
-            obj = get_rest_attributes(obj)
-            try:
-                check_dates = [is_valid_date(date) for date in obj['deadlineDatesLong']]
-            except:
-                continue
-
-            if any(check_dates) and is_valid_status(obj) and is_relevant_action(obj):
-                obj = get_call_to_save(obj)
-                grants.append(obj)
-
-    return grants
-
-
-def add_call_to_DB(call):
-    """
-    method to add new call to the local db
-    :param call: EU call
-    :return: True/False
-    """
-
-    response = True
-    call = translateData(call)
-    try:
-        Call.objects.get(ccm2Id=call['pic'])
-        response = False
-    except:
-        newCall = Call(type=call['type'], status=call['status'], ccm2Id=call['ccm2Id'],
-                       identifier=call['identifier'], title=call['title'],
-                       callTitle=call['callTitle'], deadlineDate=call['deadlineDatesLong'],
-                       sumbissionProcedure=call['sumbissionProcedure'], hasConsortium=call['hasConsortium'])
-        newCall.save()
-        for tag in call['tagsAndKeywords']:
-            try:
-                currTag = CallTag.objects.get(tag=tag)
-                currTag.calls.add(newCall)
-            except:
-                currTag = CallTag(tag=tag)
-                currTag.save()
-                currTag.calls.add(newCall)
-
-    return response
-
-
-def has_consortium(call):
-    """
-    function to check if there is a consortium for a specific EU call
-    :param call: EU call
-    :return: new call with new field hasConsortium: True/False
-    """
-
-    orgs = getOrgsByCountriesAndTags(call['tagsAndKeywords'], [])
-
-    countries = set()
-    for org in orgs:
-        countries.add(org.address.country)
-
-    call['hasConsortium'] = True if len(countries) >= 3 else False
-
-    return call
-
-
-def send_mail(email, subject, message):
-    sender_mail = 'PartnerFinderAlerts@gmail.com'
-    password = 'Alerts_123'
-    ssl_port = 465
-    smtp_server = 'smtp.gmail.com'
-    receiver_mail = email
-    message['Subject'] = subject
-    # message = 'Subject: {}\n\n{}'.format(subject, body)
-
-    context = ssl.create_default_context()
-    try:
-        with smtplib.SMTP_SSL(smtp_server, ssl_port, context=context) as server:
-            server.login(sender_mail, password)
-            server.sendmail(sender_mail, receiver_mail, message.as_string())
-        print("SENT")
-    except Exception as e:
-        print("ERROR", e)
-
-
-# ----------------------------------------------------------------------------------
-
 class CallViewSet(viewsets.ModelViewSet):
     queryset = Call.objects.all()
     permission_classes = [
@@ -1365,9 +716,11 @@ class CallViewSet(viewsets.ModelViewSet):
         :param request: HTTP request
         :return: HTTP Response
         """
-
-        alerts_settings = AlertsSettings.objects.all()[0]
         response = {'Message': 'Please Turn Alerts ON!'}
+        try:
+            alerts_settings = AlertsSettings.objects.all()[0]
+        except:
+            alerts_settings['turned_on'] = False
         if not alerts_settings.turned_on:
             return Response(response, status=status.HTTP_200_OK)
         email = alerts_settings.email
@@ -1376,27 +729,27 @@ class CallViewSet(viewsets.ModelViewSet):
         print("*" * 50)
         response = {'Message': 'Error while building the consortium!'}
 
-        Call.objects.all().delete()
-        CallTag.objects.all().delete()
-        calls = get_proposal_calls()
-
-        calls_to_send = []
-
-        for call in calls:
-            call = has_consortium(call)
-            if call['hasConsortium']:
-                calls_to_send.append({'title': call['title']})
-                add_call_to_DB(call)
-
-        # calls = Call.objects.all()
+        # Call.objects.all().delete()
+        # CallTag.objects.all().delete()
+        # calls = get_proposal_calls()
+        #
         # calls_to_send = []
+        #
         # for call in calls:
-        #     calls_to_send.append(call.__dict__['title'])
+        #     call = has_consortium(call)
+        #     if call['hasConsortium']:
+        #         calls_to_send.append({'title': call['title']})
+        #         add_call_to_DB(call)
+
+        calls = Call.objects.all()
+        calls_to_send = []
+        for call in calls:
+            calls_to_send.append({'title': call.__dict__['title']})
 
         body = MIMEMultipart('alternative')
 
         calls = ''
-        for i, call in enumerate(calls_to_send):
+        for call in calls_to_send:
             calls += '<li><b>' + call['title'] + '</b></li>'
 
         signature = 'Sincerly,<br>Consortium Builder Alerts'
@@ -1404,9 +757,9 @@ class CallViewSet(viewsets.ModelViewSet):
         <html>
           <head><h3>You have new proposal calls that might interest you</h3></head>
           <body>
-            <ul> 
+            <ol> 
             {}
-            </ul>
+            </ol>
             <br>
             <br>
             {}
@@ -1414,13 +767,12 @@ class CallViewSet(viewsets.ModelViewSet):
         </html>
         """.format(calls, signature)
 
-
         response = {'Message': 'Finished building consortium successfully!'}
 
         content = MIMEText(html, 'html')
         body.attach(content)
-
-        send_mail(email, "EU Proposal Calls Alert", body)
+        body['Subject'] = 'EU Proposal Calls Alert'
+        send_mail(receiver_email=email, message=body)
         return Response(response, status=status.HTTP_200_OK)
 
 
@@ -1430,7 +782,6 @@ class CallTagViewSet(viewsets.ModelViewSet):
         permissions.AllowAny
     ]
     serializer_class = CallTagSerializer
-
 
 
 class EventViewSet(viewsets.ModelViewSet):
@@ -1469,8 +820,8 @@ class EventViewSet(viewsets.ModelViewSet):
             try:
                 event_date_ = item.find(class_="event-card-date").get_text()
                 event_date_ = event_date_.upper()
-                dt = re.findall("((([0-9]{2})| ([0-9]{1}))\ (\w+)\,\ [0-9]{4})", event_date_)
-
+                dt = re.findall(
+                    "((([0-9]{2})| ([0-9]{1}))\ (\w+)\,\ [0-9]{4})", event_date_)
 
             except:
                 pass
@@ -1483,7 +834,8 @@ class EventViewSet(viewsets.ModelViewSet):
             if CurrentDate < event_date:
                 upComing = True
 
-            event = Event(event_name=event_title, event_url=url, event_date=event_date, is_upcoming=upComing)
+            event = Event(event_name=event_title, event_url=url,
+                          event_date=event_date, is_upcoming=upComing)
             event.save()
 
         curr_page = "/?all=true&page="
@@ -1508,10 +860,11 @@ class EventViewSet(viewsets.ModelViewSet):
                 # newEvent = B2match_event(url,date,event_title,event_location,event_text)
                 # all_events_list.append(newEvent)
                 try:
-                    event_date_ = item.find(class_="event-card-date").get_text()
+                    event_date_ = item.find(
+                        class_="event-card-date").get_text()
                     event_date_ = event_date_.upper()
-                    dt = re.findall("((([0-9]{2})| ([0-9]{1}))\ (\w+)\,\ [0-9]{4})", event_date_)
-
+                    dt = re.findall(
+                        "((([0-9]{2})| ([0-9]{1}))\ (\w+)\,\ [0-9]{4})", event_date_)
 
                 except:
                     pass
@@ -1524,7 +877,8 @@ class EventViewSet(viewsets.ModelViewSet):
                     if CurrentDate < event_date:
                         upComing = True
 
-                    event = Event(event_name=event_title, event_url=url, event_date=event_date, is_upcoming=upComing)
+                    event = Event(event_name=event_title, event_url=url,
+                                  event_date=event_date, is_upcoming=upComing)
                     event.save()
                 except:
                     pass
@@ -1555,7 +909,8 @@ class EventViewSet(viewsets.ModelViewSet):
         upcoming_event_b2match = "https://events.b2match.com"
         b2match = "https://events.b2match.com"
         upcoming_events_page = requests.get(upcoming_event_b2match)
-        upcoming_events_soup = BeautifulSoup(upcoming_events_page.content, 'html.parser')
+        upcoming_events_soup = BeautifulSoup(
+            upcoming_events_page.content, 'html.parser')
         itemes = upcoming_events_soup.find_all(class_="last next")
         upcoming_events_last_page = itemes[0].find("a")['href']
         upcoming_events = upcoming_events_soup.find_all(
@@ -1573,7 +928,8 @@ class EventViewSet(viewsets.ModelViewSet):
             try:
                 event_date_ = item.find(class_="event-card-date").get_text()
                 event_date_ = event_date_.upper()
-                dt = re.findall("((([0-9]{2})| ([0-9]{1}))\ (\w+)\,\ [0-9]{4})", event_date_)
+                dt = re.findall(
+                    "((([0-9]{2})| ([0-9]{1}))\ (\w+)\,\ [0-9]{4})", event_date_)
             except:
                 pass
 
@@ -1585,7 +941,8 @@ class EventViewSet(viewsets.ModelViewSet):
             if CurrentDate < event_date:
                 upComing = True
 
-            event = Event(event_name=event_title, event_url=url, event_date=event_date, is_upcoming=upComing)
+            event = Event(event_name=event_title, event_url=url,
+                          event_date=event_date, is_upcoming=upComing)
             newEvents.append(event)
 
         curr_page = "/?page="
@@ -1610,9 +967,11 @@ class EventViewSet(viewsets.ModelViewSet):
                 # newEvent = B2match_event(url,date,event_title,event_location,event_text)
                 # all_events_list.append(newEvent)
                 try:
-                    event_date_ = item.find(class_="event-card-date").get_text()
+                    event_date_ = item.find(
+                        class_="event-card-date").get_text()
                     event_date_ = event_date_.upper()
-                    dt = re.findall("((([0-9]{2})| ([0-9]{1}))\ (\w+)\,\ [0-9]{4})", event_date_)
+                    dt = re.findall(
+                        "((([0-9]{2})| ([0-9]{1}))\ (\w+)\,\ [0-9]{4})", event_date_)
 
                 except:
                     pass
@@ -1624,7 +983,8 @@ class EventViewSet(viewsets.ModelViewSet):
                     CurrentDate = datetime.datetime.now()
                     if CurrentDate < event_date:
                         upComing = True
-                    event = Event(event_name=event_title, event_url=url, event_date=event_date, is_upcoming=upComing)
+                    event = Event(event_name=event_title, event_url=url,
+                                  event_date=event_date, is_upcoming=upComing)
                     newEvents.append(event)
                 except:
                     pass
@@ -1660,8 +1020,6 @@ class EventViewSet(viewsets.ModelViewSet):
         add_Participants_from_Upcoming_Event()
 
         return Response([{'message': 'done, B2MATCH Reposutory updated'}], status=status.HTTP_200_OK)
-
-
 
 
 class ParticipantsViewSet(viewsets.ModelViewSet):
@@ -1727,7 +1085,8 @@ class ParticipantsViewSet(viewsets.ModelViewSet):
                         index = build_index('B2MATCH_Index')
                         print("index built....")
 
-                    index = add_par_to_index(index, participant, part_temp[7], False)
+                    index = add_par_to_index(
+                        index, participant, part_temp[7], False)
                 elif event.is_upcoming:
                     try:
                         # this is the path for the index
@@ -1744,7 +1103,8 @@ class ParticipantsViewSet(viewsets.ModelViewSet):
                         index = build_index('B2MATCH_upcoming_Index')
                         print("upcoming index built....")
 
-                    index = add_par_to_index(index, participant, part_temp[7], True)
+                    index = add_par_to_index(
+                        index, participant, part_temp[7], True)
 
         return Response({'message': 'done see DataBase'}, status=status.HTTP_200_OK)
 

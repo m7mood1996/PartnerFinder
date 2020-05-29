@@ -15,7 +15,9 @@ import json
 import operator
 from bs4 import BeautifulSoup
 from selenium import webdriver
-from googletrans import Translator
+
+from celery.schedules import crontab
+from celery.task import periodic_task
 
 # from .NLP import *
 # from .Utils import *
@@ -489,10 +491,7 @@ class OrganizationProfileViewSet(viewsets.ModelViewSet):
     ]
     serializer_class = OrganizationProfileSerializer
 
-    # @periodic_task(run_every=(crontab(minute=0, hour=15, day_of_month='1-8', day_of_week='fri')),
-    #                name="update_organizations", ignore_result=True)
-    # @periodic_task(run_every=(crontab()),
-    #                name="updateOrganizations", ignore_result=True)
+
     @action(detail=False, methods=['GET'])
     def updateOrganizations(self, request):
         """
@@ -713,7 +712,7 @@ class CallViewSet(viewsets.ModelViewSet):
         """
         method to build a consortium for EU grants calls that have at least three months
         it checks if there is a potential partners from at least three different countries
-        if yes it sends an alert to the user
+        if yes it sends an alert to the user's mail
         :param request: HTTP request
         :return: HTTP Response
         """
@@ -725,6 +724,7 @@ class CallViewSet(viewsets.ModelViewSet):
         if not alerts_settings.turned_on:
             return Response(response, status=status.HTTP_200_OK)
         email = alerts_settings.email
+
         print("*" * 50)
         print("START BUILDING CONSORTIUM")
         print("*" * 50)

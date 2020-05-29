@@ -12,6 +12,7 @@ from .serializers import OrganizationProfileSerializer, AddressSerializer, TagSe
     AlertsSettingsSerializer, UpdateSettingsSerializer, ScoresSerializer
 import json
 
+import operator
 from bs4 import BeautifulSoup
 from selenium import webdriver
 from googletrans import Translator
@@ -1179,3 +1180,85 @@ class ScoresViewSet(viewsets.ModelViewSet):
         """
         scores = Scores.objects.all()[0]
         return Response(ScoresSerializer(scores).data, status=status.HTTP_200_OK)
+
+
+class AlertsB2match(viewsets.ModelViewSet):
+    queryset = Event.objects.all()
+    permission_classes = [
+        permissions.AllowAny
+    ]
+    serializer_class = EventSerializer
+
+    @action(detail=False, methods=['GET'])
+    def alertB2match(self, request):
+        events = Event.objects.filter(is_upcoming=True)
+        myEvents = []
+        for event in events:
+            parts = event.event_part.all()
+            count = len(parts)
+            if count < 50:
+                continue
+            else:
+                eventScore =getScoreForEvent(parts)
+                myEvents.append( (event, eventScore))
+                print(event.event_name,event.event_url,eventScore)
+        myEvents.sort(key=operator.itemgetter(1),reverse=True)
+        print(myEvents)
+
+
+
+
+def fields(scores):
+    return [ f.name for f in scores._meta.fields + scores._meta.many_to_many ]
+
+
+def getSimilar(str1,str2):
+    return str1.lower().replace('_', ' ') in str2.lower().replace('_',' ').replace('-',' ')
+
+def getScoreForEvent(parts):
+    """
+    :param event: an Event
+    :return: event with
+    """
+    scores = Scores.objects.all()[0]
+    field = fields(scores)
+    dic = {}
+    for item in field:
+        dic[item] = 0
+    field[-3] = 'R&D Institution'
+    eventScore = []
+    locIndex = 0
+    typeIndex = -1
+    for part in parts:
+        loc = part.location
+        orgType = part.org_type
+        for item in field:
+            if getSimilar(item , loc.location):
+                locIndex = field.index(item)
+                dic[item] +=1
+            if item == 'R&D Institution':
+                if getSimilar(item,orgType):
+                    typeIndex = field.index(item)
+                elif getSimilar('r&d',orgType):
+                    typeIndex = field.index(item)
+                elif item in orgType:
+                    typeIndex = field.index(item)
+
+            elif item in orgType:
+                typeIndex = field.index(item)
+        locScore = getattr(scores, field[locIndex])
+        if  field[typeIndex] =='R&D Institution':
+            typeScore = getattr(scores,'R_D_Institution' )
+        else:
+            typeScore = getattr(scores, field[typeIndex])
+        eventScore.append((locIndex, locScore * typeScore))
+        locIndex=0
+        typeIndex=-1
+    field[-3] = 'R_D_Institution'
+    theScore = 0
+    for id,score in eventScore:
+        if id == 0:
+            continue
+        theScore += dic[field[id]] * score
+
+    return theScore *scores.RES

@@ -1,11 +1,28 @@
 from rest_framework import serializers
 
+<<<<<<< HEAD
 from ..models import OrganizationProfile, Address, Tag, Event, Participants, Location, TagP, MapIds, Call, CallTag
+=======
+from ..models import OrganizationProfile, Address, Tag, Event, Participants, Location, \
+    TagP, MapIds, Call, CallTag, AlertsSettings, UpdateSettings, Scores
+>>>>>>> Alerts
 
 
 class MapIdsSerializer(serializers.ModelSerializer):
     class Meta:
         model = MapIds
+        fields = '__all__'
+
+
+class AlertsSettingsSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = AlertsSettings
+        fields = '__all__'
+
+
+class UpdateSettingsSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = UpdateSettings
         fields = '__all__'
 
 
@@ -33,7 +50,11 @@ class OrganizationProfileSerializer(serializers.ModelSerializer):
 class CallTagSerializer(serializers.ModelSerializer):
     class Meta:
         model = CallTag
+<<<<<<< HEAD
         fields = ['tag', 'organizations']
+=======
+        fields = ['tag', 'calls']
+>>>>>>> Alerts
 
 
 class CallSerializer(serializers.ModelSerializer):
@@ -68,4 +89,10 @@ class ParticipantsSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Participants
+        fields = '__all__'
+
+
+class ScoresSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Scores
         fields = '__all__'

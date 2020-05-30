@@ -1,707 +1,34 @@
 import datetime
-import collections
 
 from rest_framework import viewsets, permissions, status
 from rest_framework.response import Response
 from rest_framework.decorators import action
 from time import sleep
-from ..models import OrganizationProfile, Address, Tag, Event, TagP, Participants, Location, MapIds, MapIDsB2match, \
-    MapIDsB2matchUpcoming
-from .serializers import OrganizationProfileSerializer, AddressSerializer, TagSerializer, EventSerializer, \
-    ParticipantsSerializer, LocationSerializer, TagPSerializer, CallSerializer, CallTagSerializer
-import json
-import requests
-import sys
+from ..models import Event, TagP, Participants, Location, MapIDsB2match, \
+    MapIDsB2matchUpcoming, Scores, UpdateSettings, AlertsSettings
 
+from .serializers import OrganizationProfileSerializer, AddressSerializer, TagSerializer, EventSerializer, \
+    ParticipantsSerializer, CallSerializer, CallTagSerializer, \
+    AlertsSettingsSerializer, UpdateSettingsSerializer, ScoresSerializer
+import json
+
+import operator
 from bs4 import BeautifulSoup
 from selenium import webdriver
-from googletrans import Translator
-from nltk.corpus import stopwords
-from nltk.stem import PorterStemmer
-import gensim
-from nltk.tokenize import word_tokenize
+
+from celery.schedules import crontab
+from celery.task import periodic_task
+
+# from .NLP import *
+# from .Utils import *
+from .EU import *
+from .B2MATH import *
+import datetime
+
+from email.mime.multipart import MIMEMultipart
+from email.mime.text import MIMEText
 
 import re
-
-LIST_OF_ATTRIBUTES = {'pic', 'businessName', 'legalName', 'classificationType', 'description',
-                      'address', 'tagsAndKeywords', 'dataStatus', 'numberOfProjects', 'consorsiumRoles',
-                      'collaborations'}
-
-
-# ----------------------- NLP Processor Funcs --------------------------------------
-def NLP_Processor(documents):
-    """
-    function to make new corpus for a certain set of documents
-    :param documents: list of strings
-    :return: Corpus of the documents
-    """
-    tokens = [process_Document(doc) for doc in documents]
-    print(tokens)
-    dictionary = get_ids(tokens)
-
-    return build_corpus(dictionary, tokens)
-
-
-def process_Document(document):
-    """
-    function to process a certain document which tokenize and make lower case for the current document
-    :param document: string
-    :return: list of tokens
-    """
-    ps = PorterStemmer()
-    stop_words = set(stopwords.words('english'))
-    return [ps.stem(word.lower()) for word in word_tokenize(document) if
-            not word in stop_words]  # tokenizing and normalize tokens
-
-
-def get_ids(tokens):
-    """
-    a function to map each token into a unique id
-    :param tokens: list of lists of tokens
-    :return: Dictionary object
-    """
-
-    return gensim.corpora.Dictionary(tokens)  # mapping termId : term
-
-
-def build_corpus(dictionary, tokens):
-    """
-    a function to build a corpus, which is mapping each token id to its frequency
-    :param dictionary: object for mapping token -> token id
-    :param tokens: list of lists of tokens
-    :return: list of lists of tuples (id, frequency)
-    """
-
-    return [dictionary.doc2bow(lst) for lst in tokens]  # for each doc map termId : term frequency
-
-
-def process_query_result(result):
-    """
-    a function to process similarity result, it will map each document similarity percentage with the document
-    id
-    :param result: list of lists of percentages
-    :return: pair of (doc id, doc similarity percentage)
-    """
-
-    if len(result) == 0:
-        return []
-    result = result[0]
-    pairs = []
-    for idx, sim_perc in enumerate(result):
-        pairs.append((idx, sim_perc))
-
-    return pairs
-
-
-def add_documents(index, documents):
-    """
-    function to add new documents to existent index
-    :param index: current index
-    :param documents: list of strings
-    :return: updated index
-    """
-    corpus = NLP_Processor(documents)
-    for doc in corpus:
-        index.num_features += len(doc)
-    index.num_features += 1000
-    index.add_documents(corpus)
-    index.save()
-    return index
-
-
-def load_index(path):
-    """
-    function to load index from a specific directory in disk
-    :param path: path to directory
-    :return: Similarity Object
-    """
-
-    return gensim.similarities.Similarity.load(path)
-
-
-def build_index(path):
-    """
-    build an empty index in disk
-    :param path: path of the directory
-    :return: Similarity object "index"
-    """
-
-    corpus = NLP_Processor([])
-    tfidf = gensim.models.TfidfModel(corpus)
-
-    return gensim.similarities.Similarity(path, tfidf[corpus], num_features=0)  # build the index
-
-
-def get_document_from_org(org):
-    """
-    function to take string attributes which are description and tags and keywords from EU organization
-    :param org: EU organization object
-    :return: string of description and tags and keywords
-    """
-    res = [org['description']]
-    for tag in org['tagsAndKeywords']:
-        res.append(tag)
-
-    return ' '.join(res)
-
-
-def get_document_from_par(par, tags):
-    res = [par.description]
-    for tag in tags:
-        res.append(tag)
-
-    return ' '.join(res)
-
-
-# ----------------------------------------------------------------------------------
-
-# ----------------------- Gathering/Updating EU data Funcs ----------------------------------
-def getPicsFromCollaborations(collaborations):
-    """
-    function to get list of pics from list of organizations
-    :param collaborations: list of organizations
-    :return: list of pics
-    """
-    pics = set()
-    for col in collaborations:
-        pics.add(col['pic'])
-    return pics
-
-
-def getNumOfProjects(pic):
-    """
-    function to get number of projects for a certain EU organization
-    :param pic: id of the organization
-    :return: number of projects for this organization
-    """
-
-    url = 'https://ec.europa.eu/info/funding-tenders/opportunities/api/orgProfile/publicProjects.json?pic=' + str(pic)
-    response = []
-    try:
-        response = requests.get(url)
-    except requests.exceptions.RequestException as error:
-        print("Error - ", error)
-        exit(0)
-
-    return len(response.json()['publicProjects'])
-
-
-def getOrganizationProfileFromEUByPIC(pic):
-    """
-    function to get organisation profile from the database of EU by pic number
-    :param pic: id of the organization
-    :return: organization profile in format of json
-    """
-    url = 'https://ec.europa.eu/info/funding-tenders/opportunities/api/orgProfile/data.json?pic=' + str(pic)
-    response = []
-    try:
-        response = requests.get(url)
-    except requests.exceptions.RequestException as error:
-        print("Error - ", error)
-        exit(0)
-
-    return getRelatedAttributes(response.json()['organizationProfile'])
-
-
-def getRelatedAttributes(obj):
-    """
-    function to get the related fields from an EU organization object
-    :param obj: EU organization
-    :return: obj with the related fields
-    """
-    resObj = {}
-    publicAttributes = obj['publicOrganizationData']
-
-    for attribute in LIST_OF_ATTRIBUTES:
-        if attribute in publicAttributes:
-            if attribute == 'address':
-                address = {'country': publicAttributes[attribute]['country'],
-                           'city': publicAttributes[attribute]['city']}
-                resObj[attribute] = address
-            else:
-                resObj[attribute] = publicAttributes[attribute]
-        elif attribute == 'tagsAndKeywords' and attribute in obj:
-            tags = obj[attribute]
-            listOfTags = []
-            for tag in tags:
-                if 'text' in tag:
-                    listOfTags.append(tag['text'])
-            resObj[attribute] = listOfTags
-        else:
-            if attribute in obj:
-                resObj[attribute] = obj[attribute]
-            else:
-                resObj[attribute] = ''
-
-    resObj['numberOfProjects'] = getNumOfProjects(obj['publicOrganizationData']['pic'])
-    resObj['consorsiumRoles'] = True if 'COORDINATOR' in resObj['consorsiumRoles'] else False
-    resObj['pic'] = int(resObj['pic'])
-
-    return resObj
-
-
-def translateData(data):
-    """
-    function to translate non english data in object into english
-    :param data: object
-    :return: translated object
-    """
-    translator = Translator()
-    for key in data:
-        if type(data[key]) == str:
-            try:
-                data[key] = translator.translate(data[key]).text
-            except:
-                continue
-    return data
-
-
-class Graph:
-    """
-    class to define undirected unweighted graph
-    """
-
-    def __init__(self):
-        self.graph = collections.defaultdict(set)
-        self.vertices = set()
-
-    def add(self, u, v):
-        self.vertices.add(u)
-        self.vertices.add(v)
-        self.graph[u].add(v)
-        self.graph[v].add(u)
-
-
-def add_org_to_index(index, org):
-    """
-    function to add new organization to the index
-    :param index: current index
-    :param org: new EU organization
-    :return: updated index
-    """
-
-    doc = get_document_from_org(org)
-    originalID = org['pic']
-    indexID = len(index)
-    newMap = MapIds(originalID=originalID, indexID=indexID)
-    newMap.save()
-    index = add_documents(index, [doc])
-    return index
-
-
-def addOrganizationToDB(org):
-    """
-    method to add new organization to the local db
-    :param org: EU organization
-    :return: True/False
-    """
-    ATTRIBUTES = {'description', 'tagsAndKeywords', 'dataStatus',
-                  'numberOfProjects', 'consorsiumRoles'}
-    response = True
-    org['collaborations'] = len(org['collaborations'])
-    org = translateData(org)
-    try:
-        obj = OrganizationProfile.objects.get(pic=org['pic'])
-        updated = False
-        for atr in ATTRIBUTES:
-            if atr != 'tagsAndKeywords':
-                if org[atr] != getattr(obj, atr):
-                    setattr(obj, atr, org[atr])
-                    updated = True
-
-        oldTags = Tag.objects.filter(organizations=obj)
-        tags = set()
-        for tag in oldTags:
-            tags.add(tag.tag)
-        newTags = set()
-        if len(tags) != len(org['tagsAndKeywords']):
-            updated = True
-            for tag in org['tagsAndKeywords']:
-                if tag not in tags:
-                    newTags.add(tag)
-
-        for tag in newTags:
-            try:
-                currTag = Tag.objects.get(tag=tag)
-                currTag.organizations.add(obj)
-            except:
-                currTag = Tag(tag=tag)
-                currTag.save()
-                currTag.organizations.add(obj)
-
-        if updated:
-            obj.save()
-            response = True
-    except:
-        if 'address' in org:
-            if 'country' in org['address'] and 'city' in org['address']:
-                newAddress = Address(
-                    country=org['address']['country'], city=org['address']['city'])
-                newAddress.save()
-        newOrg = OrganizationProfile(pic=org['pic'], legalName=org['legalName'], businessName=org['businessName'],
-                                     classificationType=org['classificationType'], description=org['description'],
-                                     address=newAddress, dataStatus=org['dataStatus'],
-                                     numberOfProjects=org['numberOfProjects'],
-                                     consorsiumRoles=org['consorsiumRoles'], collaborations=org['collaborations'])
-        newOrg.save()
-        for tag in org['tagsAndKeywords']:
-            try:
-                currTag = Tag.objects.get(tag=tag)
-                currTag.organizations.add(newOrg)
-            except:
-                currTag = Tag(tag=tag)
-                currTag.save()
-                currTag.organizations.add(newOrg)
-
-    return response
-
-
-# ----------------------------------------------------------------------------------
-
-
-# ----------------------- Processing query in EU data Funcs ------------------------
-def getOrgsByTags(tags):
-    """
-    method to get all organizations with at least one tag from the list of tags.
-    :param tags: list of tags
-    :return: list of organizations objects
-    """
-
-    tags = ' '.join(tags)
-    index = load_index('EU_Index')
-    corpus = NLP_Processor([tags])
-    res = index[corpus]
-
-    res = process_query_result(res)
-    res = sorted(res, key=lambda pair: pair[1], reverse=True)
-    res = res[:100]
-    res = [pair for pair in res if pair[1] > 0.3]
-    res = [MapIds.objects.get(indexID=pair[0]) for pair in res]
-
-    finalRes = []
-    for mapId in res:
-        finalRes.append(OrganizationProfile.objects.get(pic=mapId.originalID))
-
-    return finalRes
-
-
-def getOrganizationsByCountries(countries):
-    """
-    method to get all organizations that locates in one of the countries list.
-    :param countries: list of countries
-    :return: list of organizations objects
-    """
-
-    countries = [val.lower() for val in countries]
-
-    countries = set(countries)
-    res = []
-    allOrgs = OrganizationProfile.objects.all()
-
-    if not countries:
-        return allOrgs
-
-    for org in allOrgs:
-        currCountry = org.address.country.lower()
-        if currCountry in countries:
-            res.append(org)
-
-    return res
-
-
-def getOrgsIntersection(orgs1, orgs2):
-    """
-    private method to get intersection between two lists of organizations
-    :param orgs1: first list
-    :param orgs2: second list
-    :return: intersection list
-    """
-    res, seenPICS = [], set()
-
-    for org in orgs1:
-        seenPICS.add(org.pic)
-
-    addedPICS = set()
-    for org in orgs2:
-        if org.pic in seenPICS and org.pic not in addedPICS:
-            res.append(org)
-            addedPICS.add(org.pic)
-
-    return res
-
-
-def getOrgsByCountriesAndTags(tags, countries):
-    """
-    private method to get organizations from the database that have a certain tags
-    or located in one of the countries list.
-    :param tags: list of tags
-    :param countries: list of countries
-    :return: list of organizations objects
-    """
-    orgsByCountries = getOrganizationsByCountries(countries)
-    orgsByTags = getOrgsByTags(tags)
-
-    res = getOrgsIntersection(orgsByCountries, orgsByTags)
-
-    return res
-
-
-# ----------------------------------------------------------------------------------
-
-def add_Participants_from_Upcoming_Event():
-    """
-            method to define API to import all the participants from the events we have in our DB and save them to the local DB
-    """
-    events = Event.objects.filter(is_upcoming=True)
-    for event in events:
-
-        try:
-            url_arr = getParticipentFromUrl(
-                event.event_url + "/participants")
-        except:
-            continue
-
-        for item in url_arr:
-
-            part_temp = getParticipentDATA(item)
-
-            location = Location(location=part_temp[3])
-            location.save()
-            try:
-                participant = Participants(participant_name=part_temp[0], participant_img_url=part_temp[1],
-                                           organization_name=part_temp[2], org_type=part_temp[4],
-                                           org_url=part_temp[5],
-                                           org_icon_url=part_temp[6], description=part_temp[8], location=location)
-
-                participant.save()
-                event.event_part.add(participant)
-
-            except:
-                continue
-
-            for i in part_temp[7]:
-                try:
-                    currTag = TagP.objects.get(tag=i)
-                    currTag.participant.add(participant)
-                except:
-                    currTag = TagP(tag=i)
-                    currTag.save()
-                    currTag.participant.add(participant)
-            try:
-                # this is the path for the index
-
-                # index = load_index('/Users/mahmoodnael/PycharmProjects/PartnerFinderApril/Backend/src/B2MATCH_upcoming_Index')
-                index = load_index('B2MATCH_upcoming_Index')
-
-                print("upcoming index loaded......")
-            except:
-                index = None
-
-            if index is None:
-                # this is the path for the index
-                # index = build_index('/Users/mahmoodnael/PycharmProjects/PartnerFinderApril/Backend/src/B2MATCH_upcoming_Index')
-                index = build_index('B2MATCH_upcoming_Index')
-
-                print("upcoming index built....")
-
-            index = add_par_to_index(index, participant, part_temp[7], True)
-
-
-def get_the_participent_urls(event_url):
-    """
-            method to get the particepents urls from event url
-    """
-    try:
-        event_page = requests.get(event_url)
-        all_events_soup = BeautifulSoup(event_page.content, 'html.parser')
-        itemes = all_events_soup.find_all(class_="break-word")
-        par_page = itemes[0].find("a")['href']
-
-        return par_page
-    except:
-        return event_url
-
-
-def getParticipentFromUrl(url_):
-    """
-            given particepant url extruct participent information
-
-    """
-    ##### for MacOS
-    # driver = webdriver.Chrome()
-    ##### for Windows
-    driver = webdriver.Chrome('C:\\bin\chromedriver.exe')
-    driver.get(url_)
-    sleep(1)
-    num_of_part = int(driver.execute_script(
-        "return document.getElementsByClassName(\"opportunities-count-number\")[0].innerHTML"))
-    sleep(1)
-    driver.execute_script("scrollBy(0,400)")
-    par = []
-
-    script = "return document.getElementsByClassName(\"card card-participant card-hover flex-row\")["
-    script2 = "].parentElement.outerHTML"
-    i = 0
-    res = ""
-    sleep(1)
-    j = 0
-    while (j < num_of_part):
-
-        while i < 8:
-            res = str(script + str(i) + script2)
-            try:
-                par.append(driver.execute_script(
-                    str(script + str(i) + script2)))
-                i += 1
-
-            except:
-                break
-        driver.execute_script("scrollBy(0,500)")
-        sleep(2)
-        driver.execute_script("scrollBy(0,500)")
-        sleep(2)
-        j += i
-        i = 0
-
-    participent_url_arr = []
-    for item in par:
-        # url = url_ + item.find("a")['href']
-        soup = BeautifulSoup(item, 'html.parser')
-        url = url_ + '/' + (soup.find("a")['href']).split('/')[-1]
-        participent_url_arr.append(url)
-
-    driver.quit()
-
-    return participent_url_arr
-
-
-def getParticipentDATA(url_):
-    """
-            after getint the participent info, do low level NLP and make up the participant object
-
-    """
-    translator = Translator()
-    ### for macOS
-    # driver = webdriver.Chrome()
-    ### for Windows
-    driver = webdriver.Chrome('C:\\bin\chromedriver.exe')
-
-    driver.get(url_)
-    sleep(1)
-    participant_panel_detail = driver.execute_script(
-        "return document.getElementsByClassName(\"participant-panel-detail shadow-component\")[0].innerHTML")
-    soup = BeautifulSoup(participant_panel_detail, 'html.parser')
-    img_src = None
-    participant_name = None
-    try:
-
-        img_src = soup.find("img")['src']
-    except:
-        pass
-    try:
-        participant_name = driver.execute_script("return document.getElementsByClassName(\"name\")[0].innerText")
-    except:
-        pass
-
-    childcount = int(
-        driver.execute_script("return document.getElementsByClassName(\"personal-info-holder\")[0].childElementCount"))
-    list_ = []
-    i = 0
-
-    temp0 = driver.execute_script('return document.getElementsByClassName("personal-info-holder")[0].innerText')
-    temp1 = None
-    if childcount == 3:
-        temp1 = driver.execute_script(
-            'return document.getElementsByClassName("personal-info-holder")[0].children[1].outerHTML')
-        soup = BeautifulSoup(temp1, 'html.parser')
-        temp1 = soup.find('a')['href']
-    temp0 = temp0.split('\n')
-    try:
-        name = temp0[0]
-    except:
-        name = ""
-    try:
-        org_name = temp0[1]
-        org_name = org_name.split("at")[-1]
-    except:
-        org_name = ""
-    try:
-        location = temp0[2]
-    except:
-        location = ""
-    try:
-        org_url = temp1
-    except:
-        org_url = ""
-
-    org_type = None
-    try:
-        org_type = driver.execute_script(
-            'return document.getElementsByClassName("type")[0].innerText')
-    except:
-        pass
-
-    org_logo = None
-    try:
-        org_logo = driver.execute_script(
-            'return document.getElementsByClassName("organisation-logo")[0].currentSrc')
-    except:
-        pass
-
-    org_description = None
-    try:
-        org_description = driver.execute_script(
-            'return document.getElementsByClassName("description")[0].innerText')
-    except:
-        pass
-    try:
-        src = translator.translate(org_description).src
-    except:
-        src = "en"
-    tags = []
-    try:
-        tag_count = int(driver.execute_script(
-            'return document.getElementsByClassName("tag lg").length'))
-    except:
-        tag_count = 0
-    i = 0
-    while i < tag_count:
-        try:
-            # tags.append(driver.execute_script('return document.getElementsByClassName("tag lg")[' + str(i) + '].innerText'))
-            recc_tag = driver.execute_script(
-                'return document.getElementsByClassName("tag lg")[' + str(i) + '].innerText')
-        except:
-            i += 1
-            continue
-        try:
-            recc_tag_trans = translator.translate(recc_tag, src=src).text
-            tags.append(recc_tag_trans)
-            i += 1
-        except:
-            tags.append(recc_tag)
-            i += 1
-
-    try:
-        desc = translator.translate(org_description).text
-    except:
-        desc = ""
-
-    try:
-        org_type_t = translator.translate(org_type).text
-    except:
-        org_type_t = ""
-
-    driver.quit()
-    if desc != "":
-        org_description = desc
-    elif org_description == None:
-        org_description = ""
-    if org_type_t != "":
-        org_type = org_type_t
-    elif org_type == None:
-        org_type = ""
-    return name, img_src, org_name, location, org_type, org_url, org_logo, tags, org_description
-
 
 class OrganizationProfileViewSet(viewsets.ModelViewSet):
     queryset = OrganizationProfile.objects.all()
@@ -710,44 +37,7 @@ class OrganizationProfileViewSet(viewsets.ModelViewSet):
     ]
     serializer_class = OrganizationProfileSerializer
 
-    @action(detail=False, methods=['POST'])
-    def createOrganization(self, request):
 
-        """
-        method to define API to create new organization and save it to the local DB
-        """
-
-        response = {'Message': 'Organization Created Successfully!'}
-
-        data = json.loads(request.data['data'])
-        data = translateData(data)
-
-        try:
-            OrganizationProfile.objects.get(pic=data['pic'])
-            response = {
-                'Message': 'Organization with the same PIC is already exists!'}
-        except:
-            if 'address' in data:
-                if 'country' in data['address'] and 'city' in data['address']:
-                    newAddress = Address(
-                        country=data['address']['country'], city=data['address']['city'])
-                    newAddress.save()
-            org = OrganizationProfile(pic=data['pic'], legalName=data['legalName'], businessName=data['businessName'],
-                                      classificationType=data['classificationType'], description=data['description'],
-                                      address=newAddress)
-            org.save()
-            for tag in data['tagsAndKeywords']:
-                try:
-                    currTag = Tag.objects.get(tag=tag)
-                    currTag.organizations.add(org)
-                except:
-                    currTag = Tag(tag=tag)
-                    currTag.save()
-                    currTag.organizations.add(org)
-
-        return Response(response, status=status.HTTP_200_OK)
-
-    # TODO: write method to update organizations
     @action(detail=False, methods=['GET'])
     def updateOrganizations(self, request):
         """
@@ -774,13 +64,9 @@ class OrganizationProfileViewSet(viewsets.ModelViewSet):
             index.destroy()
             index = build_index('EU_Index')
 
-        allOrgs = OrganizationProfile.objects.all()
-        allOrgs = {org.pic: org for org in allOrgs}
         status = {}
         graph = Graph()
         visitngQueue = collections.deque()
-        for pic in allOrgs:
-            status[pic] = 'notVisited'
         startOrg = '999993953'
         visitngQueue.append(startOrg)
         status[startOrg] = 'visiting'
@@ -788,7 +74,8 @@ class OrganizationProfileViewSet(viewsets.ModelViewSet):
             currPic = visitngQueue.popleft()
             try:
                 currOrg = getOrganizationProfileFromEUByPIC(currPic)
-                currAdjacent = getPicsFromCollaborations(currOrg['collaborations'])
+                currAdjacent = getPicsFromCollaborations(
+                    currOrg['collaborations'])
             except:
                 continue
             for pic in currAdjacent:
@@ -797,6 +84,7 @@ class OrganizationProfileViewSet(viewsets.ModelViewSet):
                     status[pic] = 'visiting'
                     visitngQueue.append(pic)
 
+            currOrg = translateData(currOrg)
             addOrganizationToDB(currOrg)
             index = add_org_to_index(index, currOrg)
             status[currPic] = 'visited'
@@ -818,7 +106,7 @@ class OrganizationProfileViewSet(viewsets.ModelViewSet):
         countries = data['countries']
         tags = data['tags']
         EURes = getOrgsByCountriesAndTags(tags, countries)
-        B2MATCHRes = self.getB2MATCHPartByCountriesAndTags(tags, countries)
+        B2MATCHRes = getB2MATCHPartByCountriesAndTags(tags, countries)
 
         B2MATCH = []
         EU = []
@@ -840,87 +128,106 @@ class OrganizationProfileViewSet(viewsets.ModelViewSet):
 
         return Response(response, status=status.HTTP_200_OK)
 
-    def getB2MatchParByCountry(self, countries):
+
+class AlertsSettingsViewSet(viewsets.ModelViewSet):
+    queryset = AlertsSettings.objects.all()
+    permission_classes = [
+        permissions.AllowAny
+    ]
+    serializer_class = AlertsSettingsSerializer
+
+    @action(detail=False, methods=['GET'])
+    def getSettings(self, request):
         """
-        method to get all Participants that locates in one of the countries list.
+        method to define API to get updates settings.
+        :param request: HTTP request
+        :return: HTTP Response
         """
-        countries = [val.lower() for val in countries]
-        countries = set(countries)
-        res = []
-        allPart = Participants.objects.all()
+        try:
+            alertsSettings = AlertsSettings.objects.all()[0]
+            response = {'email': alertsSettings.email,
+                        'turned_on': alertsSettings.turned_on}
+        except:
+            response = {'email': '', 'turned_on': ''}
 
-        if not countries:
-            return allPart
+        return Response(response, status=status.HTTP_200_OK)
 
-        for participant in allPart:
-
-            try:
-                currLocation = participant.location.location.lower().split(" ", 1)[1]
-            except:
-                currLocation = participant.location.location.lower()
-            if currLocation in countries:
-                res.append(participant)
-        return res
-
-    def getParticipantsByTags(self, tags):
+    @action(detail=False, methods=['POST'])
+    def setSettings(self, request):
         """
-        method to get all organizations with at least one tag from the list of tags.
+        method to define API to update the update settings.
+        :param request: HTTP request with update times
+        :return: HTTP response
         """
-        tags = ' '.join(tags)
-        index1 = load_index('B2MATCH_Index')  # B2match_index
-        index2 = load_index('B2MATCH_upcoming_Index')  # B2match_upcoming_index
-        corpus = NLP_Processor([tags])
-        print(corpus)
-        res1 = index1[corpus]
-        res2 = index2[corpus]
-        print(res1, res2)
 
-        res1 = process_query_result(res1)
-        res2 = process_query_result(res2)
+        data = request.data['data']
+        data = json.loads(data)
+        email = data['email']
+        turned_on = data['turned_on']
 
-        res1 = sorted(res1, key=lambda pair: pair[1], reverse=True)
-        res1 = res1[:101]
-        res2 = sorted(res2, key=lambda pair: pair[1], reverse=True)
-        res2 = res2[:101]
+        try:
+            AlertsSettings.objects.get(ID=1)
+            AlertsSettings.objects.filter(ID=1).update(email=email)
+            AlertsSettings.objects.filter(ID=1).update(turned_on=turned_on)
+        except:
+            alertsSettings = AlertsSettings(
+                email=email, turned_on=turned_on, ID=1)
+            alertsSettings.save()
 
-        res1 = [pair for pair in res1 if pair[1] > 0.3]
-        res1 = [MapIDsB2match.objects.get(indexID=pair[0]) for pair in res1]
-        res2 = [pair for pair in res2 if pair[1] > 0.3]
-        res2 = [MapIDsB2matchUpcoming.objects.get(indexID=pair[0]) for pair in res2]
+        response = {'Message': 'Alerts Settings Updated Successfully.'}
 
-        finalRes = []
-        for mapId in res1:
-            finalRes.append(Participants.objects.get(pk=mapId.originalID))
+        return Response(response, status=status.HTTP_200_OK)
 
-        for mapId in res2:
-            finalRes.append(Participants.objects.get(pk=mapId.originalID))
 
-        print(finalRes[0].description)
-        print(len(finalRes))
-        return finalRes
+class UpdateSettingsViewSet(viewsets.ModelViewSet):
+    queryset = UpdateSettings.objects.all()
+    permission_classes = [
+        permissions.AllowAny
+    ]
+    serializer_class = UpdateSettingsSerializer
 
-    def getB2MATCHPartByCountriesAndTags(self, tags, countries):
-        apaarticipantsByCountries = self.getB2MatchParByCountry(countries)
-        ParticipantsByTags = self.getParticipantsByTags(tags)
+    @action(detail=False, methods=['GET'])
+    def getSettings(self, request):
+        """
+        method to define API to get updates settings.
+        :param request: HTTP request
+        :return: HTTP Response
+        """
+        try:
+            updateSettings = UpdateSettings.objects.all()[0]
+            response = {'EU': updateSettings.eu_last_update,
+                        'B2MATCH': updateSettings.b2match_last_update}
+        except:
+            response = {'EU': '', 'B2MATCH': ''}
 
-        res = self.getPartIntersection(apaarticipantsByCountries, ParticipantsByTags)
+        return Response(response, status=status.HTTP_200_OK)
 
-        # write method to rank the orgs by tags
+    @action(detail=False, methods=['POST'])
+    def setSettings(self, request):
+        """
+        method to define API to update the update settings.
+        :param request: HTTP request with update times
+        :return: HTTP response
+        """
 
-        return res
+        data = request.data['data']
+        data = json.loads(data)
+        euDate = int(data['EU'])
+        b2matchDate = int(data['B2MATCH'])
 
-    def getPartIntersection(self, par1, par2):
-        res, seenPart = [], set()
+        try:
+            UpdateSettings.objects.get(ID=1)
+            UpdateSettings.objects.filter(ID=1).update(eu_last_update=euDate)
+            UpdateSettings.objects.filter(ID=1).update(
+                b2match_last_update=b2matchDate)
+        except:
+            updateSettings = UpdateSettings(
+                eu_last_update=euDate, b2match_last_update=b2matchDate, ID=1)
+            updateSettings.save()
 
-        for par in par1:
-            seenPart.add(par.participant_name)
+        response = {'Message': 'Updates Settings Updated Successfully.'}
 
-        addedPar = set()
-        for par in par2:
-            if par.participant_name in seenPart and par.participant_name not in addedPar:
-                res.append(par)
-                addedPar.add(par.participant_name)
-        return res
+        return Response(response, status=status.HTTP_200_OK)
 
 
 class AddressViewSet(viewsets.ModelViewSet):
@@ -939,55 +246,89 @@ class TagViewSet(viewsets.ModelViewSet):
     serializer_class = TagSerializer
 
 
+class CallViewSet(viewsets.ModelViewSet):
+    queryset = Call.objects.all()
+    permission_classes = [
+        permissions.AllowAny
+    ]
+    serializer_class = CallSerializer
+
+    @action(detail=False, methods=['GET'])
+    def consortium_builder(self, request):
+        """
+        method to build a consortium for EU grants calls that have at least three months
+        it checks if there is a potential partners from at least three different countries
+        if yes it sends an alert to the user's mail
+        :param request: HTTP request
+        :return: HTTP Response
+        """
+        response = {'Message': 'Please Turn Alerts ON!'}
+        try:
+            alerts_settings = AlertsSettings.objects.all()[0]
+        except:
+            alerts_settings['turned_on'] = False
+        if not alerts_settings.turned_on:
+            return Response(response, status=status.HTTP_200_OK)
+        email = alerts_settings.email
+
+        print("*" * 50)
+        print("START BUILDING CONSORTIUM")
+        print("*" * 50)
+        response = {'Message': 'Error while building the consortium!'}
+
+        # Call.objects.all().delete()
+        # CallTag.objects.all().delete()
+        # calls = get_proposal_calls()
+        #
+        # calls_to_send = []
+        #
+        # for call in calls:
+        #     call = has_consortium(call)
+        #     if call['hasConsortium']:
+        #         calls_to_send.append({'title': call['title']})
+        #         add_call_to_DB(call)
+
+        calls = Call.objects.all()
+        calls_to_send = []
+        for call in calls:
+            calls_to_send.append({'title': call.__dict__['title']})
+
+        body = MIMEMultipart('alternative')
+
+        calls = ''
+        for call in calls_to_send:
+            calls += '<li><b>' + call['title'] + '</b></li>'
+
+        signature = 'Sincerly,<br>Consortium Builder Alerts'
+        html = """\
+        <html>
+          <head><h3>You have new proposal calls that might interest you</h3></head>
+          <body>
+            <ol> 
+            {}
+            </ol>
+            <br>
+            <br>
+            {}
+          </body>
+        </html>
+        """.format(calls, signature)
+
+        response = {'Message': 'Finished building consortium successfully!'}
+
+        content = MIMEText(html, 'html')
+        body.attach(content)
+        body['Subject'] = 'EU Proposal Calls Alert'
+        send_mail(receiver_email=email, message=body)
+        return Response(response, status=status.HTTP_200_OK)
+
+
 class CallTagViewSet(viewsets.ModelViewSet):
-    queryset = Tag.objects.all()
+    queryset = CallTag.objects.all()
     permission_classes = [
         permissions.AllowAny
     ]
     serializer_class = CallTagSerializer
-
-
-def getTagsForPart(part):
-    myTags = []
-    tags = TagP.objects.filter(participants=part).tag
-    for tagp in tags:
-        myTags.append(tagp.tag)
-    return myTags
-
-
-def addEventsParToMainIndex(event):
-    partsipants = event.event_part
-
-    # index = load_index('/Users/mahmoodnael/PycharmProjects/PartnerFinderApril/Backend/src/B2MATCH_Index')
-    index = load_index('B2MATCH_Index')
-    for part in partsipants:
-        tags = getTagsForPart(part)
-        des = get_document_from_par(part, tags)
-        index = add_par_to_index(index, part, des, False)
-
-
-def changeEventStatus(eventNoLongerUpcoming):
-    for event in eventNoLongerUpcoming:
-        e = Event.objects.get(event_name=event.event_name)
-        e.is_upcoming = True
-        e.save()
-        addEventsParToMainIndex(e)
-
-
-def deleteEventsTree(toupdate):
-    for event in toupdate:
-        currEvent = Event.objects.get(event_name=event.event_name)
-        # get all the participant from each Event
-
-        participants = list(currEvent.event_part.all())
-        for part in participants:
-            tags = part.tagsAndKeywordsP.all()
-            for tag in tags:
-                if tag.participant.all().count() < 2:
-                    tag.delete()
-
-            part.delete()
-    MapIDsB2matchUpcoming.objects.all().delete()
 
 
 class EventViewSet(viewsets.ModelViewSet):
@@ -1026,8 +367,8 @@ class EventViewSet(viewsets.ModelViewSet):
             try:
                 event_date_ = item.find(class_="event-card-date").get_text()
                 event_date_ = event_date_.upper()
-                dt = re.findall("((([0-9]{2})| ([0-9]{1}))\ (\w+)\,\ [0-9]{4})", event_date_)
-
+                dt = re.findall(
+                    "((([0-9]{2})| ([0-9]{1}))\ (\w+)\,\ [0-9]{4})", event_date_)
 
             except:
                 pass
@@ -1040,7 +381,8 @@ class EventViewSet(viewsets.ModelViewSet):
             if CurrentDate < event_date:
                 upComing = True
 
-            event = Event(event_name=event_title, event_url=url, event_date=event_date, is_upcoming=upComing)
+            event = Event(event_name=event_title, event_url=url,
+                          event_date=event_date, is_upcoming=upComing)
             event.save()
 
         curr_page = "/?all=true&page="
@@ -1065,10 +407,11 @@ class EventViewSet(viewsets.ModelViewSet):
                 # newEvent = B2match_event(url,date,event_title,event_location,event_text)
                 # all_events_list.append(newEvent)
                 try:
-                    event_date_ = item.find(class_="event-card-date").get_text()
+                    event_date_ = item.find(
+                        class_="event-card-date").get_text()
                     event_date_ = event_date_.upper()
-                    dt = re.findall("((([0-9]{2})| ([0-9]{1}))\ (\w+)\,\ [0-9]{4})", event_date_)
-
+                    dt = re.findall(
+                        "((([0-9]{2})| ([0-9]{1}))\ (\w+)\,\ [0-9]{4})", event_date_)
 
                 except:
                     pass
@@ -1081,7 +424,8 @@ class EventViewSet(viewsets.ModelViewSet):
                     if CurrentDate < event_date:
                         upComing = True
 
-                    event = Event(event_name=event_title, event_url=url, event_date=event_date, is_upcoming=upComing)
+                    event = Event(event_name=event_title, event_url=url,
+                                  event_date=event_date, is_upcoming=upComing)
                     event.save()
                 except:
                     pass
@@ -1112,7 +456,8 @@ class EventViewSet(viewsets.ModelViewSet):
         upcoming_event_b2match = "https://events.b2match.com"
         b2match = "https://events.b2match.com"
         upcoming_events_page = requests.get(upcoming_event_b2match)
-        upcoming_events_soup = BeautifulSoup(upcoming_events_page.content, 'html.parser')
+        upcoming_events_soup = BeautifulSoup(
+            upcoming_events_page.content, 'html.parser')
         itemes = upcoming_events_soup.find_all(class_="last next")
         upcoming_events_last_page = itemes[0].find("a")['href']
         upcoming_events = upcoming_events_soup.find_all(
@@ -1130,7 +475,8 @@ class EventViewSet(viewsets.ModelViewSet):
             try:
                 event_date_ = item.find(class_="event-card-date").get_text()
                 event_date_ = event_date_.upper()
-                dt = re.findall("((([0-9]{2})| ([0-9]{1}))\ (\w+)\,\ [0-9]{4})", event_date_)
+                dt = re.findall(
+                    "((([0-9]{2})| ([0-9]{1}))\ (\w+)\,\ [0-9]{4})", event_date_)
             except:
                 pass
 
@@ -1142,7 +488,8 @@ class EventViewSet(viewsets.ModelViewSet):
             if CurrentDate < event_date:
                 upComing = True
 
-            event = Event(event_name=event_title, event_url=url, event_date=event_date, is_upcoming=upComing)
+            event = Event(event_name=event_title, event_url=url,
+                          event_date=event_date, is_upcoming=upComing)
             newEvents.append(event)
 
         curr_page = "/?page="
@@ -1167,9 +514,11 @@ class EventViewSet(viewsets.ModelViewSet):
                 # newEvent = B2match_event(url,date,event_title,event_location,event_text)
                 # all_events_list.append(newEvent)
                 try:
-                    event_date_ = item.find(class_="event-card-date").get_text()
+                    event_date_ = item.find(
+                        class_="event-card-date").get_text()
                     event_date_ = event_date_.upper()
-                    dt = re.findall("((([0-9]{2})| ([0-9]{1}))\ (\w+)\,\ [0-9]{4})", event_date_)
+                    dt = re.findall(
+                        "((([0-9]{2})| ([0-9]{1}))\ (\w+)\,\ [0-9]{4})", event_date_)
 
                 except:
                     pass
@@ -1181,7 +530,8 @@ class EventViewSet(viewsets.ModelViewSet):
                     CurrentDate = datetime.datetime.now()
                     if CurrentDate < event_date:
                         upComing = True
-                    event = Event(event_name=event_title, event_url=url, event_date=event_date, is_upcoming=upComing)
+                    event = Event(event_name=event_title, event_url=url,
+                                  event_date=event_date, is_upcoming=upComing)
                     newEvents.append(event)
                 except:
                     pass
@@ -1225,25 +575,6 @@ class ParticipantsViewSet(viewsets.ModelViewSet):
         permissions.AllowAny
     ]
     serializer_class = ParticipantsSerializer
-
-    def add_par_to_index(self, index, par, tags, upcoming):
-        """
-        function to add new participant to the index
-        :param index: current index
-        :param par: new participant
-        :return: updated index
-        """
-        doc = get_document_from_par(par, tags)
-        originalID = par.id
-
-        indexID = len(index)
-        if not upcoming:
-            newMap = MapIDsB2match(originalID=originalID, indexID=indexID)
-        else:
-            newMap = MapIDsB2matchUpcoming(originalID=originalID, indexID=indexID)
-        newMap.save()
-        index = add_documents(index, [doc])
-        return index
 
     @action(detail=False, methods=['POST'])
     def add_Participants_from_Event(self, request):
@@ -1301,7 +632,8 @@ class ParticipantsViewSet(viewsets.ModelViewSet):
                         index = build_index('B2MATCH_Index')
                         print("index built....")
 
-                    index = self.add_par_to_index(index, participant, part_temp[7], False)
+                    index = add_par_to_index(
+                        index, participant, part_temp[7], False)
                 elif event.is_upcoming:
                     try:
                         # this is the path for the index
@@ -1318,26 +650,133 @@ class ParticipantsViewSet(viewsets.ModelViewSet):
                         index = build_index('B2MATCH_upcoming_Index')
                         print("upcoming index built....")
 
-                    index = self.add_par_to_index(index, participant, part_temp[7], True)
+                    index = add_par_to_index(
+                        index, participant, part_temp[7], True)
 
         return Response({'message': 'done see DataBase'}, status=status.HTTP_200_OK)
 
 
-def add_par_to_index(index, par, tags, upcoming):
-    """
-    function to add new participant to the index
-    :param index: current index
-    :param par: new participant
-    :return: updated index
-    """
-    doc = get_document_from_par(par, tags)
-    originalID = par.id
+class ScoresViewSet(viewsets.ModelViewSet):
+    queryset = Scores.objects.all()
+    permission_classes = [
+        permissions.AllowAny
+    ]
+    serializer_class = ScoresSerializer
 
-    indexID = len(index)
-    if not upcoming:
-        newMap = MapIDsB2match(originalID=originalID, indexID=indexID)
-    else:
-        newMap = MapIDsB2matchUpcoming(originalID=originalID, indexID=indexID)
-    newMap.save()
-    index = add_documents(index, [doc])
-    return index
+    def create(self, request, *args, **kwargs):
+        return Response({'message': 'cant add event like that'}, status=status.HTTP_400_BAD_REQUEST)
+
+    @action(detail=False, methods=['POST'])
+    def updatescores(self, request):
+        """
+        API to update scores in the data base
+        :param request: scores from user about RES, countries and orgs type
+        :return: the updated scores
+        """
+        data = request.data['data']
+        data = json.loads(data)
+
+        try:
+            scores = Scores.objects.all()[0]
+            scores.RES = data['RES']
+            scores.Italy = data['Italy']
+            scores.France = data['France']
+            scores.Austria = data['Austria']
+            scores.Germany = data['Germany']
+            scores.Denmark = data['Denmark']
+            scores.Czech_Republic = data['Czech_Republic']
+            scores.Finland = data['Finland']
+            scores.Ireland = data['Ireland']
+            scores.Israel = data['Israel']
+            scores.Portugal = data['Portugal']
+            scores.Ukranie = data['Ukranie']
+            scores.United_Kingdom = data['United_Kingdom']
+            scores.Turkey = data['Turkey']
+            scores.Switzerland = data['Switzerland']
+            scores.Spain = data['Spain']
+            scores.Norway = data['Norway']
+
+            scores.Association_Agency = data['Association_Agency']
+            scores.University = data['University']
+            scores.R_D_Institution = data['R_D_Institution']
+            scores.Start_Up = data['Start_Up']
+            scores.Others = data['Others']
+
+        except:
+            scores = Scores(RES=data['RES'],
+                            Italy=data['Italy'], France=data['France'], Austria=data['Austria'],
+                            Germany=data['Germany'],
+                            Denmark=data['Denmark'], Czech_Republic=data['Czech_Republic'], Finland=data['Finland'],
+                            Ireland=data['Ireland'], Israel=data['Israel'], Portugal=data['Portugal'],
+                            Ukranie=data['Ukranie'], United_Kingdom=data['United_Kingdom'], Turkey=data['Turkey'],
+                            Switzerland=data['Switzerland'], Spain=data['Spain'], Norway=data['Norway'],
+                            Association_Agency=data['Association_Agency'], University=data['University'],
+                            R_D_Institution=data['R_D_Institution'], Start_Up=data['Start_Up'], Others=data['Others']
+                            )
+        scores.save()
+
+        return Response(ScoresSerializer(scores).data, status=status.HTTP_200_OK)
+
+    @action(detail=False, methods=['GET'])
+    def getscores(self, request):
+        """
+        API to send current scoures
+        :param request:
+        :return:
+        """
+        scores = Scores.objects.all()[0]
+        return Response(ScoresSerializer(scores).data, status=status.HTTP_200_OK)
+
+
+class AlertsB2match(viewsets.ModelViewSet):
+    queryset = Event.objects.all()
+    permission_classes = [
+        permissions.AllowAny
+    ]
+    serializer_class = EventSerializer
+
+    @action(detail=False, methods=['GET'])
+    def alertB2match(self, request):
+        events = Event.objects.filter(is_upcoming=True)
+        myEvents = []
+        for event in events:
+            parts = event.event_part.all()
+            count = len(parts)
+            if count < 50:
+                continue
+            else:
+                eventScore =getScoreForEvent(parts)
+                myEvents.append( (event, eventScore))
+                print(event.event_name,event.event_url,eventScore)
+        myEvents.sort(key=operator.itemgetter(1),reverse=True)
+        print(myEvents)
+        alerts_settings = AlertsSettings.objects.all()[0]
+        email = alerts_settings.email
+        body = MIMEMultipart('alternative')
+        ms = ''
+        for ev in myEvents:
+            ms += '<li><b>' +ev[0].event_name + '</b><a href="'+ev[0].event_url+'">'+ ev[0].event_url + '</a></li>'
+
+        signature = 'Sincerly,<br>B2MATCH Event Alerts'
+        html = """\
+                <html>
+                  <head><h3>You have new proposal calls that might interest you</h3></head>
+                  <body>
+                    <ol> 
+                    {}
+                    </ol>
+                    <br>
+                    <br>
+                    {}
+                  </body>
+                </html>
+                """.format(ms, signature)
+
+        response = {'Message': 'Finished building consortium successfully!'}
+
+        content = MIMEText(html, 'html')
+        body.attach(content)
+        body['Subject'] = 'B2MATCH Events Alert'
+        send_mail(receiver_email=email, message=body)
+        return Response(response, status=status.HTTP_200_OK)
+

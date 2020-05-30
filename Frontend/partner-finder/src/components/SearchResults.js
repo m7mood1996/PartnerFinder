@@ -21,32 +21,12 @@ const B2Match_columns = [
   { title: "Description", field: "description" },
 ];
 
-const getRelativeData = (arr) => {
-  let res = arr.map((org) => {
-    let temp = org;
-    let address = temp.address;
-    delete temp.pic;
-    delete temp.address;
-    temp = { ...temp, city: address.city, country: address.country };
-    return temp;
-  });
-  return res;
-};
-
-function handleDataChange(data) {
-  let tempData = data;
-  let eu = getRelativeData(tempData["EU"]);
-  tempData = { ...tempData, EU: eu };
-
-  return tempData;
-}
-
 function SearchResults(props) {
   const [data, setData] = React.useState([]);
 
   React.useEffect(
     function effectFunction() {
-      setData(handleDataChange(props.data));
+      setData(props.data);
     },
     [props.data]
   );

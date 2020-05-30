@@ -63,7 +63,6 @@ function SearchDetails() {
       setFormState({ ...formState, email: false });
   };
   const changePhone = (event) => {
-    console.log("Halaa " + event);
     setPhone(event);
     if (!event || event.length !== 0 || event === "")
       setFormState({ ...formState, phone_num: false });
@@ -141,13 +140,11 @@ function SearchDetails() {
       .then((resp) => {
         setState({ loading: false });
         setData(resp);
-        console.log("DATA2", resp);
       })
       .catch((error) => console.log(error));
   };
 
   const formValidation = () => {
-    console.log("fghghgh");
     let res = {};
     let check = false;
     if (name === "" || name.length === 0) {

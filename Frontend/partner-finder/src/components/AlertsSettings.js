@@ -75,27 +75,19 @@ function AlertsSettings(props) {
   };
 
   const handleInputChange = (event) => {
-    console.log("ENTERED", event.target.id, event.target.checked);
-    if (event.target.id === "email") {
-      let newState = { ...state };
-      newState[event.target.id] = event.target.value;
-      setState(newState);
-    }
-    if (event.target.value > 1 || event.target.value < 0) {
-      let newState = { ...state };
-      newState[event.target.id] = event.target.value;
-      setState(newState);
-      let newFormState = { ...formState };
+    let newState = { ...state };
+    newState[event.target.id] = event.target.value;
+    setState(newState);
+    let newFormState = { ...formState };
+    if (
+      event.target.id !== "email" &&
+      (event.target.value > 1 || event.target.value < 0)
+    ) {
       newFormState[event.target.id] = true;
-      setFormState(newFormState);
     } else {
-      let newState = { ...state };
-      newState[event.target.id] = event.target.value;
-      setState(newState);
-      let newFormState = { ...formState };
       newFormState[event.target.id] = false;
-      setFormState(newFormState);
     }
+    setFormState(newFormState);
   };
 
   const formValidation = () => {

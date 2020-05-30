@@ -108,13 +108,13 @@ class OrganizationProfileViewSet(viewsets.ModelViewSet):
         countries = data['countries']
         tags = data['tags']
         EURes = getOrgsByCountriesAndTags(tags, countries)
-        B2MATCHRes = getB2MATCHPartByCountriesAndTags(tags, countries)
-
+        # B2MATCHRes = getB2MATCHPartByCountriesAndTags(tags, countries)
+        B2MATCHRes = []
         B2MATCH = []
         EU = []
         for val in EURes:
-            EU.append({'pic': val.pic, 'legalName': val.legalName, 'businessName': val.businessName,
-                       'address': {'country': val.address.country, 'city': val.address.city},
+            EU.append({'legalName': val.legalName,
+                       'country': val.address.country,
                        'description': val.description, 'classificationType': val.classificationType,
                        'dataStatus': val.dataStatus, 'numberOfProjects': val.numberOfProjects,
                        'consorsiumRoles': val.consorsiumRoles})

@@ -5,13 +5,61 @@ import Switch from '@material-ui/core/Switch';
 import FormControlLabel from '@material-ui/core/FormControlLabel';
 import Grid from "@material-ui/core/Grid";
 import { Button } from '@material-ui/core';
+import Typography from '@material-ui/core/Typography'
 
 function AlertsSettings() {
 
     const [email, setEmail] = React.useState('')
     const [checked, setChecked] = React.useState(false);
-    const [number, setNumber] = React.useState('');
+    const [number, setNumber] = React.useState();
+    const [italy, setItaly] = React.useState();
+    const [france, setFrance] = React.useState();
+    const [austria, setAustria] = React.useState();
+    const [germany, setGermany] = React.useState();
+    const [denmark, setDenmark] = React.useState();
+    const [czech, setCzech] = React.useState();
+    const [finland, setFinland] = React.useState();
+    const [ireland, setIreland] = React.useState();
+    const [israel, setIsrael] = React.useState();
+    const [portugal, setPortugal] = React.useState();
+    const [ukranie, setUkranie] = React.useState();
+    const [uk, setUK] = React.useState();
+    const [turkey, setTurkey] = React.useState();
+    const [switzerland, setSwitzerland] = React.useState();
+    const [spain, setSpain] = React.useState();
+    const [norway, setNorway] = React.useState();
+    const [agency, setAgency] = React.useState();
+    const [uni, setUni] = React.useState();
+    const [company, setCompany] = React.useState();
+    const [RD, setRD] = React.useState();
+    const [start, setStart] = React.useState();
+    const [oth, setOth] = React.useState();
+    const [formState, setFormState] = React.useState({
 
+    number:false,
+    italy:false,
+    france:false,
+    austria:false,
+    germany:false,
+    denmark:false,
+    czech:false,
+    finland:false,
+    ireland:false,
+    israel:false,
+    portugal:false,
+    ukranie:false,
+    uk:false,
+    turkey:false,
+    switzerland:false,
+    spain:false,
+    norway:false,
+    agency:false,
+    uni:false,
+    company:false,
+    RD:false,
+    start:false,
+    oth:false,
+    })
 
     const changeEmail = event => {
         setEmail(event.target.value);
@@ -19,82 +67,508 @@ function AlertsSettings() {
     const toggleChecked = () => {
         setChecked(prev => !prev);
     };
-    const handleBlur = () => {
-        if (number < 1) {
-            setNumber(1);
-        } else if (number > 100) {
-            setNumber(100);
-        }
-    };
+    
     const handleInputChange = event => {
-        setNumber(event.target.value === "" ? "" : Number(event.target.value));
+        
+        if(event.target.value > 1 || event.target.value < 0) {
+            setNumber(event.target.value);
+            setFormState({...formState,number:true})
+        }
+        else{
+            setNumber(event.target.value);
+            setFormState({...formState,number:false})
+        }
     }
     const handleItaly = event => {
-        setNumber(event.target.value === "" ? "" : Number(event.target.value));
+        if(event.target.value > 1 || event.target.value < 0) {
+            setItaly(event.target.value)
+            setFormState({...formState,italy:true})
+        }
+        else{
+            setItaly(event.target.value)
+            setFormState({...formState,italy:false})
+        }
     }
     const handleFrance = event => {
-        setNumber(event.target.value === "" ? "" : Number(event.target.value));
+        
+        if(event.target.value > 1 || event.target.value < 0) {
+            setFrance(event.target.value)
+            setFormState({...formState,france:true})
+        }
+        else{
+            setFrance(event.target.value)
+            setFormState({...formState,france:false})
+        }
     }
     const handleAustria = event => {
-        setNumber(event.target.value === "" ? "" : Number(event.target.value));
+        
+        if(event.target.value > 1 || event.target.value < 0) {
+            setAustria(event.target.value)
+            setFormState({...formState,austria:true})
+        }
+        else{
+            setAustria(event.target.value)
+            setFormState({...formState,austria:false})
+        }
     }
     const handleGermany = event => {
-        setNumber(event.target.value === "" ? "" : Number(event.target.value));
+        
+        if(event.target.value > 1 || event.target.value < 0) {
+            setGermany(event.target.value)
+            setFormState({...formState,germany:true})
+        }
+        else{
+            setGermany(event.target.value)
+            setFormState({...formState,germany:false})
+        }
     }
     const handleDenmark= event => {
-        setNumber(event.target.value === "" ? "" : Number(event.target.value));
+        
+        if(event.target.value > 1 || event.target.value < 0) {
+            setDenmark(event.target.value)
+            setFormState({...formState,denmark:true})
+        }
+        else{
+            setDenmark(event.target.value)
+            setFormState({...formState,denmark:false})
+        }
     }
     const handleCzech = event => {
-        setNumber(event.target.value === "" ? "" : Number(event.target.value));
+       
+        if(event.target.value > 1 || event.target.value < 0) {
+            setCzech(event.target.value)
+            setFormState({...formState,czech:true})
+        }
+        else{
+            setCzech(event.target.value)
+            setFormState({...formState,czech:false})
+        }
     }
     const handleFinland = event => {
-        setNumber(event.target.value === "" ? "" : Number(event.target.value));
+        
+        if(event.target.value > 1 || event.target.value < 0) {
+            setFinland(event.target.value)
+            setFormState({...formState,finland:true})
+        }
+        else{
+            setFinland(event.target.value)
+            setFormState({...formState,finland:false})
+        }
     }
     const handleIreland = event => {
-        setNumber(event.target.value === "" ? "" : Number(event.target.value));
+        
+        if(event.target.value > 1 || event.target.value < 0) {
+            setIreland(event.target.value)
+            setFormState({...formState,ireland:true})
+        }
+        else{
+            setIreland(event.target.value)
+            setFormState({...formState,ireland:false})
+        }
     }
     const handleIsrael = event => {
-        setNumber(event.target.value === "" ? "" : Number(event.target.value));
+        
+        if(event.target.value > 1 || event.target.value < 0) {
+            setIsrael(event.target.value)
+            setFormState({...formState,israel:true})
+        }
+        else{
+            setIsrael(event.target.value)
+            setFormState({...formState,israel:false})
+        }
     }
     const handlePortugal = event => {
-        setNumber(event.target.value === "" ? "" : Number(event.target.value));
+        
+        if(event.target.value > 1 || event.target.value < 0) {
+            setPortugal(event.target.value)
+            setFormState({...formState,portugal:true})
+        }
+        else{
+            setPortugal(event.target.value)
+            setFormState({...formState,portugal:false})
+        }
     }
     const handleUkranie = event => {
-        setNumber(event.target.value === "" ? "" : Number(event.target.value));
+        
+        if(event.target.value > 1 || event.target.value < 0) {
+            setUkranie(event.target.value)
+            setFormState({...formState,ukranie:true})
+        }
+        else{
+            setUkranie(event.target.value)
+            setFormState({...formState,ukranie:false})
+        }
     }
     const handleUK = event => {
-        setNumber(event.target.value === "" ? "" : Number(event.target.value));
+        
+        if(event.target.value > 1 || event.target.value < 0) {
+            setUK(event.target.value)
+            setFormState({...formState,uk:true})
+        }
+        else{
+            setUK(event.target.value)
+            setFormState({...formState,uk:false})
+        }
     }
     const handleTurkey = event => {
-        setNumber(event.target.value === "" ? "" : Number(event.target.value));
+        
+        if(event.target.value > 1 || event.target.value < 0) {
+            setTurkey(event.target.value)
+            setFormState({...formState,turkey:true})
+        }
+        else{
+            setTurkey(event.target.value)
+            setFormState({...formState,turkey:false})
+        }
     }
     const handleSwitzerland = event => {
-        setNumber(event.target.value === "" ? "" : Number(event.target.value));
+        
+        if(event.target.value > 1 || event.target.value < 0) {
+            setSwitzerland(event.target.value)
+            setFormState({...formState,switzerland:true})
+        }
+        else{
+            setSwitzerland(event.target.value)
+            setFormState({...formState,switzerland:false})
+        }
     }
     const handleSpain = event => {
-        setNumber(event.target.value === "" ? "" : Number(event.target.value));
+        
+        if(event.target.value > 1 || event.target.value < 0) {
+            setSpain(event.target.value)
+            setFormState({...formState,spain:true})
+        }
+        else{
+            setSpain(event.target.value)
+            setFormState({...formState,spain:false})
+        }
     }
     const handleNorway = event => {
-        setNumber(event.target.value === "" ? "" : Number(event.target.value));
+        
+        if(event.target.value > 1 || event.target.value < 0) {
+            setNorway(event.target.value)
+            setFormState({...formState,norway:true})
+        }
+        else{
+            setNorway(event.target.value)
+            setFormState({...formState,norway:false})
+        }
     }
     const handleAgency = event => {
-        setNumber(event.target.value === "" ? "" : Number(event.target.value));
+        
+        if(event.target.value > 1 || event.target.value < 0) {
+            setAgency(event.target.value)
+            setFormState({...formState,agency:true})
+        }
+        else{
+            setAgency(event.target.value)
+            setFormState({...formState,agency:false})
+        }
     }
     const handleUni = event => {
-        setNumber(event.target.value === "" ? "" : Number(event.target.value));
+        
+        if(event.target.value > 1 || event.target.value < 0) {
+            setUni(event.target.value)
+            setFormState({...formState,uni:true})
+        }
+        else{
+            setUni(event.target.value)
+            setFormState({...formState,uni:false})
+        }
     }
     const handleCompany= event => {
-        setNumber(event.target.value === "" ? "" : Number(event.target.value));
+        
+        if(event.target.value > 1 || event.target.value < 0) {
+            setCompany(event.target.value)
+            setFormState({...formState,company:true})
+        }
+        else{
+            setCompany(event.target.value)
+            setFormState({...formState,company:false})
+        }
     }
     const handleRD = event => {
-        setNumber(event.target.value === "" ? "" : Number(event.target.value));
+        
+        if(event.target.value > 1 || event.target.value < 0) {
+            setRD(event.target.value)
+            setFormState({...formState,RD:true})
+        }
+        else{
+            setRD(event.target.value)
+            setFormState({...formState,RD:false})
+        }
     }
     const handleStartUp = event => {
-        setNumber(event.target.value === "" ? "" : Number(event.target.value));
+        
+        if(event.target.value > 1 || event.target.value < 0) {
+            setStart(event.target.value)
+            setFormState({...formState,start:true})
+        }
+        else{
+            setStart(event.target.value)
+            setFormState({...formState,start:false})
+        }
     }
     const handleOTH = event => {
-        setNumber(event.target.value === "" ? "" : Number(event.target.value));
+        
+        if(event.target.value > 1 || event.target.value < 0) {
+            setOth(event.target.value)
+            setFormState({...formState,oth:true})
+        }
+        else{
+            setOth(event.target.value)
+            setFormState({...formState,oth:false})
+        }
     }
+
+    const formValidation = () => {
+
+        let res = {}
+        let check = false;
+        if(number < 0 || number > 1)
+        {
+            res = { ...res, number: true }
+            setFormState(res)
+            check = true;
+        }
+        else
+        {
+            res = { ...res, number: false }
+        }
+        if(italy < 0 || italy > 1)
+        {
+            res = { ...res, italy: true }
+            setFormState(res)
+            check = true;
+        }
+        else
+        {
+            res = { ...res, italy: false }
+        }
+        if(france < 0 || france > 1)
+        {
+            res = { ...res, france: true }
+            setFormState(res)
+            check = true;
+        }
+        else
+        {
+            res = { ...res, france: false }
+        }
+        if(austria < 0 || austria > 1)
+        {
+            res = { ...res, austria: true }
+            setFormState(res)
+            check = true;
+        }
+        else
+        {
+            res = { ...res, austria: false }
+        }
+        if(germany < 0 || germany > 1)
+        {
+            res = { ...res, germany: true }
+            setFormState(res)
+            check = true;
+        }
+        else
+        {
+            res = { ...res, germany: false }
+        }
+        if(denmark < 0 || denmark > 1)
+        {
+            res = { ...res, denmark: true }
+            setFormState(res)
+            check = true;
+        }
+        else
+        {
+            res = { ...res, denmark: false }
+        }
+        if(czech < 0 || czech > 1)
+        {
+            res = { ...res, czech: true }
+            setFormState(res)
+            check = true;
+        }
+        else
+        {
+            res = { ...res, czech: false }
+        }
+        if(finland < 0 || finland > 1)
+        {
+            res = { ...res, finland: true }
+            setFormState(res)
+            check = true;
+        }
+        else
+        {
+            res = { ...res, finland: false }
+        }
+        if(ireland < 0 || ireland > 1)
+        {
+            res = { ...res, ireland: true }
+            setFormState(res)
+            check = true;
+        }
+        else
+        {
+            res = { ...res, ireland: false }
+        }
+        if(israel < 0 || israel > 1)
+        {
+            res = { ...res, israel: true }
+            setFormState(res)
+            check = true;
+        }
+        else
+        {
+            res = { ...res, israel: false }
+        }
+        if(portugal < 0 || portugal > 1)
+        {
+            res = { ...res, portugal: true }
+            setFormState(res)
+            check = true;
+        }
+        else
+        {
+            res = { ...res, portugal: false }
+        }
+        if(ukranie < 0 || ukranie > 1)
+        {
+            res = { ...res, ukranie: true }
+            setFormState(res)
+            check = true;
+        }
+        else
+        {
+            res = { ...res, ukranie: false }
+        }
+        if(uk < 0 || uk > 1)
+        {
+            res = { ...res, uk: true }
+            setFormState(res)
+            check = true;
+        }
+        else
+        {
+            res = { ...res, uk: false }
+        }
+        if(turkey < 0 || turkey > 1)
+        {
+            res = { ...res, turkey: true }
+            setFormState(res)
+            check = true;
+        }
+        else
+        {
+            res = { ...res, turkey: false }
+        }
+        if(switzerland < 0 || switzerland > 1)
+        {
+            res = { ...res, switzerland: true }
+            setFormState(res)
+            check = true;
+        }
+        else
+        {
+            res = { ...res, switzerland: false }
+        }
+        if(spain < 0 || spain > 1)
+        {
+            res = { ...res, spain: true }
+            setFormState(res)
+            check = true;
+        }
+        else
+        {
+            res = { ...res, spain: false }
+        }
+        if(norway < 0 || norway > 1)
+        {
+            res = { ...res, norway: true }
+            setFormState(res)
+            check = true;
+        }
+        else
+        {
+            res = { ...res, norway: false }
+        }
+        if(agency < 0 || agency > 1)
+        {
+            res = { ...res, agency: true }
+            setFormState(res)
+            check = true;
+        }
+        else
+        {
+            res = { ...res, agency: false }
+        }
+        if(uni < 0 || uni > 1)
+        {
+            res = { ...res, uni: true }
+            setFormState(res)
+            check = true;
+        }
+        else
+        {
+            res = { ...res, uni: false }
+        }
+        if(company < 0 || company > 1)
+        {
+            res = { ...res, company: true }
+            setFormState(res)
+            check = true;
+        }
+        else
+        {
+            res = { ...res, company: false }
+        }
+        if(RD < 0 || RD > 1)
+        {
+            res = { ...res, RD: true }
+            setFormState(res)
+            check = true;
+        }
+        else
+        {
+            res = { ...res, RD: false }
+        }
+        if(start < 0 || start > 1)
+        {
+            res = { ...res, start: true }
+            setFormState(res)
+            check = true;
+        }
+        else
+        {
+            res = { ...res, start: false }
+        }
+        if(oth < 0 || oth > 1)
+        {
+            res = { ...res, oth: true }
+            setFormState(res)
+            check = true;
+        }
+        else
+        {
+            res = { ...res, oth: false }
+        }
+        setFormState(res)
+        return check;
+    }
+
+    const updateAlert = () => {
+        console.log("form is " + formValidation());
+        if(formValidation()){
+            alert("Scores must be between 0 and 1")
+        }
+        else {
+            console.log("It's Done");
+        }
+    }
+    
     return (
         <React.Fragment>
          <div className="title">
@@ -140,7 +614,7 @@ function AlertsSettings() {
                             label=""
                             type="number"
                             onChange={handleInputChange}
-                            onBlur={handleBlur}
+                            error={formState.number}
                             InputLabelProps={{
                                 shrink: true,
                             }}
@@ -161,8 +635,10 @@ function AlertsSettings() {
                                     id="fields"
                                     label=""
                                     type="number"
+                                    min="0"
+                                    max="1"
                                     onChange={handleItaly}
-                                    onBlur={handleBlur}
+                                    error={formState.italy}
                                     InputLabelProps={{
                                         shrink: true,
                                     }}
@@ -170,6 +646,7 @@ function AlertsSettings() {
                                 />
                             </Grid>
                         </Grid>
+                    
             <h2>France</h2>
             <Grid container spacing={2} alignItems="center"  >
                 <Grid item>
@@ -179,7 +656,7 @@ function AlertsSettings() {
                             label=""
                             type="number"
                             onChange={handleFrance}
-                            onBlur={handleBlur}
+                            error={formState.france}
                             InputLabelProps={{
                                 shrink: true,
                             }}
@@ -196,7 +673,7 @@ function AlertsSettings() {
                             label=""
                             type="number"
                             onChange={handleAustria}
-                            onBlur={handleBlur}
+                            error={formState.austria}
                             InputLabelProps={{
                                 shrink: true,
                             }}
@@ -213,7 +690,7 @@ function AlertsSettings() {
                             label=""
                             type="number"
                             onChange={handleGermany}
-                            onBlur={handleBlur}
+                            error={formState.germany}
                             InputLabelProps={{
                                 shrink: true,
                             }}
@@ -232,7 +709,7 @@ function AlertsSettings() {
                                     label=""
                                     type="number"
                                     onChange={handleDenmark}
-                                    onBlur={handleBlur}
+                                    error={formState.denmark}
                                     InputLabelProps={{
                                         shrink: true,
                                     }}
@@ -249,7 +726,7 @@ function AlertsSettings() {
                             label=""
                             type="number"
                             onChange={handleCzech}
-                            onBlur={handleBlur}
+                            error={formState.czech}
                             InputLabelProps={{
                                 shrink: true,
                             }}
@@ -266,7 +743,7 @@ function AlertsSettings() {
                             label=""
                             type="number"
                             onChange={handleFinland}
-                            onBlur={handleBlur}
+                            error={formState.finland}
                             InputLabelProps={{
                                 shrink: true,
                             }}
@@ -283,7 +760,7 @@ function AlertsSettings() {
                             label=""
                             type="number"
                             onChange={handleIreland}
-                            onBlur={handleBlur}
+                            error={formState.ireland}
                             InputLabelProps={{
                                 shrink: true,
                             }}
@@ -302,7 +779,7 @@ function AlertsSettings() {
                                     label=""
                                     type="number"
                                     onChange={handleIsrael}
-                                    onBlur={handleBlur}
+                                    error={formState.israel}
                                     InputLabelProps={{
                                         shrink: true,
                                     }}
@@ -319,7 +796,7 @@ function AlertsSettings() {
                             label=""
                             type="number"
                             onChange={handlePortugal}
-                            onBlur={handleBlur}
+                            error={formState.portugal}
                             InputLabelProps={{
                                 shrink: true,
                             }}
@@ -336,7 +813,7 @@ function AlertsSettings() {
                             label=""
                             type="number"
                             onChange={handleUkranie}
-                            onBlur={handleBlur}
+                            error={formState.ukranie}
                             InputLabelProps={{
                                 shrink: true,
                             }}
@@ -353,7 +830,7 @@ function AlertsSettings() {
                             label=""
                             type="number"
                             onChange={handleUK}
-                            onBlur={handleBlur}
+                            error={formState.uk}
                             InputLabelProps={{
                                 shrink: true,
                             }}
@@ -372,7 +849,7 @@ function AlertsSettings() {
                                     label=""
                                     type="number"
                                     onChange={handleTurkey}
-                                    onBlur={handleBlur}
+                                    error={formState.turkey}
                                     InputLabelProps={{
                                         shrink: true,
                                     }}
@@ -389,7 +866,7 @@ function AlertsSettings() {
                             label=""
                             type="number"
                             onChange={handleSwitzerland}
-                            onBlur={handleBlur}
+                            error={formState.switzerland}
                             InputLabelProps={{
                                 shrink: true,
                             }}
@@ -406,7 +883,7 @@ function AlertsSettings() {
                             label=""
                             type="number"
                             onChange={handleSpain}
-                            onBlur={handleBlur}
+                            error={formState.spain}
                             InputLabelProps={{
                                 shrink: true,
                             }}
@@ -423,7 +900,7 @@ function AlertsSettings() {
                             label=""
                             type="number"
                             onChange={handleNorway}
-                            onBlur={handleBlur}
+                            error={formState.norway}
                             InputLabelProps={{
                                 shrink: true,
                             }}
@@ -446,7 +923,7 @@ function AlertsSettings() {
                             label=""
                             type="number"
                             onChange={handleAgency}
-                            onBlur={handleBlur}
+                            error={formState.agency}
                             InputLabelProps={{
                                 shrink: true,
                             }}
@@ -463,7 +940,7 @@ function AlertsSettings() {
                             label=""
                             type="number"
                             onChange={handleUni}
-                            onBlur={handleBlur}
+                            error={formState.uni}
                             InputLabelProps={{
                                 shrink: true,
                             }}
@@ -480,7 +957,7 @@ function AlertsSettings() {
                             label=""
                             type="number"
                             onChange={handleCompany}
-                            onBlur={handleBlur}
+                            error={formState.company}
                             InputLabelProps={{
                                 shrink: true,
                             }}
@@ -499,7 +976,7 @@ function AlertsSettings() {
                             label=""
                             type="number"
                             onChange={handleRD}
-                            onBlur={handleBlur}
+                            error={formState.RD}
                             InputLabelProps={{
                                 shrink: true,
                             }}
@@ -516,7 +993,7 @@ function AlertsSettings() {
                             label=""
                             type="number"
                             onChange={handleStartUp}
-                            onBlur={handleBlur}
+                            error={formState.start}
                             InputLabelProps={{
                                 shrink: true,
                             }}
@@ -533,7 +1010,7 @@ function AlertsSettings() {
                             label=""
                             type="number"
                             onChange={handleOTH}
-                            onBlur={handleBlur}
+                            error={formState.oth}
                             InputLabelProps={{
                                 shrink: true,
                             }}
@@ -543,10 +1020,10 @@ function AlertsSettings() {
             </Grid>
         </div>
         <div className="Buttons">
-                <Button color="primary" round variant="contained" id="ButtonText">Update</Button>
+                <Button color="primary" round variant="contained" id="ButtonText" onClick={() => updateAlert()}>Update</Button>
             </div>
+        
         </React.Fragment>
     )
-
 }
 export default AlertsSettings;

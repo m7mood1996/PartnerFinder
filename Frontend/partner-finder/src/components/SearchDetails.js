@@ -29,7 +29,9 @@ function SearchDetails() {
     const [phone_num, setPhone] = React.useState('');
     const [tags, setTags] = React.useState([]);
     const [countrySearched, setCountrySearched] = React.useState([]);
-
+    const [state, setState] = React.useState({
+        loading : false,
+    })
     const [formState, setFormState] = React.useState({
         name: false,
         email: false,
@@ -67,7 +69,6 @@ function SearchDetails() {
         setType(event.target.value);
         if (event.target.value.length !== 0)
             setFormState({ ...formState, type: false })
-
     };
 
     const handleCountry = event => {
@@ -97,7 +98,6 @@ function SearchDetails() {
     };
     const addTag = (tag) => {
         setTags([...tags, tag])
-
     }
 
     const changeTagInput = (event) => {
@@ -114,16 +114,17 @@ function SearchDetails() {
     }
 
     const searchCompany = () => {
-        // if (formValidation()) {
+        if (formValidation()) {
         //     setData([])
-        // }
-        // else {
+        }
+        else {
         searchByTagsAndCountires(tags, countrySearched)
-        // }
+        }
         // setData([{ name: 'stam', type: 'stam', country: 'stam', phone: 'stam', email: 'stam', num: 'stam', description: 'stam' }])
     }
 
     const searchByTagsAndCountires = (tags, countries) => {
+        setState({loading:true})
         tags = tags.map(tag => tag.text)
         let url = new URL('http://127.0.0.1:8000/api/genericSearch/searchByCountriesAndTags/')
         let params = { 'data': JSON.stringify({ tags: tags, countries: countries }) }
@@ -132,6 +133,7 @@ function SearchDetails() {
             method: 'GET'
         }).then(res => res.json())
             .then(resp => {
+                setState({loading:false})
                 setData(resp)
                 console.log("DATA2", resp)
             })
@@ -139,6 +141,7 @@ function SearchDetails() {
     }
 
     const formValidation = () => {
+        console.log("fghghgh")
         let res = {}
         let check = false
         if (name === '' || name.length === 0) {
@@ -205,7 +208,6 @@ function SearchDetails() {
         else {
             res = { ...res, tags: false }
         }
-
         setFormState(res)
         return check
     }
@@ -341,7 +343,13 @@ function SearchDetails() {
                 </div>
             </div>
             <div className="Buttons">
-                <Button color="primary" round variant="contained" id="ButtonText" onClick={() => searchCompany()}>Search</Button>
+                <Button color="primary" round variant="contained" id="ButtonText" onClick={() => searchCompany()} disabled={state.loading}>
+                    {state.loading && <i className="fa fa-refresh fa-spin"></i>}
+                    {state.loading && <span>Loading...</span>}
+                    {!state.loading && <span>Search</span>}
+                    
+                    
+                </Button>
             </div>
             {data.length === 0 ? null :
                 <div style={{ 'margin-top': '10px' }}>

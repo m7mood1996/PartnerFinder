@@ -11,6 +11,7 @@ import Typography from "@material-ui/core/Typography";
 import Box from "@material-ui/core/Box";
 
 function MainScene(props) {
+
   const { children, value, index, ...other } = props;
 
   return (
@@ -33,13 +34,13 @@ function MainScene(props) {
 MainScene.propTypes = {
   children: PropTypes.node,
   index: PropTypes.any.isRequired,
-  value: PropTypes.any.isRequired,
+  value: PropTypes.any.isRequired
 };
 
 function a11yProps(index) {
   return {
     id: `nav-tab-${index}`,
-    "aria-controls": `nav-tabpanel-${index}`,
+    "aria-controls": `nav-tabpanel-${index}`
   };
 }
 
@@ -47,7 +48,7 @@ function LinkTab(props) {
   return (
     <Tab
       component="a"
-      onClick={(event) => {
+      onClick={event => {
         event.preventDefault();
       }}
       {...props}
@@ -55,11 +56,11 @@ function LinkTab(props) {
   );
 }
 
-const useStyles = makeStyles((theme) => ({
+const useStyles = makeStyles(theme => ({
   root: {
     flexGrow: 1,
-    backgroundColor: theme.palette.background.paper,
-  },
+    backgroundColor: theme.palette.background.paper
+  }
 }));
 
 export default function NavTabs() {
@@ -88,9 +89,11 @@ export default function NavTabs() {
         <SearchDetails />
       </MainScene>
       <MainScene value={value} index={1}>
-        BlaBla
+        <AlertsSettings />
       </MainScene>
-      <MainScene value={value} index={2}></MainScene>
+      <MainScene value={value} index={2}>
+        <Updates />
+      </MainScene>
     </div>
   );
 }

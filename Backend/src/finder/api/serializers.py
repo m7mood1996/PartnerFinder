@@ -47,12 +47,8 @@ class CallTagSerializer(serializers.ModelSerializer):
     class Meta:
         model = CallTag
 
+    fields = ['tag', 'organizations']
 
-<< << << < HEAD
-fields = ['tag', 'organizations']
-== == == =
-fields = ['tag', 'calls']
->>>>>> > Alerts
 
 
 class CallSerializer(serializers.ModelSerializer):

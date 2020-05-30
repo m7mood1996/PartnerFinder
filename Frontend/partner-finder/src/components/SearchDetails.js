@@ -1,19 +1,3 @@
-<<<<<<< HEAD
-import React from 'react'
-import TextField from '@material-ui/core/TextField';
-import Select from '@material-ui/core/Select';
-import Typography from '@material-ui/core/Typography'
-import InputLabel from '@material-ui/core/InputLabel';
-import MenuItem from '@material-ui/core/MenuItem';
-import FormControl from '@material-ui/core/FormControl';
-import Grid from "@material-ui/core/Grid";
-import { Button } from '@material-ui/core';
-import countryList from 'react-select-country-list'
-import 'react-phone-number-input/style.css'
-import PhoneInput from 'react-phone-number-input'
-import { WithContext as ReactTags } from 'react-tag-input';
-import SearchResults from './SearchResults';
-=======
 import React from "react";
 import TextField from "@material-ui/core/TextField";
 import { makeStyles } from "@material-ui/core/styles";
@@ -34,7 +18,6 @@ import PhoneInput from "react-phone-number-input";
 import { formatPhoneNumber } from "react-phone-number-input";
 import { WithContext as ReactTags } from "react-tag-input";
 import SearchResults from "./SearchResults";
->>>>>>> Alerts
 
 const KeyCodes = {
   comma: 188,
@@ -43,16 +26,18 @@ const KeyCodes = {
 const delimiters = [KeyCodes.comma, KeyCodes.enter];
 
 function SearchDetails() {
-  const [type, setType] = React.useState("");
+  const [type, setType] = React.useState('');
   const [country, setCountry] = React.useState([]);
   const [data, setData] = React.useState([]);
-  const [name, setName] = React.useState("");
-  const [email, setEmail] = React.useState("");
-  const [number, setNumber] = React.useState("");
-  const [phone_num, setPhone] = React.useState("");
+  const [name, setName] = React.useState('');
+  const [email, setEmail] = React.useState('')
+  const [number, setNumber] = React.useState('');
+  const [phone_num, setPhone] = React.useState('');
   const [tags, setTags] = React.useState([]);
   const [countrySearched, setCountrySearched] = React.useState([]);
-
+  const [state, setState] = React.useState({
+    loading: false,
+  })
   const [formState, setFormState] = React.useState({
     name: false,
     email: false,
@@ -62,16 +47,11 @@ function SearchDetails() {
     tags: false,
     number: false,
     phone_num: false,
-  });
+  })
   const companyTypesOptions = [
-    "SME",
-    "International Organization",
-    "Higher or Secondary Education",
-    "Research Organization",
-    "Private for Profit Organization",
-    "Public Organization",
-    "Other",
-  ];
+    "SME", "International Organization", "Higher or Secondary Education",
+    "Research Organization", "Private for Profit Organization", "Public Organization", "Other"
+  ]
 
   const changeName = (event) => {
     setName(event.target.value);
@@ -112,6 +92,7 @@ function SearchDetails() {
     if (event.target.value.length !== 0)
       setFormState({ ...formState, number: false });
   };
+
   const handleBlur = () => {
     if (number < 1) {
       setNumber(1);
@@ -119,6 +100,7 @@ function SearchDetails() {
       setNumber(100);
     }
   };
+
   const addTag = (tag) => {
     setTags([...tags, tag]);
   };
@@ -128,12 +110,13 @@ function SearchDetails() {
       setFormState({ ...formState, tags: false });
     }
   };
+
   const deleteTag = (idx) => {
     let newTags = tags.filter((val, i) => i !== idx);
     setTags(newTags);
   };
 
-  const dragTag = (tag, currPos, newPos) => {};
+  const dragTag = (tag, currPos, newPos) => { };
 
   const searchCompany = () => {
     // if (formValidation()) {
@@ -146,24 +129,21 @@ function SearchDetails() {
   };
 
   const searchByTagsAndCountires = (tags, countries) => {
-    tags = tags.map((tag) => tag.text);
-    let url = new URL(
-      "http://127.0.0.1:8000/api/genericSearch/searchByCountriesAndTags/"
-    );
-    let params = { data: JSON.stringify({ tags: tags, countries: countries }) };
-    Object.keys(params).forEach((key) =>
-      url.searchParams.append(key, params[key])
-    );
+    setState({ loading: true })
+    tags = tags.map(tag => tag.text)
+    let url = new URL('http://127.0.0.1:8000/api/genericSearch/searchByCountriesAndTags/')
+    let params = { 'data': JSON.stringify({ tags: tags, countries: countries }) }
+    Object.keys(params).forEach(key => url.searchParams.append(key, params[key]))
     fetch(url, {
-      method: "GET",
-    })
-      .then((res) => res.json())
-      .then((resp) => {
-        setData(resp);
-        console.log("DATA2", resp);
+      method: 'GET'
+    }).then(res => res.json())
+      .then(resp => {
+        setState({ loading: false })
+        setData(resp)
+        console.log("DATA2", resp)
       })
-      .catch((error) => console.log(error));
-  };
+      .catch(error => console.log(error))
+  }
 
   const formValidation = () => {
     let res = {};
@@ -232,153 +212,10 @@ function SearchDetails() {
     } else {
       res = { ...res, tags: false };
     }
-
     setFormState(res);
     return check;
   };
 
-<<<<<<< HEAD
-    return (
-        <React.Fragment>
-            <div className="Org_Details">
-                <h1>Simple Partner Search</h1>
-                <h2>Organization Details</h2>
-                <div className="first_row">
-                    <div className="SearchTab">
-                        <h1>Name</h1>
-                        <form className={SearchDetails.root} autoComplete="off">
-                            <TextField id="fields" onChange={changeName} label="Name" variant="outlined" error={formState.name} />
-                        </form>
-                    </div>
-                    <div className="type">
-                        <h1>Type</h1>
-                        <FormControl className={SearchDetails.formControl} id="tab">
-                            <InputLabel id="company_type" error={formState.type}>Type</InputLabel>
-                            <Select
-                                labelId="company_type"
-                                id="company_type"
-                                value={type}
-                                onChange={handleChange}
-                            >
-                                {companyTypesOptions.map((val, idx) => {
-                                    return <MenuItem value={idx}>{val}</MenuItem>
-                                })}
-                            </Select>
-                        </FormControl>
-                    </div>
-                    <div className="country">
-                        <h1>Country</h1>
-                        <FormControl className={SearchDetails.formControl} id="tab" >
-                            <InputLabel id="company_type" error={formState.country} >Country</InputLabel>
-                            <Select
-                                options={countryList().getData()}
-                                value={country}
-                                onChange={handleCountry}
-                            >
-                                {countryList().getData().map(val => {
-                                    return <MenuItem value={val.label}>{val.label}</MenuItem>
-                                })}
-                            </Select>
-                        </FormControl>
-                    </div>
-                    <div className="Email">
-                        <h1>E-mail</h1>
-                        <TextField
-                            id="fields"
-                            label="E-mail"
-                            onChange={changeEmail}
-                            className={SearchDetails.textField}
-                            type="email"
-                            name="email"
-                            autoComplete="email"
-                            margin="normal"
-                            variant="outlined"
-                            error={formState.email}
-                        />
-                    </div>
-                </div>
-                <div className="second_row">
-                    <div className="Projects">
-                        <h1>Number Of Projects</h1>
-                        <Grid container spacing={2} alignItems="center"  >
-                            <Grid item>
-                                <TextField
-                                    style={{'width' : '40%'}}
-                                    id="fields"
-                                    label=""
-                                    type="number"
-                                    error={formState.number}
-                                    onChange={handleInputChange}
-                                    onBlur={handleBlur}
-                                    InputLabelProps={{
-                                        shrink: true,
-                                    }}
-                                    variant="outlined"
-                                />
-                            </Grid>
-                        </Grid>
-                    </div>
-                    <div className="Phone_Number">
-                        <h1>Phone</h1>
-                        <PhoneInput
-                            placeholder="Enter phone number"
-                            value={phone_num}
-                            onChange={changePhone}
-                            error={formState.phone_num}
-                        />
-                    </div>
-                </div>
-            </div>
-            <hr style={{ 'margin-top': '3%', 'border': '2px solid gray', 'border-radius': '5px', 'marginLeft': '2%', 'marginRight': '4%' }} />
-            <div className="Search_Details">
-                <h1 style={{ 'margin-left': '1%' }}>Search Details</h1>
-                <div className="third_row">
-                    <div className="Tags">
-                        <h1>Tags and Keywords</h1>
-                        <ReactTags tags={tags}
-                            handleDelete={deleteTag}
-                            handleAddition={addTag}
-                            handleDrag={dragTag}
-                            delimiters={delimiters}
-                            handleInputChange={changeTagInput}
-                        />
-
-                        {formState.tags ? <Typography variant="caption" display="block" gutterBottom style={{ 'color': 'red' }}>
-                            Enter at least one tag
-                                    </Typography> : null}
-                    </div>
-                    <div className="SCountry">
-                        <h1>Country</h1>
-                        <FormControl className={SearchDetails.formControl} id="tab" >
-                            <InputLabel id="demo-mutiple-name-label" error={formState.country} >Country</InputLabel>
-                            <Select
-                                options={countryList().getData()}
-                                value={countrySearched}
-                                onChange={handleCountrySearched}
-                                labelId="demo-mutiple-name-label"
-                                id="demo-mutiple-name"
-                                multiple
-                            >
-                                {countryList().getData().map(val => {
-                                    return <MenuItem value={val.label}>{val.label}</MenuItem>
-                                })}
-                            </Select>
-                        </FormControl>
-                    </div>
-                </div>
-            </div>
-            <div className="Buttons">
-                <Button color="primary" round variant="contained" id="ButtonText" onClick={() => searchCompany()}>Search</Button>
-            </div>
-            {data.length === 0 ? null :
-                <div style={{ 'margin-top': '10px' }}>
-                    <SearchResults data={data} />
-                </div>
-            }
-        </React.Fragment>
-
-    );
-=======
   return (
     <React.Fragment>
       <div className="Org_Details">
@@ -560,6 +397,6 @@ function SearchDetails() {
       )}
     </React.Fragment>
   );
->>>>>>> Alerts
 }
+
 export default SearchDetails;

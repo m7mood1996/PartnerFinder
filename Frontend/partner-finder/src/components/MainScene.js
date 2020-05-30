@@ -1,12 +1,7 @@
-<<<<<<< HEAD
 import React from 'react'
 import SearchDetails from './SearchDetails'
 import AlertsSettings from './AlertsSettings'
 import Updates from './Updates'
-=======
-import React from "react";
-import SearchDetails from "./SearchDetails";
->>>>>>> Alerts
 import PropTypes from "prop-types";
 import { makeStyles } from "@material-ui/core/styles";
 import AppBar from "@material-ui/core/AppBar";
@@ -67,42 +62,6 @@ const useStyles = makeStyles((theme) => ({
   },
 }));
 
-<<<<<<< HEAD
-  export default function NavTabs() {
-    const classes = useStyles();
-    const [value, setValue] = React.useState(0);
-  
-    const handleChange = (event, newValue) => {
-      setValue(newValue);
-    };
-  
-    return (
-      <div className={classes.root}>
-        <AppBar position="static">
-          <Tabs
-            variant="fullWidth"
-            value={value}
-            onChange={handleChange}
-            aria-label="nav tabs example"
-          >
-            <LinkTab label="Basic Search" href="/search" {...a11yProps(0)} />
-            <LinkTab label="Alerts Settings" href="/settings" {...a11yProps(1)} />
-            <LinkTab label="Updates" href="/updates" {...a11yProps(2)} />
-          </Tabs>
-        </AppBar>
-        <MainScene value={value} index={0}>
-        <SearchDetails/>
-        </MainScene>
-        <MainScene value={value} index={1}>
-        <AlertsSettings/>
-        </MainScene>
-        <MainScene value={value} index={2}>
-        <Updates/>
-        </MainScene>
-      </div>
-    );
-  }
-=======
 export default function NavTabs() {
   const classes = useStyles();
   const [value, setValue] = React.useState(0);
@@ -135,4 +94,3 @@ export default function NavTabs() {
     </div>
   );
 }
->>>>>>> Alerts

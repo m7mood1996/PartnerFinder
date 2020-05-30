@@ -27,7 +27,7 @@ function Updates() {
                 <Button color="primary" round variant="contained" id="ButtonText" style={{'width':'20%'}}>Update Now</Button>
             </div>
             <div style={{'margin-top':'10%'}}>
-                <h1 style={{'margin-left':'45px','color':'blue','font-weight':'bold'}}>*There is an automatically updates every two weeks for both EU & B2MATCH</h1>
+                <h1 style={{'margin-left':'45px','color':'blue','font-weight':'bold'}}>*There is an automatically updates every month for both EU & B2MATCH</h1>
             </div>
         </React.Fragment>
     )

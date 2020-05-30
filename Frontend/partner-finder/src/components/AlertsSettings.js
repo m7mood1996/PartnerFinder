@@ -9,1020 +9,679 @@ import Typography from '@material-ui/core/Typography'
 
 function AlertsSettings() {
 
-    const [email, setEmail] = React.useState('')
-    const [checked, setChecked] = React.useState(false);
-    const [number, setNumber] = React.useState();
-    const [italy, setItaly] = React.useState();
-    const [france, setFrance] = React.useState();
-    const [austria, setAustria] = React.useState();
-    const [germany, setGermany] = React.useState();
-    const [denmark, setDenmark] = React.useState();
-    const [czech, setCzech] = React.useState();
-    const [finland, setFinland] = React.useState();
-    const [ireland, setIreland] = React.useState();
-    const [israel, setIsrael] = React.useState();
-    const [portugal, setPortugal] = React.useState();
-    const [ukranie, setUkranie] = React.useState();
-    const [uk, setUK] = React.useState();
-    const [turkey, setTurkey] = React.useState();
-    const [switzerland, setSwitzerland] = React.useState();
-    const [spain, setSpain] = React.useState();
-    const [norway, setNorway] = React.useState();
-    const [agency, setAgency] = React.useState();
-    const [uni, setUni] = React.useState();
-    const [company, setCompany] = React.useState();
-    const [RD, setRD] = React.useState();
-    const [start, setStart] = React.useState();
-    const [oth, setOth] = React.useState();
-    const [formState, setFormState] = React.useState({
-
-    number:false,
-    italy:false,
-    france:false,
-    austria:false,
-    germany:false,
-    denmark:false,
-    czech:false,
-    finland:false,
-    ireland:false,
-    israel:false,
-    portugal:false,
-    ukranie:false,
-    uk:false,
-    turkey:false,
-    switzerland:false,
-    spain:false,
-    norway:false,
-    agency:false,
-    uni:false,
-    company:false,
-    RD:false,
-    start:false,
-    oth:false,
+    const [turnedOn, setTurnedOn] = React.useState(false);
+    const [state, setState] = React.useState({
+        firstLoading: true,
+        email: '',
+        resScore: 0,
+        italy: 0,
+        france: 0,
+        austria: 0,
+        germany: 0,
+        denmark: 0,
+        czech: 0,
+        finland: 0,
+        ireland: 0,
+        israel: 0,
+        portugal: 0,
+        ukranie: 0,
+        uk: 0,
+        turkey: 0,
+        switzerland: 0,
+        spain: 0,
+        norway: 0,
+        agency: 0,
+        uni: 0,
+        company: 0,
+        RD: 0,
+        start: 0,
+        oth: 0,
     })
 
-    const changeEmail = event => {
-        setEmail(event.target.value);
+    const [formState, setFormState] = React.useState({
+
+        resScore: false,
+        italy: false,
+        france: false,
+        austria: false,
+        germany: false,
+        denmark: false,
+        czech: false,
+        finland: false,
+        ireland: false,
+        israel: false,
+        portugal: false,
+        ukranie: false,
+        uk: false,
+        turkey: false,
+        switzerland: false,
+        spain: false,
+        norway: false,
+        agency: false,
+        uni: false,
+        company: false,
+        RD: false,
+        start: false,
+        oth: false,
+    })
+
+    if (state.firstLoading) {
+        let newState = { ...state, 'firstLoading': false }
+        let newMail = ''
+        let url = new URL('http://127.0.0.1:8000/api/alerts/getSettings/')
+        fetch(url, {
+            method: 'GET'
+        }).then(res => res.json())
+            .then(resp => {
+                setTurnedOn(resp.turned_on)
+                newMail = resp.email
+            })
+            .catch(error => console.log(error))
+
+        url = new URL('http://127.0.0.1:8000/api/scores/getscores/')
+        fetch(url, {
+            method: 'GET'
+        }).then(res => res.json())
+            .then(resp => {
+                newState['resScore'] = resp.RES
+                newState['italy'] = resp.Italy
+                newState['france'] = resp.France
+                newState['austria'] = resp.Austria
+                newState['germany'] = resp.Germany
+                newState['denmark'] = resp.Denmark
+                newState['czech'] = resp.Czech_Republic
+                newState['finland'] = resp.Finland
+                newState['ireland'] = resp.Ireland
+                newState['israel'] = resp.Israel
+                newState['portugal'] = resp.Portugal
+                newState['ukranie'] = resp.Ukranie
+                newState['uk'] = resp.United_Kingdom
+                newState['turkey'] = resp.Turkey
+                newState['switzerland'] = resp.Switzerland
+                newState['spain'] = resp.Spain
+                newState['norway'] = resp.Norway
+                newState['agency'] = resp.Association_Agency
+                newState['uni'] = resp.University
+                newState['company'] = resp.Company
+                newState['RD'] = resp.R_D_Institution
+                newState['start'] = resp.Start_Up
+                newState['oth'] = resp.Others
+                newState['email'] = newMail
+                setState(newState)
+            })
+            .catch(error => console.log(error))
     }
+
     const toggleChecked = () => {
-        setChecked(prev => !prev);
+        setTurnedOn(prev => !prev);
     };
-    
+
     const handleInputChange = event => {
-        
-        if(event.target.value > 1 || event.target.value < 0) {
-            setNumber(event.target.value);
-            setFormState({...formState,number:true})
+
+        console.log("ENTERED", event.target.id, event.target.checked)
+        if (event.target.id === 'email') {
+            let newState = { ...state }
+            newState[event.target.id] = event.target.value
+            setState(newState)
         }
-        else{
-            setNumber(event.target.value);
-            setFormState({...formState,number:false})
+        if (event.target.value > 1 || event.target.value < 0) {
+            let newState = { ...state }
+            newState[event.target.id] = event.target.value
+            setState(newState)
+            let newFormState = { ...formState }
+            newFormState[event.target.id] = true
+            setFormState(newFormState)
         }
-    }
-    const handleItaly = event => {
-        if(event.target.value > 1 || event.target.value < 0) {
-            setItaly(event.target.value)
-            setFormState({...formState,italy:true})
-        }
-        else{
-            setItaly(event.target.value)
-            setFormState({...formState,italy:false})
-        }
-    }
-    const handleFrance = event => {
-        
-        if(event.target.value > 1 || event.target.value < 0) {
-            setFrance(event.target.value)
-            setFormState({...formState,france:true})
-        }
-        else{
-            setFrance(event.target.value)
-            setFormState({...formState,france:false})
+        else {
+            let newState = { ...state }
+            newState[event.target.id] = event.target.value
+            setState(newState)
+            let newFormState = { ...formState }
+            newFormState[event.target.id] = false
+            setFormState(newFormState)
         }
     }
-    const handleAustria = event => {
-        
-        if(event.target.value > 1 || event.target.value < 0) {
-            setAustria(event.target.value)
-            setFormState({...formState,austria:true})
-        }
-        else{
-            setAustria(event.target.value)
-            setFormState({...formState,austria:false})
-        }
-    }
-    const handleGermany = event => {
-        
-        if(event.target.value > 1 || event.target.value < 0) {
-            setGermany(event.target.value)
-            setFormState({...formState,germany:true})
-        }
-        else{
-            setGermany(event.target.value)
-            setFormState({...formState,germany:false})
-        }
-    }
-    const handleDenmark= event => {
-        
-        if(event.target.value > 1 || event.target.value < 0) {
-            setDenmark(event.target.value)
-            setFormState({...formState,denmark:true})
-        }
-        else{
-            setDenmark(event.target.value)
-            setFormState({...formState,denmark:false})
-        }
-    }
-    const handleCzech = event => {
-       
-        if(event.target.value > 1 || event.target.value < 0) {
-            setCzech(event.target.value)
-            setFormState({...formState,czech:true})
-        }
-        else{
-            setCzech(event.target.value)
-            setFormState({...formState,czech:false})
-        }
-    }
-    const handleFinland = event => {
-        
-        if(event.target.value > 1 || event.target.value < 0) {
-            setFinland(event.target.value)
-            setFormState({...formState,finland:true})
-        }
-        else{
-            setFinland(event.target.value)
-            setFormState({...formState,finland:false})
-        }
-    }
-    const handleIreland = event => {
-        
-        if(event.target.value > 1 || event.target.value < 0) {
-            setIreland(event.target.value)
-            setFormState({...formState,ireland:true})
-        }
-        else{
-            setIreland(event.target.value)
-            setFormState({...formState,ireland:false})
-        }
-    }
-    const handleIsrael = event => {
-        
-        if(event.target.value > 1 || event.target.value < 0) {
-            setIsrael(event.target.value)
-            setFormState({...formState,israel:true})
-        }
-        else{
-            setIsrael(event.target.value)
-            setFormState({...formState,israel:false})
-        }
-    }
-    const handlePortugal = event => {
-        
-        if(event.target.value > 1 || event.target.value < 0) {
-            setPortugal(event.target.value)
-            setFormState({...formState,portugal:true})
-        }
-        else{
-            setPortugal(event.target.value)
-            setFormState({...formState,portugal:false})
-        }
-    }
-    const handleUkranie = event => {
-        
-        if(event.target.value > 1 || event.target.value < 0) {
-            setUkranie(event.target.value)
-            setFormState({...formState,ukranie:true})
-        }
-        else{
-            setUkranie(event.target.value)
-            setFormState({...formState,ukranie:false})
-        }
-    }
-    const handleUK = event => {
-        
-        if(event.target.value > 1 || event.target.value < 0) {
-            setUK(event.target.value)
-            setFormState({...formState,uk:true})
-        }
-        else{
-            setUK(event.target.value)
-            setFormState({...formState,uk:false})
-        }
-    }
-    const handleTurkey = event => {
-        
-        if(event.target.value > 1 || event.target.value < 0) {
-            setTurkey(event.target.value)
-            setFormState({...formState,turkey:true})
-        }
-        else{
-            setTurkey(event.target.value)
-            setFormState({...formState,turkey:false})
-        }
-    }
-    const handleSwitzerland = event => {
-        
-        if(event.target.value > 1 || event.target.value < 0) {
-            setSwitzerland(event.target.value)
-            setFormState({...formState,switzerland:true})
-        }
-        else{
-            setSwitzerland(event.target.value)
-            setFormState({...formState,switzerland:false})
-        }
-    }
-    const handleSpain = event => {
-        
-        if(event.target.value > 1 || event.target.value < 0) {
-            setSpain(event.target.value)
-            setFormState({...formState,spain:true})
-        }
-        else{
-            setSpain(event.target.value)
-            setFormState({...formState,spain:false})
-        }
-    }
-    const handleNorway = event => {
-        
-        if(event.target.value > 1 || event.target.value < 0) {
-            setNorway(event.target.value)
-            setFormState({...formState,norway:true})
-        }
-        else{
-            setNorway(event.target.value)
-            setFormState({...formState,norway:false})
-        }
-    }
-    const handleAgency = event => {
-        
-        if(event.target.value > 1 || event.target.value < 0) {
-            setAgency(event.target.value)
-            setFormState({...formState,agency:true})
-        }
-        else{
-            setAgency(event.target.value)
-            setFormState({...formState,agency:false})
-        }
-    }
-    const handleUni = event => {
-        
-        if(event.target.value > 1 || event.target.value < 0) {
-            setUni(event.target.value)
-            setFormState({...formState,uni:true})
-        }
-        else{
-            setUni(event.target.value)
-            setFormState({...formState,uni:false})
-        }
-    }
-    const handleCompany= event => {
-        
-        if(event.target.value > 1 || event.target.value < 0) {
-            setCompany(event.target.value)
-            setFormState({...formState,company:true})
-        }
-        else{
-            setCompany(event.target.value)
-            setFormState({...formState,company:false})
-        }
-    }
-    const handleRD = event => {
-        
-        if(event.target.value > 1 || event.target.value < 0) {
-            setRD(event.target.value)
-            setFormState({...formState,RD:true})
-        }
-        else{
-            setRD(event.target.value)
-            setFormState({...formState,RD:false})
-        }
-    }
-    const handleStartUp = event => {
-        
-        if(event.target.value > 1 || event.target.value < 0) {
-            setStart(event.target.value)
-            setFormState({...formState,start:true})
-        }
-        else{
-            setStart(event.target.value)
-            setFormState({...formState,start:false})
-        }
-    }
-    const handleOTH = event => {
-        
-        if(event.target.value > 1 || event.target.value < 0) {
-            setOth(event.target.value)
-            setFormState({...formState,oth:true})
-        }
-        else{
-            setOth(event.target.value)
-            setFormState({...formState,oth:false})
-        }
-    }
+
 
     const formValidation = () => {
 
         let res = {}
         let check = false;
-        if(number < 0 || number > 1)
-        {
-            res = { ...res, number: true }
-            setFormState(res)
-            check = true;
-        }
-        else
-        {
-            res = { ...res, number: false }
-        }
-        if(italy < 0 || italy > 1)
-        {
-            res = { ...res, italy: true }
-            setFormState(res)
-            check = true;
-        }
-        else
-        {
-            res = { ...res, italy: false }
-        }
-        if(france < 0 || france > 1)
-        {
-            res = { ...res, france: true }
-            setFormState(res)
-            check = true;
-        }
-        else
-        {
-            res = { ...res, france: false }
-        }
-        if(austria < 0 || austria > 1)
-        {
-            res = { ...res, austria: true }
-            setFormState(res)
-            check = true;
-        }
-        else
-        {
-            res = { ...res, austria: false }
-        }
-        if(germany < 0 || germany > 1)
-        {
-            res = { ...res, germany: true }
-            setFormState(res)
-            check = true;
-        }
-        else
-        {
-            res = { ...res, germany: false }
-        }
-        if(denmark < 0 || denmark > 1)
-        {
-            res = { ...res, denmark: true }
-            setFormState(res)
-            check = true;
-        }
-        else
-        {
-            res = { ...res, denmark: false }
-        }
-        if(czech < 0 || czech > 1)
-        {
-            res = { ...res, czech: true }
-            setFormState(res)
-            check = true;
-        }
-        else
-        {
-            res = { ...res, czech: false }
-        }
-        if(finland < 0 || finland > 1)
-        {
-            res = { ...res, finland: true }
-            setFormState(res)
-            check = true;
-        }
-        else
-        {
-            res = { ...res, finland: false }
-        }
-        if(ireland < 0 || ireland > 1)
-        {
-            res = { ...res, ireland: true }
-            setFormState(res)
-            check = true;
-        }
-        else
-        {
-            res = { ...res, ireland: false }
-        }
-        if(israel < 0 || israel > 1)
-        {
-            res = { ...res, israel: true }
-            setFormState(res)
-            check = true;
-        }
-        else
-        {
-            res = { ...res, israel: false }
-        }
-        if(portugal < 0 || portugal > 1)
-        {
-            res = { ...res, portugal: true }
-            setFormState(res)
-            check = true;
-        }
-        else
-        {
-            res = { ...res, portugal: false }
-        }
-        if(ukranie < 0 || ukranie > 1)
-        {
-            res = { ...res, ukranie: true }
-            setFormState(res)
-            check = true;
-        }
-        else
-        {
-            res = { ...res, ukranie: false }
-        }
-        if(uk < 0 || uk > 1)
-        {
-            res = { ...res, uk: true }
-            setFormState(res)
-            check = true;
-        }
-        else
-        {
-            res = { ...res, uk: false }
-        }
-        if(turkey < 0 || turkey > 1)
-        {
-            res = { ...res, turkey: true }
-            setFormState(res)
-            check = true;
-        }
-        else
-        {
-            res = { ...res, turkey: false }
-        }
-        if(switzerland < 0 || switzerland > 1)
-        {
-            res = { ...res, switzerland: true }
-            setFormState(res)
-            check = true;
-        }
-        else
-        {
-            res = { ...res, switzerland: false }
-        }
-        if(spain < 0 || spain > 1)
-        {
-            res = { ...res, spain: true }
-            setFormState(res)
-            check = true;
-        }
-        else
-        {
-            res = { ...res, spain: false }
-        }
-        if(norway < 0 || norway > 1)
-        {
-            res = { ...res, norway: true }
-            setFormState(res)
-            check = true;
-        }
-        else
-        {
-            res = { ...res, norway: false }
-        }
-        if(agency < 0 || agency > 1)
-        {
-            res = { ...res, agency: true }
-            setFormState(res)
-            check = true;
-        }
-        else
-        {
-            res = { ...res, agency: false }
-        }
-        if(uni < 0 || uni > 1)
-        {
-            res = { ...res, uni: true }
-            setFormState(res)
-            check = true;
-        }
-        else
-        {
-            res = { ...res, uni: false }
-        }
-        if(company < 0 || company > 1)
-        {
-            res = { ...res, company: true }
-            setFormState(res)
-            check = true;
-        }
-        else
-        {
-            res = { ...res, company: false }
-        }
-        if(RD < 0 || RD > 1)
-        {
-            res = { ...res, RD: true }
-            setFormState(res)
-            check = true;
-        }
-        else
-        {
-            res = { ...res, RD: false }
-        }
-        if(start < 0 || start > 1)
-        {
-            res = { ...res, start: true }
-            setFormState(res)
-            check = true;
-        }
-        else
-        {
-            res = { ...res, start: false }
-        }
-        if(oth < 0 || oth > 1)
-        {
-            res = { ...res, oth: true }
-            setFormState(res)
-            check = true;
-        }
-        else
-        {
-            res = { ...res, oth: false }
-        }
+        Object.keys(state).forEach(key => {
+            if (key !== 'email') {
+                if (state[key] < 0 || state[key] > 1) {
+                    res[key] = true
+                    check = true;
+                }
+                else {
+                    res[key] = false
+                }
+            }
+        })
         setFormState(res)
         return check;
     }
 
     const updateAlert = () => {
-        console.log("form is " + formValidation());
-        if(formValidation()){
+        if (formValidation()) {
             alert("Scores must be between 0 and 1")
         }
         else {
-            console.log("It's Done");
+            let url = new URL('http://127.0.0.1:8000/api/alerts/setSettings/')
+            let params = { 'data': JSON.stringify({ 'email': state.email, 'turned_on': turnedOn }) }
+            Object.keys(params).forEach(key => url.searchParams.append(key, params[key]))
+            fetch(url, {
+                method: 'POST'
+            }).then(res => res.json())
+                .then(resp => {
+                    // TODO: show successful message
+                    console.log("UPDATE SETTINGS", resp)
+                })
+                // TODO: show error message
+                .catch(error => console.log(error))
+
+            url = new URL('http://127.0.0.1:8000/api/scores/updatescores/')
+            let data = {
+                'RES': state.resScore, 'Italy': state.italy,
+                'France': state.france, 'Austria': state.austria, 'Germany': state.germany, 'Denmark': state.denmark,
+                'Czech_Republic': state.czech, 'Finland': state.finland, 'Ireland': state.ireland, 'Israel': state.israel,
+                'Portugal': state.portugal, 'Ukranie': state.ukranie, 'United_Kingdom': state.uk,
+                'Turkey': state.turkey, 'Switzerland': state.switzerland, 'Spain': state.spain, 'Norway': state.norway,
+                'Association_Agency': state.agency, 'University': state.uni, 'Company': state.company, 'R_D_Institution': state.RD, 'Start_Up': state.start, 'Others': state.oth
+            }
+            params = { 'data': JSON.stringify(data) }
+            Object.keys(params).forEach(key => url.searchParams.append(key, params[key]))
+            fetch(url, {
+                method: 'POST'
+            }).then(res => res.json())
+                .then(resp => {
+                    // TODO: show successful message
+                    console.log("UPDATE SETTINGS", resp)
+                })
+                // TODO: show error message
+                .catch(error => console.log(error))
         }
     }
-    
+
     return (
         <React.Fragment>
-         <div className="title">
-            <h1>Alerts Settings</h1>
-         </div>
-         <div className="alert_email">
-            <h2>Update Email Address: </h2>
-            <TextField
-                    id="fields"
+            <div className="title">
+                <h1>Alerts Settings</h1>
+            </div>
+            <div className="alert_email">
+                <h2>Update Email Address: </h2>
+                <TextField
+                    id="email"
                     label="E-mail"
-                    onChange={changeEmail}
+                    onChange={handleInputChange}
                     className={AlertsSettings.textField}
-                    type="email"
-                    name="email"
+                    type={state.email}
+                    name={state.email}
+                    value={state.email}
                     autoComplete="email"
                     margin="normal"
                     variant="outlined"
-                        />
-            <h5 style={{'margin-left' : '10px', 'margin-top' : '25px'}}>*Email is mutual for EU and B2MATCH</h5>
-            
+                />
+                <h5 style={{ 'margin-left': '10px', 'margin-top': '25px' }}>*Email is mutual for EU and B2MATCH</h5>
+
                 <h3>Enable/Disable Alerts</h3>
                 <FormGroup style={{ 'margin-top': '15px' }}>
                     <FormControlLabel
-                        
+
                         control={
-                        <Switch size="medium" checked={checked} onChange={toggleChecked} />
-                                }
+                            <Switch size="medium" checked={turnedOn} onChange={toggleChecked} />
+                        }
                         label="On"
-                        style={{'margin-right' : '30px'}}
+                        style={{ 'margin-right': '30px' }}
                     />
                 </FormGroup>
-         </div> 
-         <div>
-            <h1>B2MATCH</h1>
-         </div>  
-         <div className="res_score">
-            <h3 style={{'margin-left' : '50px'}}>RES SCORE</h3>
-            <Grid container spacing={2} alignItems="center"  >
-                <Grid item>
-                    <TextField
-                            style={{'width' : '40%'}}
-                            id="fields"
+            </div>
+            <div>
+                <h1>B2MATCH</h1>
+            </div>
+            <div className="res_score">
+                <h3 style={{ 'margin-left': '50px' }}>RES SCORE</h3>
+                <Grid container spacing={2} alignItems="center"  >
+                    <Grid item>
+                        <TextField
+                            style={{ 'width': '40%' }}
+                            id="resScore"
                             label=""
                             type="number"
+                            value={state.resScore}
                             onChange={handleInputChange}
-                            error={formState.number}
+                            error={formState.resScore}
                             InputLabelProps={{
                                 shrink: true,
                             }}
                             variant="outlined"
-                            />
+                        />
+                    </Grid>
                 </Grid>
-            </Grid>
-        </div>
-        <div>
-            <h1 style={{'margin-left' : '50px'}}>Countries Score</h1>
-        </div>
-        <div className="first_sc">
-            <h2 style={{'margin-left' : '50px'}}>Italy</h2>
-            <Grid container spacing={2} alignItems="center"  >
-                            <Grid item>
-                                <TextField
-                                    style={{'width' : '40%'}}
-                                    id="fields"
-                                    label=""
-                                    type="number"
-                                    min="0"
-                                    max="1"
-                                    onChange={handleItaly}
-                                    error={formState.italy}
-                                    InputLabelProps={{
-                                        shrink: true,
-                                    }}
-                                    variant="outlined"
-                                />
-                            </Grid>
-                        </Grid>
-                    
-            <h2>France</h2>
-            <Grid container spacing={2} alignItems="center"  >
-                <Grid item>
-                    <TextField
-                            style={{'width' : '40%'}}
-                            id="fields"
+            </div>
+            <div>
+                <h1 style={{ 'margin-left': '50px' }}>Countries Score</h1>
+            </div>
+            <div className="first_sc">
+                <h2 style={{ 'margin-left': '50px' }}>Italy</h2>
+                <Grid container spacing={2} alignItems="center"  >
+                    <Grid item>
+                        <TextField
+                            style={{ 'width': '40%' }}
+                            id="italy"
                             label=""
                             type="number"
-                            onChange={handleFrance}
+                            min="0"
+                            max="1"
+                            value={state.italy}
+                            onChange={handleInputChange}
+                            error={formState.italy}
+                            InputLabelProps={{
+                                shrink: true,
+                            }}
+                            variant="outlined"
+                        />
+                    </Grid>
+                </Grid>
+
+                <h2>France</h2>
+                <Grid container spacing={2} alignItems="center"  >
+                    <Grid item>
+                        <TextField
+                            style={{ 'width': '40%' }}
+                            id="france"
+                            label=""
+                            type="number"
+                            value={state.france}
+                            onChange={handleInputChange}
                             error={formState.france}
                             InputLabelProps={{
                                 shrink: true,
                             }}
                             variant="outlined"
-                            />
+                        />
+                    </Grid>
                 </Grid>
-            </Grid>
-            <h2>Austria</h2>
-            <Grid container spacing={2} alignItems="center"  >
-                <Grid item>
-                    <TextField
-                            style={{'width' : '40%'}}
-                            id="fields"
+                <h2>Austria</h2>
+                <Grid container spacing={2} alignItems="center"  >
+                    <Grid item>
+                        <TextField
+                            style={{ 'width': '40%' }}
+                            id="austria"
                             label=""
                             type="number"
-                            onChange={handleAustria}
+                            value={state.austria}
+                            onChange={handleInputChange}
                             error={formState.austria}
                             InputLabelProps={{
                                 shrink: true,
                             }}
                             variant="outlined"
-                            />
+                        />
+                    </Grid>
                 </Grid>
-            </Grid>
-            <h2>Germany</h2>
-            <Grid container spacing={2} alignItems="center"  >
-                <Grid item>
-                    <TextField
-                            style={{'width' : '40%'}}
-                            id="fields"
+                <h2>Germany</h2>
+                <Grid container spacing={2} alignItems="center"  >
+                    <Grid item>
+                        <TextField
+                            style={{ 'width': '40%' }}
+                            id="germany"
                             label=""
                             type="number"
-                            onChange={handleGermany}
+                            value={state.germany}
+                            onChange={handleInputChange}
                             error={formState.germany}
                             InputLabelProps={{
                                 shrink: true,
                             }}
                             variant="outlined"
-                            />
+                        />
+                    </Grid>
                 </Grid>
-            </Grid>
-        </div>
-        <div className="second_sc">
-            <h2 style={{'margin-left' : '50px'}}>Denmark</h2>
-            <Grid container spacing={2} alignItems="center"  >
-                            <Grid item>
-                                <TextField
-                                    style={{'width' : '40%'}}
-                                    id="fields"
-                                    label=""
-                                    type="number"
-                                    onChange={handleDenmark}
-                                    error={formState.denmark}
-                                    InputLabelProps={{
-                                        shrink: true,
-                                    }}
-                                    variant="outlined"
-                                />
-                            </Grid>
-                        </Grid>
-            <h2>Czech Republic</h2>
-            <Grid container spacing={2} alignItems="center"  >
-                <Grid item>
-                    <TextField
-                            style={{'width' : '40%'}}
-                            id="fields"
+            </div>
+            <div className="second_sc">
+                <h2 style={{ 'margin-left': '50px' }}>Denmark</h2>
+                <Grid container spacing={2} alignItems="center"  >
+                    <Grid item>
+                        <TextField
+                            style={{ 'width': '40%' }}
+                            id="denmark"
                             label=""
                             type="number"
-                            onChange={handleCzech}
+                            value={state.denmark}
+                            onChange={handleInputChange}
+                            error={formState.denmark}
+                            InputLabelProps={{
+                                shrink: true,
+                            }}
+                            variant="outlined"
+                        />
+                    </Grid>
+                </Grid>
+                <h2>Czech Republic</h2>
+                <Grid container spacing={2} alignItems="center"  >
+                    <Grid item>
+                        <TextField
+                            style={{ 'width': '40%' }}
+                            id="czech"
+                            label=""
+                            type="number"
+                            value={state.czech}
+                            onChange={handleInputChange}
                             error={formState.czech}
                             InputLabelProps={{
                                 shrink: true,
                             }}
                             variant="outlined"
-                            />
+                        />
+                    </Grid>
                 </Grid>
-            </Grid>
-            <h2>Finland</h2>
-            <Grid container spacing={2} alignItems="center"  >
-                <Grid item>
-                    <TextField
-                            style={{'width' : '40%'}}
-                            id="fields"
+                <h2>Finland</h2>
+                <Grid container spacing={2} alignItems="center"  >
+                    <Grid item>
+                        <TextField
+                            style={{ 'width': '40%' }}
+                            id="finland"
                             label=""
                             type="number"
-                            onChange={handleFinland}
+                            value={state.finland}
+                            onChange={handleInputChange}
                             error={formState.finland}
                             InputLabelProps={{
                                 shrink: true,
                             }}
                             variant="outlined"
-                            />
+                        />
+                    </Grid>
                 </Grid>
-            </Grid>
-            <h2>Ireland</h2>
-            <Grid container spacing={2} alignItems="center"  >
-                <Grid item>
-                    <TextField
-                            style={{'width' : '40%'}}
-                            id="fields"
+                <h2>Ireland</h2>
+                <Grid container spacing={2} alignItems="center"  >
+                    <Grid item>
+                        <TextField
+                            style={{ 'width': '40%' }}
+                            id="ireland"
                             label=""
                             type="number"
-                            onChange={handleIreland}
+                            value={state.ireland}
+                            onChange={handleInputChange}
                             error={formState.ireland}
                             InputLabelProps={{
                                 shrink: true,
                             }}
                             variant="outlined"
-                            />
+                        />
+                    </Grid>
                 </Grid>
-            </Grid>
-        </div>
-        <div className="third_sc">
-            <h2 style={{'margin-left' : '50px'}}>Israel</h2>
-            <Grid container spacing={2} alignItems="center"  >
-                            <Grid item>
-                                <TextField
-                                    style={{'width' : '40%'}}
-                                    id="fields"
-                                    label=""
-                                    type="number"
-                                    onChange={handleIsrael}
-                                    error={formState.israel}
-                                    InputLabelProps={{
-                                        shrink: true,
-                                    }}
-                                    variant="outlined"
-                                />
-                            </Grid>
-                        </Grid>
-            <h2>Portugal</h2>
-            <Grid container spacing={2} alignItems="center"  >
-                <Grid item>
-                    <TextField
-                            style={{'width' : '40%'}}
-                            id="fields"
+            </div>
+            <div className="third_sc">
+                <h2 style={{ 'margin-left': '50px' }}>Israel</h2>
+                <Grid container spacing={2} alignItems="center"  >
+                    <Grid item>
+                        <TextField
+                            style={{ 'width': '40%' }}
+                            id="israel"
                             label=""
                             type="number"
-                            onChange={handlePortugal}
+                            value={state.israel}
+                            onChange={handleInputChange}
+                            error={formState.israel}
+                            InputLabelProps={{
+                                shrink: true,
+                            }}
+                            variant="outlined"
+                        />
+                    </Grid>
+                </Grid>
+                <h2>Portugal</h2>
+                <Grid container spacing={2} alignItems="center"  >
+                    <Grid item>
+                        <TextField
+                            style={{ 'width': '40%' }}
+                            id="portugal"
+                            label=""
+                            type="number"
+                            value={state.portugal}
+                            onChange={handleInputChange}
                             error={formState.portugal}
                             InputLabelProps={{
                                 shrink: true,
                             }}
                             variant="outlined"
-                            />
+                        />
+                    </Grid>
                 </Grid>
-            </Grid>
-            <h2>Ukranie</h2>
-            <Grid container spacing={2} alignItems="center"  >
-                <Grid item>
-                    <TextField
-                            style={{'width' : '40%'}}
-                            id="fields"
+                <h2>Ukranie</h2>
+                <Grid container spacing={2} alignItems="center"  >
+                    <Grid item>
+                        <TextField
+                            style={{ 'width': '40%' }}
+                            id="ukraine"
                             label=""
                             type="number"
-                            onChange={handleUkranie}
+                            value={state.ukranie}
+                            onChange={handleInputChange}
                             error={formState.ukranie}
                             InputLabelProps={{
                                 shrink: true,
                             }}
                             variant="outlined"
-                            />
+                        />
+                    </Grid>
                 </Grid>
-            </Grid>
-            <h2>United Kingdom</h2>
-            <Grid container spacing={2} alignItems="center"  >
-                <Grid item>
-                    <TextField
-                            style={{'width' : '40%'}}
-                            id="fields"
+                <h2>United Kingdom</h2>
+                <Grid container spacing={2} alignItems="center"  >
+                    <Grid item>
+                        <TextField
+                            style={{ 'width': '40%' }}
+                            id="uk"
                             label=""
                             type="number"
-                            onChange={handleUK}
+                            value={state.uk}
+                            onChange={handleInputChange}
                             error={formState.uk}
                             InputLabelProps={{
                                 shrink: true,
                             }}
                             variant="outlined"
-                            />
+                        />
+                    </Grid>
                 </Grid>
-            </Grid>
-        </div>
-        <div className="fourth_sc">
-            <h2 style={{'margin-left' : '50px'}}>Turkey</h2>
-            <Grid container spacing={2} alignItems="center"  >
-                            <Grid item>
-                                <TextField
-                                    style={{'width' : '40%'}}
-                                    id="fields"
-                                    label=""
-                                    type="number"
-                                    onChange={handleTurkey}
-                                    error={formState.turkey}
-                                    InputLabelProps={{
-                                        shrink: true,
-                                    }}
-                                    variant="outlined"
-                                />
-                            </Grid>
-                        </Grid>
-            <h2>Switzerland</h2>
-            <Grid container spacing={2} alignItems="center"  >
-                <Grid item>
-                    <TextField
-                            style={{'width' : '40%'}}
-                            id="fields"
+            </div>
+            <div className="fourth_sc">
+                <h2 style={{ 'margin-left': '50px' }}>Turkey</h2>
+                <Grid container spacing={2} alignItems="center"  >
+                    <Grid item>
+                        <TextField
+                            style={{ 'width': '40%' }}
+                            id="turkey"
                             label=""
                             type="number"
-                            onChange={handleSwitzerland}
+                            value={state.turkey}
+                            onChange={handleInputChange}
+                            error={formState.turkey}
+                            InputLabelProps={{
+                                shrink: true,
+                            }}
+                            variant="outlined"
+                        />
+                    </Grid>
+                </Grid>
+                <h2>Switzerland</h2>
+                <Grid container spacing={2} alignItems="center"  >
+                    <Grid item>
+                        <TextField
+                            style={{ 'width': '40%' }}
+                            id="switzerland"
+                            label=""
+                            type="number"
+                            value={state.switzerland}
+                            onChange={handleInputChange}
                             error={formState.switzerland}
                             InputLabelProps={{
                                 shrink: true,
                             }}
                             variant="outlined"
-                            />
+                        />
+                    </Grid>
                 </Grid>
-            </Grid>
-            <h2>Spain</h2>
-            <Grid container spacing={2} alignItems="center"  >
-                <Grid item>
-                    <TextField
-                            style={{'width' : '40%'}}
-                            id="fields"
+                <h2>Spain</h2>
+                <Grid container spacing={2} alignItems="center"  >
+                    <Grid item>
+                        <TextField
+                            style={{ 'width': '40%' }}
+                            id="spain"
                             label=""
                             type="number"
-                            onChange={handleSpain}
+                            value={state.spain}
+                            onChange={handleInputChange}
                             error={formState.spain}
                             InputLabelProps={{
                                 shrink: true,
                             }}
                             variant="outlined"
-                            />
+                        />
+                    </Grid>
                 </Grid>
-            </Grid>
-            <h2>Norway</h2>
-            <Grid container spacing={2} alignItems="center"  >
-                <Grid item>
-                    <TextField
-                            style={{'width' : '40%'}}
-                            id="fields"
+                <h2>Norway</h2>
+                <Grid container spacing={2} alignItems="center"  >
+                    <Grid item>
+                        <TextField
+                            style={{ 'width': '40%' }}
+                            id="norway"
                             label=""
                             type="number"
-                            onChange={handleNorway}
+                            value={state.norway}
+                            onChange={handleInputChange}
                             error={formState.norway}
                             InputLabelProps={{
                                 shrink: true,
                             }}
                             variant="outlined"
-                            />
+                        />
+                    </Grid>
                 </Grid>
-            </Grid>
-        </div>
-        <div className="line"></div>
-        <div>
-            <h1 style={{'margin-left' : '50px'}}>Types Scores</h1>
-        </div>
-        <div className="first_ty" style={{'margin-top' : '5px'}}>
-            <h2 style={{'margin-left' : '50px'}}>Association/Agency</h2>
-            <Grid container spacing={2} alignItems="center"  >
-                <Grid item>
-                    <TextField
-                            style={{'width' : '40%'}}
-                            id="fields"
+            </div>
+            <div className="line"></div>
+            <div>
+                <h1 style={{ 'margin-left': '50px' }}>Types Scores</h1>
+            </div>
+            <div className="first_ty" style={{ 'margin-top': '5px' }}>
+                <h2 style={{ 'margin-left': '50px' }}>Association/Agency</h2>
+                <Grid container spacing={2} alignItems="center"  >
+                    <Grid item>
+                        <TextField
+                            style={{ 'width': '40%' }}
+                            id="agency"
                             label=""
                             type="number"
-                            onChange={handleAgency}
+                            value={state.agency}
+                            onChange={handleInputChange}
                             error={formState.agency}
                             InputLabelProps={{
                                 shrink: true,
                             }}
                             variant="outlined"
-                            />
+                        />
+                    </Grid>
                 </Grid>
-            </Grid>
-            <h2>University</h2>
-            <Grid container spacing={2} alignItems="center"  >
-                <Grid item>
-                    <TextField
-                            style={{'width' : '40%'}}
-                            id="fields"
+                <h2>University</h2>
+                <Grid container spacing={2} alignItems="center"  >
+                    <Grid item>
+                        <TextField
+                            style={{ 'width': '40%' }}
+                            id="uni"
                             label=""
                             type="number"
-                            onChange={handleUni}
+                            value={state.uni}
+                            onChange={handleInputChange}
                             error={formState.uni}
                             InputLabelProps={{
                                 shrink: true,
                             }}
                             variant="outlined"
-                            />
+                        />
+                    </Grid>
                 </Grid>
-            </Grid>
-            <h2>Company</h2>
-            <Grid container spacing={2} alignItems="center"  >
-                <Grid item>
-                    <TextField
-                            style={{'width' : '40%'}}
-                            id="fields"
+                <h2>Company</h2>
+                <Grid container spacing={2} alignItems="center"  >
+                    <Grid item>
+                        <TextField
+                            style={{ 'width': '40%' }}
+                            id="company"
                             label=""
                             type="number"
-                            onChange={handleCompany}
+                            value={state.company}
+                            onChange={handleInputChange}
                             error={formState.company}
                             InputLabelProps={{
                                 shrink: true,
                             }}
                             variant="outlined"
-                            />
+                        />
+                    </Grid>
                 </Grid>
-            </Grid>
-        </div>
-        <div className="first_ty" style={{'margin-top' : '5px'}}>
-            <h2 style={{'margin-left' : '50px'}}>R&D Institution</h2>
-            <Grid container spacing={2} alignItems="center"  >
-                <Grid item>
-                    <TextField
-                            style={{'width' : '40%'}}
-                            id="fields"
+            </div>
+            <div className="first_ty" style={{ 'margin-top': '5px' }}>
+                <h2 style={{ 'margin-left': '50px' }}>R&D Institution</h2>
+                <Grid container spacing={2} alignItems="center"  >
+                    <Grid item>
+                        <TextField
+                            style={{ 'width': '40%' }}
+                            id="RD"
                             label=""
                             type="number"
-                            onChange={handleRD}
+                            value={state.RD}
+                            onChange={handleInputChange}
                             error={formState.RD}
                             InputLabelProps={{
                                 shrink: true,
                             }}
                             variant="outlined"
-                            />
+                        />
+                    </Grid>
                 </Grid>
-            </Grid>
-            <h2>Start-Up</h2>
-            <Grid container spacing={2} alignItems="center"  >
-                <Grid item>
-                    <TextField
-                            style={{'width' : '40%'}}
-                            id="fields"
+                <h2>Start-Up</h2>
+                <Grid container spacing={2} alignItems="center"  >
+                    <Grid item>
+                        <TextField
+                            style={{ 'width': '40%' }}
+                            id="start"
                             label=""
                             type="number"
-                            onChange={handleStartUp}
+                            value={state.start}
+                            onChange={handleInputChange}
                             error={formState.start}
                             InputLabelProps={{
                                 shrink: true,
                             }}
                             variant="outlined"
-                            />
+                        />
+                    </Grid>
                 </Grid>
-            </Grid>
-            <h2>Others</h2>
-            <Grid container spacing={2} alignItems="center"  >
-                <Grid item>
-                    <TextField
-                            style={{'width' : '40%'}}
-                            id="fields"
+                <h2>Others</h2>
+                <Grid container spacing={2} alignItems="center"  >
+                    <Grid item>
+                        <TextField
+                            style={{ 'width': '40%' }}
+                            id="oth"
                             label=""
                             type="number"
-                            onChange={handleOTH}
+                            value={state.oth}
+                            onChange={handleInputChange}
                             error={formState.oth}
                             InputLabelProps={{
                                 shrink: true,
                             }}
                             variant="outlined"
-                            />
+                        />
+                    </Grid>
                 </Grid>
-            </Grid>
-        </div>
-        <div className="Buttons">
+            </div>
+
+            <div className="Buttons">
                 <Button color="primary" round variant="contained" id="ButtonText" onClick={() => updateAlert()}>Update</Button>
             </div>
-        
+
         </React.Fragment>
     )
 }

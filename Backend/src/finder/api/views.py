@@ -19,8 +19,7 @@ from selenium import webdriver
 from celery.schedules import crontab
 from celery.task import periodic_task
 
-# from .NLP import *
-# from .Utils import *
+
 from .EU import *
 from .B2MATH import *
 import datetime
@@ -29,6 +28,7 @@ from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
 
 import re
+
 
 class OrganizationProfileViewSet(viewsets.ModelViewSet):
     queryset = OrganizationProfile.objects.all()
@@ -49,6 +49,7 @@ class OrganizationProfileViewSet(viewsets.ModelViewSet):
         print("*" * 50)
         print("START UPDATING EU DB")
         print("*" * 50)
+
 
         MapIds.objects.all().delete()
 
@@ -90,6 +91,7 @@ class OrganizationProfileViewSet(viewsets.ModelViewSet):
             status[currPic] = 'visited'
 
         response = {'Message': 'Organizations updated successfully!'}
+        setUpdateSettings(euDate=time.mktime(datetime.datetime.now().timetuple()))
 
         return Response(response, status=status.HTTP_200_OK)
 
@@ -160,7 +162,7 @@ class AlertsSettingsViewSet(viewsets.ModelViewSet):
         :return: HTTP response
         """
 
-        data = request.data['data']
+        data = request.query_params['data']
         data = json.loads(data)
         email = data['email']
         turned_on = data['turned_on']
@@ -202,32 +204,7 @@ class UpdateSettingsViewSet(viewsets.ModelViewSet):
 
         return Response(response, status=status.HTTP_200_OK)
 
-    @action(detail=False, methods=['POST'])
-    def setSettings(self, request):
-        """
-        method to define API to update the update settings.
-        :param request: HTTP request with update times
-        :return: HTTP response
-        """
 
-        data = request.data['data']
-        data = json.loads(data)
-        euDate = int(data['EU'])
-        b2matchDate = int(data['B2MATCH'])
-
-        try:
-            UpdateSettings.objects.get(ID=1)
-            UpdateSettings.objects.filter(ID=1).update(eu_last_update=euDate)
-            UpdateSettings.objects.filter(ID=1).update(
-                b2match_last_update=b2matchDate)
-        except:
-            updateSettings = UpdateSettings(
-                eu_last_update=euDate, b2match_last_update=b2matchDate, ID=1)
-            updateSettings.save()
-
-        response = {'Message': 'Updates Settings Updated Successfully.'}
-
-        return Response(response, status=status.HTTP_200_OK)
 
 
 class AddressViewSet(viewsets.ModelViewSet):
@@ -565,6 +542,7 @@ class EventViewSet(viewsets.ModelViewSet):
             e.save()
         print("Adding new Participants....\n")
         add_Participants_from_Upcoming_Event()
+        setUpdateSettings(b2matchDate=time.mktime(datetime.datetime.now().timetuple()))
 
         return Response([{'message': 'done, B2MATCH Reposutory updated'}], status=status.HTTP_200_OK)
 
@@ -673,7 +651,7 @@ class ScoresViewSet(viewsets.ModelViewSet):
         :param request: scores from user about RES, countries and orgs type
         :return: the updated scores
         """
-        data = request.data['data']
+        data = request.query_params['data']
         data = json.loads(data)
 
         try:
@@ -695,7 +673,6 @@ class ScoresViewSet(viewsets.ModelViewSet):
             scores.Switzerland = data['Switzerland']
             scores.Spain = data['Spain']
             scores.Norway = data['Norway']
-
             scores.Association_Agency = data['Association_Agency']
             scores.University = data['University']
             scores.R_D_Institution = data['R_D_Institution']
@@ -715,7 +692,7 @@ class ScoresViewSet(viewsets.ModelViewSet):
                             )
         scores.save()
 
-        return Response(ScoresSerializer(scores).data, status=status.HTTP_200_OK)
+        return Response({"Message": 'Scores Updated Successfully!'}, status=status.HTTP_200_OK)
 
     @action(detail=False, methods=['GET'])
     def getscores(self, request):
@@ -779,4 +756,31 @@ class AlertsB2match(viewsets.ModelViewSet):
         body['Subject'] = 'B2MATCH Events Alert'
         send_mail(receiver_email=email, message=body)
         return Response(response, status=status.HTTP_200_OK)
+
+
+def setUpdateSettings(euDate=None, b2matchDate=None):
+    """
+    method to define API to update the update settings.
+    :param request: HTTP request with update times
+    :return: HTTP response
+    """
+
+    if euDate:
+        euDate = int(euDate)
+    if b2matchDate:
+        b2matchDate = int(b2matchDate)
+
+    try:
+        print("TRY")
+        UpdateSettings.objects.get(ID=1)
+        if euDate:
+            UpdateSettings.objects.filter(ID=1).update(eu_last_update=euDate)
+        if b2matchDate:
+            UpdateSettings.objects.filter(ID=1).update(
+                b2match_last_update=b2matchDate)
+    except:
+        print("EXCEPT")
+        updateSettings = UpdateSettings(
+            eu_last_update=euDate, b2match_last_update=b2matchDate, ID=1)
+        updateSettings.save()
 

@@ -3,7 +3,7 @@ from celery.task import periodic_task
 import requests
 
 
-@periodic_task(run_every=(crontab(minute='*/5')),
+@periodic_task(run_every=(crontab(minute=0, hour=6)),
                name="consortium_builder", ignore_result=True)
 def consortium_builder():
     """
@@ -13,8 +13,8 @@ def consortium_builder():
     url = 'http://127.0.0.1:8000/api/calls/consortium_builder/'
     response = requests.get(url)
 
-
-@periodic_task(run_every=(crontab(minute=0, hour=15, day_of_month='1-8', day_of_week='fri')),
+# , day_of_month='1-8'
+@periodic_task(run_every=(crontab(minute=0, hour=15, day_of_week='fri')),
                name="update_organizations", ignore_result=True)
 def update_organizations():
     """

@@ -11,7 +11,6 @@ def NLP_Processor(documents):
     :return: Corpus of the documents
     """
     tokens = [process_Document(doc) for doc in documents]
-    print(tokens)
     dictionary = get_ids(tokens)
 
     return build_corpus(dictionary, tokens)

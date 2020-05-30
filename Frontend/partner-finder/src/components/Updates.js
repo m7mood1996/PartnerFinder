@@ -1,8 +1,8 @@
 import React from 'react';
 import { Button } from '@material-ui/core';
-import moment from 'moment'
 
-function Updates() {
+
+function Updates(props) {
 
     const [state, setState] = React.useState({
         'EU': 0,
@@ -11,17 +11,7 @@ function Updates() {
     })
 
     if (state.firstLoading) {
-        let url = new URL('http://127.0.0.1:8000/api/updates/getSettings/')
-        fetch(url, {
-            method: 'GET'
-        }).then(res => res.json())
-            .then(resp => {
-                // TODO: show successful message
-                console.log("GET SETTINGS", resp)
-                setState({ ...state, 'EU': moment.unix(resp.EU).format('MMMM Do YYYY, h:mm:ss a'), 'B2MATCH': moment.unix(resp.B2MATCH).format('MMMM Do YYYY, h:mm:ss a'), 'firstLoading': false })
-            })
-            // TODO: show error message
-            .catch(error => console.log(error))
+        setState({ ...props.state })
     }
 
 
@@ -34,7 +24,7 @@ function Updates() {
             .then(resp => {
                 // TODO: show successful message
                 console.log("GET SETTINGS", resp)
-
+                props.setState({ ...state })
             })
             // TODO: show error message
             .catch(error => console.log(error))

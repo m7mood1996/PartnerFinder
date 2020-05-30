@@ -7,7 +7,7 @@ import Grid from "@material-ui/core/Grid";
 import { Button } from '@material-ui/core';
 import Typography from '@material-ui/core/Typography'
 
-function AlertsSettings() {
+function AlertsSettings(props) {
 
     const [turnedOn, setTurnedOn] = React.useState(false);
     const [state, setState] = React.useState({
@@ -66,50 +66,10 @@ function AlertsSettings() {
     })
 
     if (state.firstLoading) {
-        let newState = { ...state, 'firstLoading': false }
-        let newMail = ''
-        let url = new URL('http://127.0.0.1:8000/api/alerts/getSettings/')
-        fetch(url, {
-            method: 'GET'
-        }).then(res => res.json())
-            .then(resp => {
-                setTurnedOn(resp.turned_on)
-                newMail = resp.email
-            })
-            .catch(error => console.log(error))
-
-        url = new URL('http://127.0.0.1:8000/api/scores/getscores/')
-        fetch(url, {
-            method: 'GET'
-        }).then(res => res.json())
-            .then(resp => {
-                newState['resScore'] = resp.RES
-                newState['italy'] = resp.Italy
-                newState['france'] = resp.France
-                newState['austria'] = resp.Austria
-                newState['germany'] = resp.Germany
-                newState['denmark'] = resp.Denmark
-                newState['czech'] = resp.Czech_Republic
-                newState['finland'] = resp.Finland
-                newState['ireland'] = resp.Ireland
-                newState['israel'] = resp.Israel
-                newState['portugal'] = resp.Portugal
-                newState['ukranie'] = resp.Ukranie
-                newState['uk'] = resp.United_Kingdom
-                newState['turkey'] = resp.Turkey
-                newState['switzerland'] = resp.Switzerland
-                newState['spain'] = resp.Spain
-                newState['norway'] = resp.Norway
-                newState['agency'] = resp.Association_Agency
-                newState['uni'] = resp.University
-                newState['company'] = resp.Company
-                newState['RD'] = resp.R_D_Institution
-                newState['start'] = resp.Start_Up
-                newState['oth'] = resp.Others
-                newState['email'] = newMail
-                setState(newState)
-            })
-            .catch(error => console.log(error))
+        let newState = { ...props.state }
+        setTurnedOn(newState.turnedOn)
+        delete newState['turnedOn']
+        setState(newState)
     }
 
     const toggleChecked = () => {
@@ -176,30 +136,33 @@ function AlertsSettings() {
                 .then(resp => {
                     // TODO: show successful message
                     console.log("UPDATE SETTINGS", resp)
+                    props.setState({ ...props.state, 'email': state.email, 'turnedOn': turnedOn })
+                    url = new URL('http://127.0.0.1:8000/api/scores/updatescores/')
+                    let data = {
+                        'RES': state.resScore, 'Italy': state.italy,
+                        'France': state.france, 'Austria': state.austria, 'Germany': state.germany, 'Denmark': state.denmark,
+                        'Czech_Republic': state.czech, 'Finland': state.finland, 'Ireland': state.ireland, 'Israel': state.israel,
+                        'Portugal': state.portugal, 'Ukranie': state.ukranie, 'United_Kingdom': state.uk,
+                        'Turkey': state.turkey, 'Switzerland': state.switzerland, 'Spain': state.spain, 'Norway': state.norway,
+                        'Association_Agency': state.agency, 'University': state.uni, 'Company': state.company, 'R_D_Institution': state.RD, 'Start_Up': state.start, 'Others': state.oth
+                    }
+                    params = { 'data': JSON.stringify(data) }
+                    Object.keys(params).forEach(key => url.searchParams.append(key, params[key]))
+                    fetch(url, {
+                        method: 'POST'
+                    }).then(res => res.json())
+                        .then(resp => {
+                            // TODO: show successful message
+                            props.setState({ ...props.state, ...state })
+                            console.log("UPDATE SETTINGS", resp)
+                        })
+                        // TODO: show error message
+                        .catch(error => console.log(error))
                 })
                 // TODO: show error message
                 .catch(error => console.log(error))
 
-            url = new URL('http://127.0.0.1:8000/api/scores/updatescores/')
-            let data = {
-                'RES': state.resScore, 'Italy': state.italy,
-                'France': state.france, 'Austria': state.austria, 'Germany': state.germany, 'Denmark': state.denmark,
-                'Czech_Republic': state.czech, 'Finland': state.finland, 'Ireland': state.ireland, 'Israel': state.israel,
-                'Portugal': state.portugal, 'Ukranie': state.ukranie, 'United_Kingdom': state.uk,
-                'Turkey': state.turkey, 'Switzerland': state.switzerland, 'Spain': state.spain, 'Norway': state.norway,
-                'Association_Agency': state.agency, 'University': state.uni, 'Company': state.company, 'R_D_Institution': state.RD, 'Start_Up': state.start, 'Others': state.oth
-            }
-            params = { 'data': JSON.stringify(data) }
-            Object.keys(params).forEach(key => url.searchParams.append(key, params[key]))
-            fetch(url, {
-                method: 'POST'
-            }).then(res => res.json())
-                .then(resp => {
-                    // TODO: show successful message
-                    console.log("UPDATE SETTINGS", resp)
-                })
-                // TODO: show error message
-                .catch(error => console.log(error))
+
         }
     }
 

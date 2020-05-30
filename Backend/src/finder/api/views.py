@@ -253,22 +253,22 @@ class CallViewSet(viewsets.ModelViewSet):
         print("*" * 50)
         response = {'Message': 'Error while building the consortium!'}
 
-        # Call.objects.all().delete()
-        # CallTag.objects.all().delete()
-        # calls = get_proposal_calls()
-        #
-        # calls_to_send = []
-        #
-        # for call in calls:
-        #     call = has_consortium(call)
-        #     if call['hasConsortium']:
-        #         calls_to_send.append({'title': call['title']})
-        #         add_call_to_DB(call)
+        Call.objects.all().delete()
+        CallTag.objects.all().delete()
+        calls = get_proposal_calls()
 
-        calls = Call.objects.all()
         calls_to_send = []
+
         for call in calls:
-            calls_to_send.append({'title': call.__dict__['title']})
+            call = has_consortium(call)
+            if call['hasConsortium']:
+                calls_to_send.append({'title': call['title']})
+                add_call_to_DB(call)
+
+        # calls = Call.objects.all()
+        # calls_to_send = []
+        # for call in calls:
+        #     calls_to_send.append({'title': call.__dict__['title']})
 
         body = MIMEMultipart('alternative')
 
@@ -296,7 +296,8 @@ class CallViewSet(viewsets.ModelViewSet):
         content = MIMEText(html, 'html')
         body.attach(content)
         body['Subject'] = 'EU Proposal Calls Alert'
-        send_mail(receiver_email=email, message=body)
+        if len(calls_to_send) > 0:
+            send_mail(receiver_email=email, message=body)
         return Response(response, status=status.HTTP_200_OK)
 
 

@@ -93,7 +93,7 @@ body {
 .third_sc {
   color: black;
   display: grid;
-  grid-template-columns:  0.12fr 0.1fr 0.12fr 0.1fr 0.12fr 0.1fr 0.12fr 0.1fr;
+  grid-template-columns: 0.12fr 0.1fr 0.12fr 0.1fr 0.12fr 0.1fr 0.12fr 0.1fr;
 }
 .fourth_sc {
   color: black;
@@ -101,9 +101,9 @@ body {
   grid-template-columns: 0.12fr 0.1fr 0.12fr 0.1fr 0.12fr 0.1fr 0.12fr 0.1fr;
 }
 .line {
-  border-top : 5px solid black;
-  width : 80%;
-  margin-left : 130px;
+  border-top: 5px solid black;
+  width: 80%;
+  margin-left: 130px;
   margin-top: 20px;
 }
 .first_ty {

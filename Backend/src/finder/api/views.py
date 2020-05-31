@@ -19,7 +19,6 @@ from selenium import webdriver
 from celery.schedules import crontab
 from celery.task import periodic_task
 
-
 from .EU import *
 from .B2MATH import *
 import datetime
@@ -37,7 +36,6 @@ class OrganizationProfileViewSet(viewsets.ModelViewSet):
     ]
     serializer_class = OrganizationProfileSerializer
 
-
     @action(detail=False, methods=['GET'])
     def updateOrganizations(self, request):
         """
@@ -49,7 +47,6 @@ class OrganizationProfileViewSet(viewsets.ModelViewSet):
         print("*" * 50)
         print("START UPDATING EU DB")
         print("*" * 50)
-
 
         MapIds.objects.all().delete()
 
@@ -204,8 +201,6 @@ class UpdateSettingsViewSet(viewsets.ModelViewSet):
         return Response(response, status=status.HTTP_200_OK)
 
 
-
-
 class AddressViewSet(viewsets.ModelViewSet):
     queryset = Address.objects.all()
     permission_classes = [
@@ -297,6 +292,57 @@ class CallViewSet(viewsets.ModelViewSet):
         body['Subject'] = 'EU Proposal Calls Alert'
         if len(calls_to_send) > 0:
             send_mail(receiver_email=email, message=body)
+        return Response(response, status=status.HTTP_200_OK)
+
+    @action(detail=False, methods=['GET'])
+    def get_calls(self, request):
+        """
+        method to build get all calls that has a potential participants
+        :param request: HTTP request
+        :return: HTTP Response
+        """
+        response = {'calls': ''}
+        try:
+            calls = Call.objects.all()
+            res = []
+            for call in calls:
+                res.append({'type': call.type, 'status': call.status, 'ccm2Id': call.ccm2Id,
+                            'identifier': call.identifier, 'title': call.title,
+                            'callTitle': call.callTitle, 'deadlineDate': call.deadlineDate,
+                            'sumbissionProcedure': call.sumbissionProcedure})
+            response['calls'] = res
+        except:
+            response = {'Message': 'Error while uploading calls!'}
+
+        return Response(response, status=status.HTTP_200_OK)
+
+    @action(detail=False, methods=['GET'])
+    def search_organizations(self, request):
+        """
+        method to search for organizations for a specific ccm2id call
+        :param request: HTTP request
+        :return: HTTP Response
+        """
+        data = request.query_params['data']
+        data = json.loads(data)
+        id = int(data['ccm2Id'])
+        call = Call.objects.get(ccm2Id=id)
+        tags = CallTag.objects.filter(calls=call)
+        tagsList = []
+        for tag in tags:
+            tagsList.append(tag.tag)
+
+        EURes = getOrgsByCountriesAndTags(tags=tagsList, countries=[])
+        EU = []
+        for val in EURes:
+            EU.append({'legalName': val.legalName,
+                       'country': val.address.country,
+                       'description': val.description, 'classificationType': val.classificationType,
+                       'dataStatus': val.dataStatus, 'numberOfProjects': val.numberOfProjects,
+                       'consorsiumRoles': val.consorsiumRoles})
+
+        response = {'EU': EU}
+
         return Response(response, status=status.HTTP_200_OK)
 
 
@@ -722,17 +768,18 @@ class AlertsB2match(viewsets.ModelViewSet):
             if count < 50:
                 continue
             else:
-                eventScore =getScoreForEvent(parts)
-                myEvents.append( (event, eventScore))
-                print(event.event_name,event.event_url,eventScore)
-        myEvents.sort(key=operator.itemgetter(1),reverse=True)
+                eventScore = getScoreForEvent(parts)
+                myEvents.append((event, eventScore))
+                print(event.event_name, event.event_url, eventScore)
+        myEvents.sort(key=operator.itemgetter(1), reverse=True)
         print(myEvents)
         alerts_settings = AlertsSettings.objects.all()[0]
         email = alerts_settings.email
         body = MIMEMultipart('alternative')
         ms = ''
         for ev in myEvents:
-            ms += '<li><b>' +ev[0].event_name + '</b><a href="'+ev[0].event_url+'">'+ ev[0].event_url + '</a></li>'
+            ms += '<li><b>' + ev[0].event_name + '</b><a href="' + ev[0].event_url + '">' + ev[
+                0].event_url + '</a></li>'
 
         signature = 'Sincerly,<br>B2MATCH Event Alerts'
         html = """\
@@ -783,4 +830,3 @@ def setUpdateSettings(euDate=None, b2matchDate=None):
         updateSettings = UpdateSettings(
             eu_last_update=euDate, b2match_last_update=b2matchDate, ID=1)
         updateSettings.save()
-

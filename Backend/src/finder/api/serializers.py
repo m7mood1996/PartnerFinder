@@ -47,7 +47,7 @@ class CallTagSerializer(serializers.ModelSerializer):
     class Meta:
         model = CallTag
 
-    fields = ['tag', 'organizations']
+    fields = '__all__'
 
 
 

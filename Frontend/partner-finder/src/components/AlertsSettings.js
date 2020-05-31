@@ -5,7 +5,18 @@ import Switch from "@material-ui/core/Switch";
 import FormControlLabel from "@material-ui/core/FormControlLabel";
 import Grid from "@material-ui/core/Grid";
 import { Button } from "@material-ui/core";
-import Typography from "@material-ui/core/Typography";
+import CallsResultsTable from "./CallsResultsTable";
+import moment from "moment";
+
+const calls_columns = [
+  { title: "Title", field: "title" },
+  { title: "Call Title", field: "callTitle" },
+  { title: "Identifier", field: "identifier" },
+  { title: "Type", field: "type" },
+  { title: "Status", field: "status" },
+  { title: "Deadline Date", field: "deadlineDate" },
+  { title: "Submission Procedure Role", field: "sumbissionProcedure" },
+];
 
 function AlertsSettings(props) {
   const [turnedOn, setTurnedOn] = React.useState(false);
@@ -35,8 +46,8 @@ function AlertsSettings(props) {
     RD: 0,
     start: 0,
     oth: 0,
+    calls: [],
   });
-
   const [formState, setFormState] = React.useState({
     resScore: false,
     italy: false,
@@ -67,11 +78,35 @@ function AlertsSettings(props) {
     let newState = { ...props.state };
     setTurnedOn(newState.turnedOn);
     delete newState["turnedOn"];
+    newState["calls"] = [];
     setState(newState);
   }
 
   const toggleChecked = () => {
     setTurnedOn((prev) => !prev);
+  };
+
+  const getCalls = () => {
+    let url = new URL("http://127.0.0.1:8000/api/calls/get_calls/");
+    fetch(url, {
+      method: "GET",
+    })
+      .then((res) => res.json())
+      .then((resp) => {
+        if ("calls" in resp && resp.calls.length !== 0) {
+          console.log("CALLS", resp);
+          let calls = resp["calls"].map((call) => {
+            call["deadlineDate"] = moment
+              .unix(call.deadlineDate)
+              .format("DD/MM/YYYY");
+            return call;
+          });
+          setState({ ...state, calls });
+        } else {
+          console.log("show error");
+        }
+      })
+      .catch((error) => console.log(error));
   };
 
   const handleInputChange = (event) => {
@@ -667,6 +702,27 @@ function AlertsSettings(props) {
         >
           Update
         </Button>
+      </div>
+
+      <div className="Buttons">
+        <Button
+          color="secondary"
+          round
+          variant="contained"
+          onClick={() => getCalls()}
+        >
+          Show Alerts Results
+        </Button>
+      </div>
+
+      <div style={{ "margin-top": "10px" }}>
+        {state.calls.length === 0 ? null : (
+          <CallsResultsTable
+            title={"EU Proposal Calls"}
+            columns={calls_columns}
+            data={state.calls}
+          />
+        )}
       </div>
     </React.Fragment>
   );

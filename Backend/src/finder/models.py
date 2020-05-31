@@ -83,13 +83,14 @@ class Call(models.Model):
     class to define the data model of proposal call from the EU DB
     """
     ccm2Id = models.IntegerField(unique=True)
-    deadlineDatesLong = models.IntegerField()
+    deadlineDate = models.IntegerField()
     type = models.IntegerField()
     identifier = models.CharField(max_length=200)
     status = models.CharField(max_length=100)
     sumbissionProcedure = models.CharField(max_length=100)
     title = models.CharField(max_length=500)
     callTitle = models.CharField(max_length=500)
+    hasConsortium = models.BooleanField(default=False)
 
     def __str__(self):
         return self.title

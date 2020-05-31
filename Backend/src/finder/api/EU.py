@@ -437,7 +437,7 @@ def add_call_to_DB(call):
     response = True
     call = translateData(call)
     try:
-        Call.objects.get(ccm2Id=call['pic'])
+        Call.objects.get(ccm2Id=call['ccm2Id'])
         response = False
     except:
         newCall = Call(type=call['type'], status=call['status'], ccm2Id=call['ccm2Id'],

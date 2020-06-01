@@ -1,5 +1,5 @@
 from ..models import Event, TagP, Participants, Location, MapIDsB2match, \
-    MapIDsB2matchUpcoming, Scores
+    MapIDsB2matchUpcoming, Scores, EventsForAlerts
 from .NLP import *
 from bs4 import BeautifulSoup
 from selenium import webdriver
@@ -517,3 +517,10 @@ def getScoreForEvent(parts):
         theScore += dic[field[id]] * score
 
     return theScore *scores.RES
+
+
+def updateAlertsEvents(myEvents):
+    EventsForAlerts.objects.all().delete()
+    for event,score in myEvents:
+        event_for_alerts = EventsForAlerts(event_name=event.event_name,event_url=event.event_url,event_score=score)
+        event_for_alerts.save()

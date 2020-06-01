@@ -222,3 +222,12 @@ class Scores(models.Model):
     Start_Up = models.FloatField(null=True, default=0)
 
     Others = models.FloatField(null=True, default=0)
+
+
+class EventsForAlerts(models.Model):
+    """
+    Event result of alerts
+    """
+    event_name = models.CharField(max_length=200, unique=True)
+    event_url = models.CharField(max_length=200)
+    event_score = models.FloatField(blank=False, null=False)

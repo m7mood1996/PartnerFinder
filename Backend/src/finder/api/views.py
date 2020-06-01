@@ -247,22 +247,22 @@ class CallViewSet(viewsets.ModelViewSet):
         print("*" * 50)
         response = {'Message': 'Error while building the consortium!'}
 
-        Call.objects.all().delete()
-        CallTag.objects.all().delete()
-        calls = get_proposal_calls()
-
-        calls_to_send = []
-
-        for call in calls:
-            call = has_consortium(call)
-            if call['hasConsortium']:
-                calls_to_send.append({'title': call['title']})
-                add_call_to_DB(call)
-
-        # calls = Call.objects.all()
+        # Call.objects.all().delete()
+        # CallTag.objects.all().delete()
+        # calls = get_proposal_calls()
+        #
         # calls_to_send = []
+        #
         # for call in calls:
-        #     calls_to_send.append({'title': call.__dict__['title']})
+        #     call = has_consortium(call)
+        #     if call['hasConsortium']:
+        #         calls_to_send.append({'title': call['title']})
+        #         add_call_to_DB(call)
+
+        calls = Call.objects.all()
+        calls_to_send = []
+        for call in calls:
+            calls_to_send.append({'title': call.__dict__['title']})
 
         body = MIMEMultipart('alternative')
 
@@ -771,6 +771,8 @@ class AlertsB2match(viewsets.ModelViewSet):
                 eventScore = getScoreForEvent(parts)
                 myEvents.append((event, eventScore))
                 print(event.event_name, event.event_url, eventScore)
+                updateAlertsEvents(myEvents)
+
         myEvents.sort(key=operator.itemgetter(1), reverse=True)
         print(myEvents)
         alerts_settings = AlertsSettings.objects.all()[0]

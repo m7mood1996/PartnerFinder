@@ -464,16 +464,28 @@ def getB2MATCHPartByCountriesAndTags(tags, countries):
 
 
 def fields(scores):
+    """
+    function to return the fields name of specific object
+    :param scores: an object usually score object
+    :return: list of strings (fields name)
+    """
     return [ f.name for f in scores._meta.fields + scores._meta.many_to_many ]
 
 
 def getSimilar(str1,str2):
+    """
+    gives if the str1 appears in str2
+    :param str1: string
+    :param str2: string
+    :return: True if str1 appears in str2, False otherwise
+    """
     return str1.lower().replace('_', ' ') in str2.lower().replace('_',' ').replace('-',' ')
 
 def getScoreForEvent(parts):
     """
-    :param event: an Event
-    :return: event with
+    function to give score for events for alerts
+    :param parts: list of participants for a specific event
+    :return: score for the event
     """
     scores = Scores.objects.all()[0]
     field = fields(scores)
@@ -520,6 +532,11 @@ def getScoreForEvent(parts):
 
 
 def updateAlertsEvents(myEvents):
+    """
+    function to update recommended events in the data base for alerts
+    :param myEvents: list od tuples (event, event score)
+    :return:
+    """
     EventsForAlerts.objects.all().delete()
     for event,score in myEvents:
         event_for_alerts = EventsForAlerts(event_name=event.event_name,event_url=event.event_url,event_score=score)

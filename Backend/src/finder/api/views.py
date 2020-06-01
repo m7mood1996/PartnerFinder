@@ -760,6 +760,11 @@ class AlertsB2match(viewsets.ModelViewSet):
 
     @action(detail=False, methods=['GET'])
     def alertB2match(self, request):
+        """
+        api for alerts sends recommnded events via mail and saves them temprorarly to the database
+        :param request:
+        :return:
+        """
         events = Event.objects.filter(is_upcoming=True)
         myEvents = []
         for event in events:

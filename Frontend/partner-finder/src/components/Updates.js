@@ -1,5 +1,6 @@
 import React from "react";
 import { Button } from "@material-ui/core";
+import { Msgtoshow } from "./Msgtoshow"
 
 function Updates(props) {
   const [state, setState] = React.useState({
@@ -7,6 +8,8 @@ function Updates(props) {
     B2MATCH: 0,
     firstLoading: true,
   });
+
+  const [msgState, setMsgState] = React.useState({ title: '', body: '', visible: false });
 
   if (state.firstLoading) {
     setState({ ...props.state });
@@ -21,12 +24,19 @@ function Updates(props) {
     })
       .then((res) => res.json())
       .then((resp) => {
-        // TODO: show successful message
+        setMsgState({
+          title: 'Success',
+          body: 'Updated Successfully',
+          visible: true
+        });
         console.log("GET SETTINGS", resp);
         props.setState({ ...state });
       })
-      // TODO: show error message
-      .catch((error) => console.log(error));
+      .catch((error) => setMsgState({
+        title: 'Success',
+        body: { error },
+        visible: true
+      }));
   };
 
   const updateEU = (event) => {
@@ -38,15 +48,21 @@ function Updates(props) {
     })
       .then((res) => res.json())
       .then((resp) => {
-        // TODO: show successful message
+        setMsgState({
+          title: 'Success',
+          body: 'Updated Successfully',
+          visible: true
+        });
         console.log("GET SETTINGS", resp);
       })
-      // TODO: show error message
       .catch((error) => console.log(error));
   };
 
   return (
     <React.Fragment>
+      <div style={{ display: 'flex', justifyContent: 'center', marginTop: 100 }}>
+        <Msgtoshow {...msgState} handleClose={() => setMsgState({ ...msgState, visible: false })} />
+      </div>
       <div>
         <h1>Updates</h1>
       </div>

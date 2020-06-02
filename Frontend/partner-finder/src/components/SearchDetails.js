@@ -12,20 +12,31 @@ import "react-phone-number-input/style.css";
 import PhoneInput from "react-phone-number-input";
 import { WithContext as ReactTags } from "react-tag-input";
 import SearchResults from "./SearchResults";
-
+import { BounceLoader, BarLoader, BeatLoader } from 'react-spinners'
+import { makeStyles, Dialog, DialogTitle, DialogContent } from '@material-ui/core/';
 const KeyCodes = {
   comma: 188,
   enter: 13,
 };
 const delimiters = [KeyCodes.comma, KeyCodes.enter];
 
+const useStyles = makeStyles(theme => ({
+  title: {
+    textAlign: 'center',
+    fontSize: 30,
+  },
+
+
+}));
+
 function SearchDetails() {
+  const classes = useStyles();
   const [type, setType] = React.useState("");
   const [country, setCountry] = React.useState([]);
   const [data, setData] = React.useState([]);
   const [name, setName] = React.useState("");
   const [email, setEmail] = React.useState("");
-  const [number, setNumber] = React.useState("");
+  const [number, setNumber] = React.useState(0);
   const [phone_num, setPhone] = React.useState("");
   const [tags, setTags] = React.useState([]);
   const [countrySearched, setCountrySearched] = React.useState([]);
@@ -81,14 +92,17 @@ function SearchDetails() {
 
   const handleCountrySearched = (event) => {
     setCountrySearched(event.target.value);
-    if (event.target.value.length !== 0)
-      setFormState({ ...formState, countrySearched: false });
   };
 
   const handleInputChange = (event) => {
-    setNumber(event.target.value === "" ? "" : Number(event.target.value));
-    if (event.target.value.length !== 0)
+    setNumber(event.target.value);
+    if (event.target.value < '0' || event.target.value.length === 0) {
+      setFormState({ ...formState, number: true });
+    }
+    else {
       setFormState({ ...formState, number: false });
+    }
+
   };
   const handleBlur = () => {
     if (number < 1) {
@@ -111,18 +125,29 @@ function SearchDetails() {
     setTags(newTags);
   };
 
-  const dragTag = (tag, currPos, newPos) => {};
+  const dragTag = (tag, currPos, newPos) => { };
 
   const searchCompany = () => {
-    // if (formValidation()) {
-    //   //     setData([])
-    // }
-    // else {
-    searchByTagsAndCountires(tags, countrySearched);
-    // }
-    // setData([{ name: 'stam', type: 'stam', country: 'stam', phone: 'stam', email: 'stam', num: 'stam', description: 'stam' }])
+    if (formValidation()) {
+
+    }
+    else {
+      searchByTagsAndCountires(tags, countrySearched);
+    }
   };
 
+  const validate = () => {
+    let check = true;
+    let emailError = "";
+    if (!state.email.includes('@')) {
+      emailError = 'invalid email !'
+    }
+    if (emailError) {
+      setState(...setState, emailError);
+      return check = false;
+    }
+    return check;
+  }
   const searchByTagsAndCountires = (tags, countries) => {
     setState({ loading: true });
     tags = tags.map((tag) => tag.text);
@@ -168,17 +193,6 @@ function SearchDetails() {
     } else {
       res = { ...res, country: false };
     }
-    if (
-      countrySearched.length === 0 ||
-      countrySearched === undefined ||
-      countrySearched === null
-    ) {
-      res = { ...res, countrySearched: true };
-      setFormState(res);
-      check = true;
-    } else {
-      res = { ...res, countrySearched: false };
-    }
     if (type.length === 0 || type === undefined || type === null) {
       res = { ...res, type: true };
       setFormState(res);
@@ -186,7 +200,7 @@ function SearchDetails() {
     } else {
       res = { ...res, type: false };
     }
-    if (number.length === 0 || number === undefined || number === null) {
+    if (number.length <= 0 || number === undefined || number === null) {
       res = { ...res, number: true };
       setFormState(res);
       check = true;
@@ -298,7 +312,6 @@ function SearchDetails() {
                   type="number"
                   error={formState.number}
                   onChange={handleInputChange}
-                  onBlur={handleBlur}
                   InputLabelProps={{
                     shrink: true,
                   }}
@@ -357,7 +370,6 @@ function SearchDetails() {
             <FormControl className={SearchDetails.formControl} id="tab">
               <InputLabel
                 id="demo-mutiple-name-label"
-                error={formState.country}
               >
                 Country
               </InputLabel>
@@ -389,7 +401,17 @@ function SearchDetails() {
           disabled={state.loading}
         >
           {state.loading && <i className="fa fa-refresh fa-spin"></i>}
-          {state.loading && <span>Loading...</span>}
+          {state.loading && <span>Loading...</span> && <Dialog
+            disableBackdropClick
+            disableEscapeKeyDown
+            open={true}
+            aria-labelledby="alert-dialog-title"
+            aria-describedby="alert-dialog-description">
+            <DialogTitle className={classes.title}>LOADING</DialogTitle>
+            <DialogContent style={{ 'margin-left': '17px' }}>
+              <BeatLoader />
+            </DialogContent>
+          </Dialog>}
           {!state.loading && <span>Search</span>}
         </Button>
       </div>

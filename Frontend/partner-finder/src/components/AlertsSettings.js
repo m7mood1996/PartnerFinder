@@ -7,6 +7,8 @@ import Grid from "@material-ui/core/Grid";
 import { Button } from "@material-ui/core";
 import CallsResultsTable from "./CallsResultsTable";
 import moment from "moment";
+import { Msgtoshow } from "./Msgtoshow"
+import ResultsTable from "./ResultsTable";
 
 const calls_columns = [
   { title: "Title", field: "title" },
@@ -18,7 +20,16 @@ const calls_columns = [
   { title: "Submission Procedure Role", field: "sumbissionProcedure" },
 ];
 
+const events_columns = [
+  { title: "Name", field: "event_name" },
+  {
+    title: "URL", field: "event_url", render: rowData => <a href={rowData.event_url} target="_blank">{rowData.event_url} </a>
+  },
+];
+
 function AlertsSettings(props) {
+
+  const [msgState, setMsgState] = React.useState({ title: '', body: '', visible: false });
   const [turnedOn, setTurnedOn] = React.useState(false);
   const [state, setState] = React.useState({
     firstLoading: true,
@@ -47,6 +58,7 @@ function AlertsSettings(props) {
     start: 0,
     oth: 0,
     calls: [],
+    events: [],
   });
   const [formState, setFormState] = React.useState({
     resScore: false,
@@ -79,6 +91,7 @@ function AlertsSettings(props) {
     setTurnedOn(newState.turnedOn);
     delete newState["turnedOn"];
     newState["calls"] = [];
+    newState['events'] = [];
     setState(newState);
   }
 
@@ -86,6 +99,9 @@ function AlertsSettings(props) {
     setTurnedOn((prev) => !prev);
   };
 
+  const hideAlerts = () => {
+    setState({ ...state, 'events': [], 'calls': [] })
+  }
   const getCalls = () => {
     let url = new URL("http://127.0.0.1:8000/api/calls/get_calls/");
     fetch(url, {
@@ -94,7 +110,6 @@ function AlertsSettings(props) {
       .then((res) => res.json())
       .then((resp) => {
         if ("calls" in resp && resp.calls.length !== 0) {
-          console.log("CALLS", resp);
           let calls = resp["calls"].map((call) => {
             call["deadlineDate"] = moment
               .unix(call.deadlineDate)
@@ -102,9 +117,19 @@ function AlertsSettings(props) {
             return call;
           });
           setState({ ...state, calls });
+          url = new URL("http://127.0.0.1:8000/api/b2matchalerts/getEventFromAlerts/");
+          fetch(url, {
+            method: "GET",
+          })
+            .then((res) => res.json())
+            .then((resp) => {
+              setState({ ...state, calls, 'events': resp })
+            })
+            .catch((error) => console.log(error));
         } else {
           console.log("show error");
         }
+
       })
       .catch((error) => console.log(error));
   };
@@ -144,7 +169,11 @@ function AlertsSettings(props) {
 
   const updateAlert = () => {
     if (formValidation()) {
-      alert("Scores must be between 0 and 1");
+      setMsgState({
+        title: 'Failed',
+        body: 'Scores must be between 0 and 1',
+        visible: true
+      });
     } else {
       let url = new URL("http://127.0.0.1:8000/api/alerts/setSettings/");
       let params = {
@@ -158,7 +187,11 @@ function AlertsSettings(props) {
       })
         .then((res) => res.json())
         .then((resp) => {
-          // TODO: show successful message
+          setMsgState({
+            title: 'Success',
+            body: 'Updated Successfully',
+            visible: true
+          });
           console.log("UPDATE SETTINGS", resp);
           props.setState({
             ...props.state,
@@ -200,20 +233,25 @@ function AlertsSettings(props) {
           })
             .then((res) => res.json())
             .then((resp) => {
-              // TODO: show successful message
               props.setState({ ...props.state, ...state });
+              setMsgState({
+                title: 'Success',
+                body: 'Updated Successfully',
+                visible: true
+              });
               console.log("UPDATE SETTINGS", resp);
             })
-            // TODO: show error message
             .catch((error) => console.log(error));
         })
-        // TODO: show error message
         .catch((error) => console.log(error));
     }
   };
 
   return (
     <React.Fragment>
+      <div style={{ display: 'flex', justifyContent: 'center', marginTop: 100 }}>
+        <Msgtoshow {...msgState} handleClose={() => setMsgState({ ...msgState, visible: false })} />
+      </div>
       <div className="title">
         <h1>Alerts Settings</h1>
       </div>
@@ -723,6 +761,28 @@ function AlertsSettings(props) {
             data={state.calls}
           />
         )}
+      </div>
+      <div style={{ "margin-top": "10px" }}>
+        {state.events.length === 0 ? null : (
+          <ResultsTable
+            title={"B2match Alerts Results"}
+            columns={events_columns}
+            data={state.events}
+          />
+        )}
+      </div>
+      <div className="Buttons">
+        {state.events.length === 0 ? null : (
+          <Button
+            color="secondary"
+            round
+            variant="contained"
+            onClick={() => hideAlerts()}
+          >
+            Hide Alerts Results
+        </Button>
+        )}
+
       </div>
     </React.Fragment>
   );

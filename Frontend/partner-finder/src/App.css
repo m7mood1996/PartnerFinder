@@ -83,22 +83,22 @@ body {
 .first_sc {
   color: black;
   display: grid;
-  grid-template-columns: 0.12fr 0.1fr 0.12fr 0.1fr 0.12fr 0.1fr 0.12fr 0.1fr;
+  grid-template-columns: 0.2fr 0.19fr 0.2fr 0.19fr 0.2fr 0.19fr 0.2fr 0.19fr;
 }
 .second_sc {
   color: black;
   display: grid;
-  grid-template-columns: 0.12fr 0.1fr 0.12fr 0.1fr 0.12fr 0.1fr 0.12fr 0.1fr;
+  grid-template-columns: 0.2fr 0.19fr 0.2fr 0.19fr 0.2fr 0.19fr 0.2fr 0.19fr;
 }
 .third_sc {
   color: black;
   display: grid;
-  grid-template-columns: 0.12fr 0.1fr 0.12fr 0.1fr 0.12fr 0.1fr 0.12fr 0.1fr;
+  grid-template-columns: 0.2fr 0.19fr 0.2fr 0.19fr 0.2fr 0.19fr 0.2fr 0.19fr;
 }
 .fourth_sc {
   color: black;
   display: grid;
-  grid-template-columns: 0.12fr 0.1fr 0.12fr 0.1fr 0.12fr 0.1fr 0.12fr 0.1fr;
+  grid-template-columns: 0.2fr 0.19fr 0.2fr 0.19fr 0.2fr 0.19fr 0.2fr 0.19fr;
 }
 .line {
   border-top: 5px solid black;

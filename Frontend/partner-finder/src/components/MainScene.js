@@ -10,6 +10,7 @@ import Tab from "@material-ui/core/Tab";
 import Typography from "@material-ui/core/Typography";
 import Box from "@material-ui/core/Box";
 import moment from "moment";
+import { Msgtoshow } from './Msgtoshow';
 
 function MainScene(props) {
   const { children, value, index, ...other } = props;
@@ -66,6 +67,7 @@ const useStyles = makeStyles((theme) => ({
 export default function NavTabs() {
   const classes = useStyles();
   const [value, setValue] = React.useState(0);
+  const [msgState, setMsgState] = React.useState({ title: '', body: '', visible: false });
   const [alertsState, setAlertsState] = React.useState({
     firstLoading: true,
     turnedOn: false,
@@ -115,8 +117,11 @@ export default function NavTabs() {
           firstLoading: false,
         });
       })
-      // TODO: show error message
-      .catch((error) => console.log(error));
+      .catch((error) => setMsgState({
+        title: 'Success',
+        body: { error },
+        visible: true
+      }));
   }
 
   if (alertsState.firstLoading) {
@@ -164,9 +169,17 @@ export default function NavTabs() {
             newState["turnedOn"] = turnedOn;
             setAlertsState(newState);
           })
-          .catch((error) => console.log(error));
+          .catch((error) => setMsgState({
+            title: 'Success',
+            body: { error },
+            visible: true
+          }));
       })
-      .catch((error) => console.log(error));
+      .catch((error) => setMsgState({
+        title: 'Success',
+        body: { error },
+        visible: true
+      }));
   }
 
   const handleChange = (event, newValue) => {

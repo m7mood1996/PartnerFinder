@@ -4,8 +4,8 @@ import { Msgtoshow } from "./Msgtoshow"
 
 function Updates(props) {
   const [state, setState] = React.useState({
-    EU: 0,
-    B2MATCH: 0,
+    EU: '',
+    B2MATCH: '',
     firstLoading: true,
   });
 
@@ -26,15 +26,13 @@ function Updates(props) {
       .then((resp) => {
         setMsgState({
           title: 'Success',
-          body: 'Updated Successfully',
+          body: 'B2match has been updated successfully',
           visible: true
         });
-        console.log("GET SETTINGS", resp);
-        props.setState({ ...state });
       })
       .catch((error) => setMsgState({
-        title: 'Success',
-        body: { error },
+        title: 'Error',
+        body: 'Error while updating B2match data',
         visible: true
       }));
   };
@@ -50,12 +48,15 @@ function Updates(props) {
       .then((resp) => {
         setMsgState({
           title: 'Success',
-          body: 'Updated Successfully',
+          body: 'EU has been updated successfully.',
           visible: true
         });
-        console.log("GET SETTINGS", resp);
       })
-      .catch((error) => console.log(error));
+      .catch((error) => setMsgState({
+        title: 'Error',
+        body: 'Error while updating EU data',
+        visible: true
+      }));
   };
 
   return (
@@ -112,7 +113,7 @@ function Updates(props) {
             "font-weight": "bold",
           }}
         >
-          *There is an automatically updates every month for both EU & B2MATCH
+          ** There is an automatically updates every month for both EU & B2MATCH **
         </h1>
       </div>
     </React.Fragment>

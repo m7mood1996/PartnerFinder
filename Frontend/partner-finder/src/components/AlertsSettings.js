@@ -108,13 +108,20 @@ function AlertsSettings(props) {
   }
 
   const toggleChecked = () => {
-    setTurnedOn((prev) => !prev);
+    let temp = false;
+    setTurnedOn((prev) => {
+      temp = !prev;
+      return temp
+    });
+    props.setState({ ...props.state, 'turnedOn': temp })
+    console.log("NEW TURN", temp)
   };
 
   const hideAlerts = () => {
     setState({ ...state, 'events': [], 'calls': [] })
   }
   const getCalls = () => {
+    // TODO: show loading
     let url = new URL("http://127.0.0.1:8000/api/calls/get_calls/");
     fetch(url, {
       method: "GET",
@@ -137,19 +144,36 @@ function AlertsSettings(props) {
             .then((resp) => {
               setState({ ...state, calls, 'events': resp })
             })
-            .catch((error) => console.log(error));
+            .catch((error) => {
+              setMsgState({
+                title: 'Error',
+                body: 'Error while getting b2match events',
+                visible: true
+              });
+              setState({ ...state, 'events': [] })
+            });
         } else {
-          console.log("show error");
+          setMsgState({
+            title: 'Error',
+            body: 'Error while getting organizations',
+            visible: true
+          });
         }
-
       })
-      .catch((error) => console.log(error));
+      .catch((error) => {
+        setMsgState({
+          title: 'Error',
+          body: 'Error while getting organizations',
+          visible: true
+        });
+      });
   };
 
   const handleInputChange = (event) => {
     let newState = { ...state };
     newState[event.target.id] = event.target.value;
     setState(newState);
+    props.setState({ ...newState })
     let newFormState = { ...formState };
     if (
       event.target.id !== "email" &&
@@ -174,7 +198,7 @@ function AlertsSettings(props) {
           res[key] = false;
         }
       }
-      else {
+      else if (key === 'email') {
         if (!state[key].match(/^([\w.%+-]+)@([\w-]+\.)+([\w]{2,})$/i)) {
           console.log("What the hell !!")
           setFormState({ ...formState, valid_email: true });
@@ -269,14 +293,23 @@ function AlertsSettings(props) {
               setState({ ...state, loading: false });
               setMsgState({
                 title: 'Success',
-                body: 'Updated Successfully',
+                body: 'Alerts settings has been updated successfully',
                 visible: true
               });
-              console.log("UPDATE SETTINGS", resp);
             })
-            .catch((error) => console.log(error));
+            .catch((error) => setMsgState({
+              title: 'Error',
+              body: 'Error while updating alerts settings',
+              visible: true
+            }));
+          setState({ ...state, loading: false });
         })
-        .catch((error) => console.log(error));
+        .catch((error) => setMsgState({
+          title: 'Error',
+          body: 'Error while updating alerts settings',
+          visible: true
+        }));
+      setState({ ...state, loading: false });
     }
   };
 
@@ -289,7 +322,6 @@ function AlertsSettings(props) {
         <h1>Alerts Settings</h1>
       </div>
       <div className="alert_email">
-        <h2>Update Email Address: </h2>
         <TextField
           id="email"
           label="E-mail"
@@ -304,7 +336,7 @@ function AlertsSettings(props) {
           variant="outlined"
         />
 
-        <h3 style={{ 'margin-left': '15px', 'margin-top': '24px' }}>Enable/Disable Alerts</h3>
+        <h3 style={{ 'margin-left': '14px', 'margin-top': '24px' }}>Enable/Disable Alerts</h3>
         <FormGroup style={{ "margin-top": "15px" }}>
           <FormControlLabel
             control={
@@ -785,7 +817,7 @@ function AlertsSettings(props) {
       </div>
 
       <div style={{ "margin-top": "10px" }}>
-        {state.calls.length === 0 ? null : (
+        {state && state.calls && state.calls.length === 0 ? null : (
           <CallsResultsTable
             title={"EU Proposal Calls"}
             columns={calls_columns}
@@ -794,7 +826,7 @@ function AlertsSettings(props) {
         )}
       </div>
       <div style={{ "margin-top": "10px" }}>
-        {state.events.length === 0 ? null : (
+        {state && state.events && state.events.length === 0 ? null : (
           <ResultsTable
             title={"B2match Alerts Results"}
             columns={events_columns}
@@ -803,7 +835,7 @@ function AlertsSettings(props) {
         )}
       </div>
       <div className="Buttons">
-        {state.events.length === 0 ? null : (
+        {state && ((state.events && state.events.length !== 0) || (state.calls && state.calls.length !== 0)) ? (
           <Button
             color="secondary"
             round
@@ -811,10 +843,10 @@ function AlertsSettings(props) {
             onClick={() => hideAlerts()}
           >
             Hide Alerts Results
-        </Button>
-        )}
+        </Button>)
+          : null}
       </div>
-      {state.loading ? <Dialog
+      {state && state.loading ? <Dialog
         disableBackdropClick
         disableEscapeKeyDown
         open={true}

@@ -28,6 +28,8 @@ import Remove from "@material-ui/icons/Remove";
 import SaveAlt from "@material-ui/icons/SaveAlt";
 import Search from "@material-ui/icons/Search";
 import ViewColumn from "@material-ui/icons/ViewColumn";
+import { EU_columns } from '../utils';
+
 
 const useStyles = makeStyles((theme) => ({
   title: {
@@ -60,15 +62,15 @@ const tableIcons = {
   ViewColumn: forwardRef((props, ref) => <ViewColumn {...props} ref={ref} />),
 };
 
-const EU_columns = [
-  { title: "Name", field: "legalName" },
-  { title: "Type", field: "classificationType" },
-  { title: "Country", field: "country" },
-  { title: "Data Status", field: "dataStatus" },
-  { title: "Number of EU Projects", field: "numberOfProjects" },
-  { title: "Description", field: "description" },
-  { title: "Consorsium Role", field: "consorsiumRoles" },
-];
+// const EU_columns = [
+//   { title: "Name", field: "legalName" },
+//   { title: "Type", field: "classificationType" },
+//   { title: "Country", field: "country" },
+//   { title: "Data Status", field: "dataStatus" },
+//   { title: "Number of EU Projects", field: "numberOfProjects" },
+//   { title: "Description", field: "description" },
+//   { title: "Consorsium Role", field: "consorsiumRoles" },
+// ];
 
 function CallsResultsTable(props) {
   const [data, setData] = React.useState(props.data);
@@ -93,6 +95,8 @@ function CallsResultsTable(props) {
   };
 
   const searchOrganizations = (rowData) => {
+    //TODO: loading
+    console.log("COLSS", EU_columns)
     let url = new URL("http://127.0.0.1:8000/api/calls/search_organizations/");
     let params = {
       data: JSON.stringify({ ccm2Id: rowData["ccm2Id"] }),
@@ -105,12 +109,19 @@ function CallsResultsTable(props) {
     })
       .then((res) => res.json())
       .then((resp) => {
+        //TODO: end loading
         setSearchTitle(rowData["title"]);
         setSearchResult(resp.EU);
         setVisible(true);
       })
-      // TODO: show error message
+      // TODO: show error message and end loading
       .catch((error) => console.log(error));
+  };
+
+  const handleDelete = (oldData) => {
+    let newData = [...data];
+    newData.splice(newData.indexOf(oldData), 1);
+    setData(newData);
   };
 
   return (
@@ -123,6 +134,15 @@ function CallsResultsTable(props) {
             options={{ exportButton: true }}
             columns={columns}
             data={data}
+            editable={{
+              onRowDelete: (oldData) =>
+                new Promise((resolve) => {
+                  setTimeout(() => {
+                    resolve();
+                    handleDelete(oldData);
+                  }, 600);
+                }),
+            }}
             actions={[
               {
                 icon: SearchIcon,

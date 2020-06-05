@@ -14,6 +14,8 @@ import { WithContext as ReactTags } from "react-tag-input";
 import SearchResults from "./SearchResults";
 import { BeatLoader } from 'react-spinners'
 import { makeStyles, Dialog, DialogTitle, DialogContent } from '@material-ui/core/';
+import { companyTypesOptions } from '../utils';
+
 const KeyCodes = {
   comma: 188,
   enter: 13,
@@ -29,7 +31,7 @@ const useStyles = makeStyles(theme => ({
 
 }));
 
-function SearchDetails() {
+function SearchDetails(props) {
   const classes = useStyles();
   const [type, setType] = React.useState("");
   const [country, setCountry] = React.useState([]);
@@ -42,7 +44,9 @@ function SearchDetails() {
   const [countrySearched, setCountrySearched] = React.useState([]);
   const [state, setState] = React.useState({
     loading: false,
+    firstLoading: true,
   });
+
   const [formState, setFormState] = React.useState({
     name: false,
     email: false,
@@ -53,18 +57,16 @@ function SearchDetails() {
     number: false,
     phone_num: false,
   });
-  const companyTypesOptions = [
-    "SME",
-    "International Organization",
-    "Higher or Secondary Education",
-    "Research Organization",
-    "Private for Profit Organization",
-    "Public Organization",
-    "Other",
-  ];
+
+  if (state.firstLoading) {
+    setName(props.state.name)
+    setState({ ...state, firstLoading: false })
+  }
 
   const changeName = (event) => {
     setName(event.target.value);
+    console.log("HERE", event.target.value)
+    props.setState({ ...props.state, 'name': event.target.value })
     if (event.target.value.length !== 0)
       setFormState({ ...formState, name: false });
   };
@@ -123,7 +125,7 @@ function SearchDetails() {
 
   const searchCompany = () => {
     if (formValidation()) {
-
+      // TODO: show error message
     }
     else {
       searchByTagsAndCountires(tags, countrySearched);
@@ -142,6 +144,7 @@ function SearchDetails() {
     }
     return check;
   }
+
   const searchByTagsAndCountires = (tags, countries) => {
     setState({ loading: true });
     tags = tags.map((tag) => tag.text);
@@ -160,7 +163,11 @@ function SearchDetails() {
         setState({ loading: false });
         setData(resp);
       })
-      .catch((error) => console.log(error));
+      .catch((error) => {
+        setData([])
+        //TODO: show error message
+        setState({ loading: false });
+      });
   };
 
   const formValidation = () => {
@@ -361,7 +368,7 @@ function SearchDetails() {
               handleInputChange={changeTagInput}
             />
 
-            {formState.tags ? (
+            {formState && formState.tags ? (
               <Typography
                 variant="caption"
                 display="block"
@@ -407,8 +414,8 @@ function SearchDetails() {
           onClick={() => searchCompany()}
           disabled={state.loading}
         >
-          {state.loading && <i className="fa fa-refresh fa-spin"></i>}
-          {state.loading && <Dialog
+          {state && state.loading && <i className="fa fa-refresh fa-spin"></i>}
+          {state && state.loading && <Dialog
             disableBackdropClick
             disableEscapeKeyDown
             open={true}
@@ -419,10 +426,10 @@ function SearchDetails() {
               <BeatLoader />
             </DialogContent>
           </Dialog>}
-          {!state.loading && <span>Search</span>}
+          {state && !state.loading && <span>Search</span>}
         </Button>
       </div>
-      {data.length === 0 ? null : (
+      {data && data.length === 0 ? null : (
         <div style={{ "margin-top": "10px" }}>
           <SearchResults data={data} />
         </div>

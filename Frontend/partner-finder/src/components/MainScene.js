@@ -96,11 +96,27 @@ export default function NavTabs() {
     start: 0,
     oth: 0,
   });
+
+  const [searchState, setSearchState] = React.useState({
+    type: '',
+    country: '',
+    data: [],
+    name: '',
+    email: '',
+    number: '',
+    phone_num: '',
+    tags: [],
+    countrySearched: [],
+    firstLoading: false,
+    loading: false,
+  })
+
   const [updatesState, setUpdatesState] = React.useState({
-    EU: 0,
-    B2MATCH: 0,
+    EU: '',
+    B2MATCH: '',
     firstLoading: true,
   });
+
 
   if (updatesState.firstLoading) {
     let url = new URL("http://127.0.0.1:8000/api/updates/getSettings/");
@@ -109,19 +125,24 @@ export default function NavTabs() {
     })
       .then((res) => res.json())
       .then((resp) => {
-        // TODO: show successful message
-        console.log("GET SETTINGS", resp);
         setUpdatesState({
           EU: moment.unix(resp.EU).format("MMMM Do YYYY, h:mm:ss a"),
           B2MATCH: moment.unix(resp.B2MATCH).format("MMMM Do YYYY, h:mm:ss a"),
           firstLoading: false,
         });
       })
-      .catch((error) => setMsgState({
-        title: 'Success',
-        body: { error },
-        visible: true
-      }));
+      .catch((error) => {
+        setMsgState({
+          title: 'Error',
+          body: 'Error while getting updates settings',
+          visible: true
+        })
+        setUpdatesState({
+          EU: '',
+          B2MATCH: '',
+          firstLoading: false,
+        })
+      });
   }
 
   if (alertsState.firstLoading) {
@@ -169,17 +190,23 @@ export default function NavTabs() {
             newState["turnedOn"] = turnedOn;
             setAlertsState(newState);
           })
-          .catch((error) => setMsgState({
-            title: 'Success',
-            body: { error },
-            visible: true
-          }));
+          .catch((error) => {
+            setMsgState({
+              title: 'Error',
+              body: 'Error while getting alerts settings',
+              visible: true
+            })
+            setAlertsState(newState);
+          });
       })
-      .catch((error) => setMsgState({
-        title: 'Success',
-        body: { error },
-        visible: true
-      }));
+      .catch((error) => {
+        setMsgState({
+          title: 'Error',
+          body: 'Error while getting alerts settings',
+          visible: true
+        })
+        setAlertsState(newState);
+      });
   }
 
   const handleChange = (event, newValue) => {
@@ -200,7 +227,7 @@ export default function NavTabs() {
         </Tabs>
       </AppBar>
       <MainScene value={value} index={0}>
-        <SearchDetails />
+        <SearchDetails state={searchState} setState={setSearchState} />
       </MainScene>
       <MainScene value={value} index={1}>
         <AlertsSettings state={alertsState} setState={setAlertsState} />

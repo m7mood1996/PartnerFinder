@@ -70,7 +70,7 @@ export default function NavTabs() {
   const [msgState, setMsgState] = React.useState({ title: '', body: '', visible: false });
   const [alertsState, setAlertsState] = React.useState({
     firstLoading: true,
-    turnedOn: false,
+    turned_on: false,
     email: "",
     resScore: 0,
     italy: 0,
@@ -148,14 +148,14 @@ export default function NavTabs() {
   if (alertsState.firstLoading) {
     let newState = { ...alertsState, firstLoading: false };
     let newMail = "";
-    let turnedOn = false;
+    let turned_on = false;
     let url = new URL("http://127.0.0.1:8000/api/alerts/getSettings/");
     fetch(url, {
       method: "GET",
     })
       .then((res) => res.json())
       .then((resp) => {
-        turnedOn = resp.turned_on;
+        turned_on = resp.turned_on;
         newMail = resp.email;
         url = new URL("http://127.0.0.1:8000/api/scores/getscores/");
         fetch(url, {
@@ -187,7 +187,7 @@ export default function NavTabs() {
             newState["start"] = resp.Start_Up;
             newState["oth"] = resp.Others;
             newState["email"] = newMail;
-            newState["turnedOn"] = turnedOn;
+            newState["turned_on"] = turned_on;
             setAlertsState(newState);
           })
           .catch((error) => {

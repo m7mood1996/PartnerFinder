@@ -40,7 +40,7 @@ const events_columns = [
 function AlertsSettings(props) {
   const classes = useStyles();
   const [msgState, setMsgState] = React.useState({ title: '', body: '', visible: false });
-  const [turnedOn, setTurnedOn] = React.useState(false);
+  const [turned_on, setturned_on] = React.useState(false);
   const [state, setState] = React.useState({
     firstLoading: true,
     loading: false,
@@ -100,8 +100,8 @@ function AlertsSettings(props) {
 
   if (state.firstLoading) {
     let newState = { ...props.state };
-    setTurnedOn(newState.turnedOn);
-    delete newState["turnedOn"];
+    setturned_on(newState.turned_on);
+    delete newState["turned_on"];
     newState["calls"] = [];
     newState['events'] = [];
     setState(newState);
@@ -109,12 +109,11 @@ function AlertsSettings(props) {
 
   const toggleChecked = () => {
     let temp = false;
-    setTurnedOn((prev) => {
+    setturned_on((prev) => {
       temp = !prev;
       return temp
     });
-    props.setState({ ...props.state, 'turnedOn': temp })
-    console.log("NEW TURN", temp)
+    props.setState({ ...props.state, 'turned_on': temp })
   };
 
   const hideAlerts = () => {
@@ -173,7 +172,7 @@ function AlertsSettings(props) {
     let newState = { ...state };
     newState[event.target.id] = event.target.value;
     setState(newState);
-    props.setState({ ...newState })
+    props.setState({ ...props.state, ...newState })
     let newFormState = { ...formState };
     if (
       event.target.id !== "email" &&
@@ -238,7 +237,7 @@ function AlertsSettings(props) {
       setState({ ...state, loading: true });
       let url = new URL("http://127.0.0.1:8000/api/alerts/setSettings/");
       let params = {
-        data: JSON.stringify({ email: state.email, turned_on: turnedOn }),
+        data: JSON.stringify({ 'email': state.email, 'turned_on': turned_on }),
       };
       Object.keys(params).forEach((key) =>
         url.searchParams.append(key, params[key])
@@ -252,7 +251,7 @@ function AlertsSettings(props) {
           props.setState({
             ...props.state,
             email: state.email,
-            turnedOn: turnedOn,
+            turned_on: turned_on,
           });
           url = new URL("http://127.0.0.1:8000/api/scores/updatescores/");
           let data = {
@@ -342,7 +341,7 @@ function AlertsSettings(props) {
             control={
               <Switch
                 size="medium"
-                checked={turnedOn}
+                checked={turned_on}
                 onChange={toggleChecked}
               />
             }

@@ -9,7 +9,8 @@ import CallsResultsTable from "./CallsResultsTable";
 import moment from "moment";
 import { Msgtoshow } from "./Msgtoshow"
 import ResultsTable from "./ResultsTable";
-
+import { BeatLoader } from 'react-spinners'
+import { makeStyles, Dialog, DialogTitle, DialogContent } from '@material-ui/core/';
 const calls_columns = [
   { title: "Title", field: "title" },
   { title: "Call Title", field: "callTitle" },
@@ -20,6 +21,15 @@ const calls_columns = [
   { title: "Submission Procedure Role", field: "sumbissionProcedure" },
 ];
 
+const useStyles = makeStyles(theme => ({
+  title: {
+    textAlign: 'center',
+    fontSize: 30,
+  },
+
+
+}));
+
 const events_columns = [
   { title: "Name", field: "event_name" },
   {
@@ -28,11 +38,12 @@ const events_columns = [
 ];
 
 function AlertsSettings(props) {
-
+  const classes = useStyles();
   const [msgState, setMsgState] = React.useState({ title: '', body: '', visible: false });
   const [turnedOn, setTurnedOn] = React.useState(false);
   const [state, setState] = React.useState({
     firstLoading: true,
+    loading: false,
     email: "",
     resScore: 0,
     italy: 0,
@@ -61,6 +72,7 @@ function AlertsSettings(props) {
     events: [],
   });
   const [formState, setFormState] = React.useState({
+    valid_email: false,
     resScore: false,
     italy: false,
     france: false,
@@ -162,19 +174,44 @@ function AlertsSettings(props) {
           res[key] = false;
         }
       }
+      else {
+        if (!state[key].match(/^([\w.%+-]+)@([\w-]+\.)+([\w]{2,})$/i)) {
+          console.log("What the hell !!")
+          setFormState({ ...formState, valid_email: true });
+          console.log("state of email" + "\t" + formState.valid_email);
+          check = true;
+        }
+        else {
+          res[key] = false;
+        }
+      }
     });
+    console.log(res);
     setFormState(res);
     return check;
   };
 
   const updateAlert = () => {
     if (formValidation()) {
-      setMsgState({
-        title: 'Failed',
-        body: 'Scores must be between 0 and 1',
-        visible: true
-      });
+      if (formState.valid_email) {
+        console.log("Invalid Email");
+        setMsgState({
+          title: 'Failed',
+          body: 'Invalid Email',
+          visible: true
+        });
+      }
+      else {
+        console.log("form" + formState.valid_email);
+        setMsgState({
+          title: 'Failed',
+          body: 'Scores must be between 0 and 1',
+          visible: true
+        });
+      }
+
     } else {
+      setState({ ...state, loading: true });
       let url = new URL("http://127.0.0.1:8000/api/alerts/setSettings/");
       let params = {
         data: JSON.stringify({ email: state.email, turned_on: turnedOn }),
@@ -187,11 +224,6 @@ function AlertsSettings(props) {
       })
         .then((res) => res.json())
         .then((resp) => {
-          setMsgState({
-            title: 'Success',
-            body: 'Updated Successfully',
-            visible: true
-          });
           console.log("UPDATE SETTINGS", resp);
           props.setState({
             ...props.state,
@@ -234,6 +266,7 @@ function AlertsSettings(props) {
             .then((res) => res.json())
             .then((resp) => {
               props.setState({ ...props.state, ...state });
+              setState({ ...state, loading: false });
               setMsgState({
                 title: 'Success',
                 body: 'Updated Successfully',
@@ -265,15 +298,13 @@ function AlertsSettings(props) {
           type={state.email}
           name={state.email}
           value={state.email}
+          error={formState.valid_email}
           autoComplete="email"
           margin="normal"
           variant="outlined"
         />
-        <h5 style={{ "margin-left": "10px", "margin-top": "25px" }}>
-          *Email is mutual for EU and B2MATCH
-        </h5>
 
-        <h3>Enable/Disable Alerts</h3>
+        <h3 style={{ 'margin-left': '15px', 'margin-top': '24px' }}>Enable/Disable Alerts</h3>
         <FormGroup style={{ "margin-top": "15px" }}>
           <FormControlLabel
             control={
@@ -782,8 +813,18 @@ function AlertsSettings(props) {
             Hide Alerts Results
         </Button>
         )}
-
       </div>
+      {state.loading ? <Dialog
+        disableBackdropClick
+        disableEscapeKeyDown
+        open={true}
+        aria-labelledby="alert-dialog-title"
+        aria-describedby="alert-dialog-description">
+        <DialogTitle className={classes.title}>LOADING</DialogTitle>
+        <DialogContent style={{ 'margin-left': '17px' }}>
+          <BeatLoader />
+        </DialogContent>
+      </Dialog> : null}
     </React.Fragment>
   );
 }

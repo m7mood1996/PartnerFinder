@@ -12,7 +12,7 @@ import "react-phone-number-input/style.css";
 import PhoneInput from "react-phone-number-input";
 import { WithContext as ReactTags } from "react-tag-input";
 import SearchResults from "./SearchResults";
-import { BounceLoader, BarLoader, BeatLoader } from 'react-spinners'
+import { BeatLoader } from 'react-spinners'
 import { makeStyles, Dialog, DialogTitle, DialogContent } from '@material-ui/core/';
 const KeyCodes = {
   comma: 188,
@@ -36,7 +36,7 @@ function SearchDetails() {
   const [data, setData] = React.useState([]);
   const [name, setName] = React.useState("");
   const [email, setEmail] = React.useState("");
-  const [number, setNumber] = React.useState(0);
+  const [number, setNumber] = React.useState();
   const [phone_num, setPhone] = React.useState("");
   const [tags, setTags] = React.useState([]);
   const [countrySearched, setCountrySearched] = React.useState([]);
@@ -75,8 +75,9 @@ function SearchDetails() {
   };
   const changePhone = (event) => {
     setPhone(event);
-    if (!event || event.length !== 0 || event === "")
+    if (event !== 0 || event !== "")
       setFormState({ ...formState, phone_num: false });
+    console.log("phone" + phone_num);
   };
   const handleChange = (event) => {
     setType(event.target.value);
@@ -96,20 +97,13 @@ function SearchDetails() {
 
   const handleInputChange = (event) => {
     setNumber(event.target.value);
-    if (event.target.value < '0' || event.target.value.length === 0) {
+    if (event.target.value <= 0) {
       setFormState({ ...formState, number: true });
     }
     else {
       setFormState({ ...formState, number: false });
     }
 
-  };
-  const handleBlur = () => {
-    if (number < 1) {
-      setNumber(1);
-    } else if (number > 100) {
-      setNumber(100);
-    }
   };
   const addTag = (tag) => {
     setTags([...tags, tag]);
@@ -184,7 +178,14 @@ function SearchDetails() {
       setFormState(res);
       check = true;
     } else {
-      res = { ...res, email: false };
+      if (!email.match(/^([\w.%+-]+)@([\w-]+\.)+([\w]{2,})$/i)) {
+        res = { ...res, email: true };
+        setFormState(res);
+        check = true;
+      }
+      else {
+        res = { ...res, email: false };
+      }
     }
     if (country.length === 0 || country === undefined || country === null) {
       res = { ...res, country: true };
@@ -200,18 +201,21 @@ function SearchDetails() {
     } else {
       res = { ...res, type: false };
     }
-    if (number.length <= 0 || number === undefined || number === null) {
+    if (number === undefined || number === null) {
       res = { ...res, number: true };
       setFormState(res);
       check = true;
     } else {
-      res = { ...res, number: false };
+      if (number <= 0) {
+        res = { ...res, number: true };
+        setFormState(res);
+        check = true;
+      }
+      else {
+        res = { ...res, number: false };
+      }
     }
-    if (
-      phone_num.length === 0 ||
-      phone_num === undefined ||
-      phone_num === null
-    ) {
+    if (phone_num.length === 0 || phone_num === undefined || phone_num === null) {
       res = { ...res, phone_num: true };
       setFormState(res);
       check = true;
@@ -240,6 +244,7 @@ function SearchDetails() {
             <form className={SearchDetails.root} autoComplete="off">
               <TextField
                 id="fields"
+                style={{ 'margin-top': '19px' }}
                 onChange={changeName}
                 label="Name"
                 variant="outlined"
@@ -268,10 +273,11 @@ function SearchDetails() {
           <div className="country">
             <h1>Country</h1>
             <FormControl className={SearchDetails.formControl} id="tab">
-              <InputLabel id="company_type" error={formState.country}>
+              <InputLabel style={{ 'margin-top': '12px' }} id="company_type" error={formState.country}>
                 Country
               </InputLabel>
               <Select
+                style={{ 'margin-top': '26.8px' }}
                 options={countryList().getData()}
                 value={country}
                 onChange={handleCountry}
@@ -289,6 +295,7 @@ function SearchDetails() {
             <TextField
               id="fields"
               label="E-mail"
+              style={{ 'margin-top': '19px' }}
               onChange={changeEmail}
               className={SearchDetails.textField}
               type="email"
@@ -401,7 +408,7 @@ function SearchDetails() {
           disabled={state.loading}
         >
           {state.loading && <i className="fa fa-refresh fa-spin"></i>}
-          {state.loading && <span>Loading...</span> && <Dialog
+          {state.loading && <Dialog
             disableBackdropClick
             disableEscapeKeyDown
             open={true}

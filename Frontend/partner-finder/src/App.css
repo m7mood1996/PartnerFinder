@@ -74,7 +74,7 @@ body {
 
 .alert_email {
   display: grid;
-  grid-template-columns: 0.16fr 0.2fr 0.2fr 0.13fr 0.2fr;
+  grid-template-columns: 0.25fr 0.21fr 0.2fr 0.2fr;
 }
 .res_score {
   display: grid;
@@ -118,6 +118,10 @@ body {
 .Buttons {
   margin-top: 42px;
   text-align: center;
+}
+.update {
+  display:grid;
+  grid-template-columns: 0.29fr 0.3fr;
 }
 #ButtonText {
   width: 125px;

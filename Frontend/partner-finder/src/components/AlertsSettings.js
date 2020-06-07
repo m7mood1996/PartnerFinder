@@ -131,7 +131,7 @@ function AlertsSettings(props) {
         if ('error' in resp) {
           setMsgState({
             title: 'Error',
-            body: 'Error while getting organizations',
+            body: 'Error while uploading alerts results',
             visible: true
           });
           setState({ ...state, loading: false, 'calls': [] });
@@ -152,7 +152,7 @@ function AlertsSettings(props) {
               if ('error' in resp) {
                 setMsgState({
                   title: 'Error',
-                  body: 'Error while getting organizations',
+                  body: 'Error while uploading alerts results',
                   visible: true
                 });
                 setState({ ...state, loading: false, 'events': [] });
@@ -165,7 +165,7 @@ function AlertsSettings(props) {
             .catch((error) => {
               setMsgState({
                 title: 'Error',
-                body: 'Error while getting b2match events',
+                body: 'Error while uploading alerts results',
                 visible: true
               });
               setState({ ...state, 'events': [] })
@@ -175,7 +175,7 @@ function AlertsSettings(props) {
       .catch((error) => {
         setMsgState({
           title: 'Error',
-          body: 'Error while getting organizations',
+          body: 'Error while uploading alerts results',
           visible: true
         });
         setState({ ...state, loading: false, 'calls': [] });

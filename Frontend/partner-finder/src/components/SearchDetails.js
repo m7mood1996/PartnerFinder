@@ -65,7 +65,6 @@ function SearchDetails(props) {
 
   const changeName = (event) => {
     setName(event.target.value);
-    console.log("HERE", event.target.value)
     props.setState({ ...props.state, 'name': event.target.value })
     if (event.target.value.length !== 0)
       setFormState({ ...formState, name: false });

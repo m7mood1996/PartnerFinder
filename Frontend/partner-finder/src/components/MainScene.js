@@ -70,6 +70,7 @@ export default function NavTabs() {
   const [msgState, setMsgState] = React.useState({ title: '', body: '', visible: false });
   const [alertsState, setAlertsState] = React.useState({
     firstLoading: true,
+    loading:false,
     turned_on: false,
     email: "",
     resScore: 0,

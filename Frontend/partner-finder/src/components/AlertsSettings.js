@@ -120,7 +120,7 @@ function AlertsSettings(props) {
     setState({ ...state, 'events': [], 'calls': [] })
   }
   const getCalls = () => {
-    // TODO: show loading
+    setState({ ...state, loading: true });
     let url = new URL("http://127.0.0.1:8000/api/calls/get_calls/");
     fetch(url, {
       method: "GET",
@@ -141,6 +141,8 @@ function AlertsSettings(props) {
           })
             .then((res) => res.json())
             .then((resp) => {
+              console.log("state is " + state.loading);
+              // setState({ ...state, loading: false });
               setState({ ...state, calls, 'events': resp })
             })
             .catch((error) => {
@@ -295,20 +297,25 @@ function AlertsSettings(props) {
                 body: 'Alerts settings has been updated successfully',
                 visible: true
               });
+
             })
-            .catch((error) => setMsgState({
-              title: 'Error',
-              body: 'Error while updating alerts settings',
-              visible: true
-            }));
-          setState({ ...state, loading: false });
+            .catch((error) => {
+              setMsgState({
+                title: 'Error',
+                body: 'Error while updating alerts settings',
+                visible: true
+              })
+              setState({ ...state, loading: false });
+            });
         })
-        .catch((error) => setMsgState({
-          title: 'Error',
-          body: 'Error while updating alerts settings',
-          visible: true
-        }));
-      setState({ ...state, loading: false });
+        .catch((error) => {
+          setMsgState({
+            title: 'Error',
+            body: 'Error while updating alerts settings',
+            visible: true
+          })
+          setState({ ...state, loading: false });
+        });
     }
   };
 

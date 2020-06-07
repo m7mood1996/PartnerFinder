@@ -47,48 +47,49 @@ class OrganizationProfileViewSet(viewsets.ModelViewSet):
         print("*" * 50)
         print("START UPDATING EU DB")
         print("*" * 50)
+        try:
+            # MapIds.objects.all().delete()
+            # try:
+            #     index = load_index('EU_Index')
+            # except:
+            #     index = None
+            #
+            # if index is None:
+            #     index = build_index('EU_Index')
+            # else:
+            #     index.destroy()
+            #     index = build_index('EU_Index')
+            #
+            # status = {}
+            # graph = Graph()
+            # visitngQueue = collections.deque()
+            # startOrg = '999993953'
+            # visitngQueue.append(startOrg)
+            # status[startOrg] = 'visiting'
+            # while len(visitngQueue) > 0:
+            #     currPic = visitngQueue.popleft()
+            #     try:
+            #         currOrg = getOrganizationProfileFromEUByPIC(currPic)
+            #         currAdjacent = getPicsFromCollaborations(
+            #             currOrg['collaborations'])
+            #     except:
+            #         continue
+            #     for pic in currAdjacent:
+            #         if pic not in graph.vertices or status[pic] == 'notVisited':
+            #             graph.add(currPic, pic)
+            #             status[pic] = 'visiting'
+            #             visitngQueue.append(pic)
+            #
+            #     currOrg = translateData(currOrg)
+            #     addOrganizationToDB(currOrg)
+            #     index = add_org_to_index(index, currOrg)
+            #     status[currPic] = 'visited'
 
-        # MapIds.objects.all().delete()
-        #
-        # response = {'Message': 'Error while updating the organizations!'}
-        # try:
-        #     index = load_index('EU_Index')
-        # except:
-        #     index = None
-        #
-        # if index is None:
-        #     index = build_index('EU_Index')
-        # else:
-        #     index.destroy()
-        #     index = build_index('EU_Index')
-        #
-        # status = {}
-        # graph = Graph()
-        # visitngQueue = collections.deque()
-        # startOrg = '999993953'
-        # visitngQueue.append(startOrg)
-        # status[startOrg] = 'visiting'
-        # while len(visitngQueue) > 0:
-        #     currPic = visitngQueue.popleft()
-        #     try:
-        #         currOrg = getOrganizationProfileFromEUByPIC(currPic)
-        #         currAdjacent = getPicsFromCollaborations(
-        #             currOrg['collaborations'])
-        #     except:
-        #         continue
-        #     for pic in currAdjacent:
-        #         if pic not in graph.vertices or status[pic] == 'notVisited':
-        #             graph.add(currPic, pic)
-        #             status[pic] = 'visiting'
-        #             visitngQueue.append(pic)
-        #
-        #     currOrg = translateData(currOrg)
-        #     addOrganizationToDB(currOrg)
-        #     index = add_org_to_index(index, currOrg)
-        #     status[currPic] = 'visited'
-
-        response = {'Message': 'Organizations updated successfully!'}
-        setUpdateSettings(euDate=time.mktime(datetime.datetime.now().timetuple()))
+            response = {'success': 'Organizations updated successfully!'}
+            if not setUpdateSettings(euDate=time.mktime(datetime.datetime.now().timetuple())):
+                raise
+        except:
+            response = {'error': 'Error while updating organizations.'}
 
         return Response(response, status=status.HTTP_200_OK)
 
@@ -125,7 +126,7 @@ class OrganizationProfileViewSet(viewsets.ModelViewSet):
 
             response = {'EU': EU, 'B2MATCH': B2MATCH}
         except:
-            response = {'EU': [], 'B2MATCH': []}
+            response = {'EU': [], 'B2MATCH': [], 'error': 'Error while searching for organizations and participants'}
 
         return Response(response, status=status.HTTP_200_OK)
 
@@ -149,7 +150,7 @@ class AlertsSettingsViewSet(viewsets.ModelViewSet):
             response = {'email': alertsSettings.email,
                         'turned_on': alertsSettings.turned_on}
         except:
-            response = {'email': '', 'turned_on': ''}
+            response = {'email': '', 'turned_on': '', 'error': 'Error while uploading alerts settings'}
 
         return Response(response, status=status.HTTP_200_OK)
 
@@ -160,22 +161,25 @@ class AlertsSettingsViewSet(viewsets.ModelViewSet):
         :param request: HTTP request with update times
         :return: HTTP response
         """
-
-        data = request.query_params['data']
-        data = json.loads(data)
-        email = data['email']
-        turned_on = data['turned_on']
-
         try:
-            AlertsSettings.objects.get(ID=1)
-            AlertsSettings.objects.filter(ID=1).update(email=email)
-            AlertsSettings.objects.filter(ID=1).update(turned_on=turned_on)
-        except:
-            alertsSettings = AlertsSettings(
-                email=email, turned_on=turned_on, ID=1)
-            alertsSettings.save()
 
-        response = {'Message': 'Alerts Settings Updated Successfully.'}
+            data = request.query_params['data']
+            data = json.loads(data)
+            email = data['email']
+            turned_on = data['turned_on']
+
+            try:
+                AlertsSettings.objects.get(ID=1)
+                AlertsSettings.objects.filter(ID=1).update(email=email)
+                AlertsSettings.objects.filter(ID=1).update(turned_on=turned_on)
+            except:
+                alertsSettings = AlertsSettings(
+                    email=email, turned_on=turned_on, ID=1)
+                alertsSettings.save()
+
+            response = {'success': 'Alerts Settings Updated Successfully.'}
+        except:
+            response = {'error': 'Error while updating alerts settings'}
 
         return Response(response, status=status.HTTP_200_OK)
 
@@ -199,7 +203,7 @@ class UpdateSettingsViewSet(viewsets.ModelViewSet):
             response = {'EU': updateSettings.eu_last_update,
                         'B2MATCH': updateSettings.b2match_last_update}
         except:
-            response = {'EU': '', 'B2MATCH': ''}
+            response = {'EU': '', 'B2MATCH': '', 'error': 'Error while uploading updates settings'}
 
         return Response(response, status=status.HTTP_200_OK)
 
@@ -236,65 +240,68 @@ class CallViewSet(viewsets.ModelViewSet):
         :param request: HTTP request
         :return: HTTP Response
         """
-        response = {'Message': 'Please Turn Alerts ON!'}
         try:
-            alerts_settings = AlertsSettings.objects.all()[0]
+            response = {'success': 'Please Turn Alerts ON!'}
+            try:
+                alerts_settings = AlertsSettings.objects.all()[0]
+            except:
+                alerts_settings['turned_on'] = False
+            if not alerts_settings.turned_on:
+                return Response(response, status=status.HTTP_200_OK)
+            email = alerts_settings.email
+
+            print("*" * 50)
+            print("START BUILDING CONSORTIUM")
+            print("*" * 50)
+
+            # Call.objects.all().delete()
+            # CallTag.objects.all().delete()
+            # calls = get_proposal_calls()
+            #
+            # calls_to_send = []
+            #
+            # for call in calls:
+            #     call = has_consortium(call)
+            #     if call['hasConsortium']:
+            #         calls_to_send.append({'title': call['title']})
+            #         add_call_to_DB(call)
+
+            calls = Call.objects.all()
+            calls_to_send = []
+            for call in calls:
+                calls_to_send.append({'title': call.__dict__['title']})
+
+            body = MIMEMultipart('alternative')
+
+            calls = ''
+            for call in calls_to_send:
+                calls += '<li><b>' + call['title'] + '</b>.</li>'
+
+            signature = 'Sincerly,<br>Consortium Builder Alerts'
+            html = """\
+            <html>
+              <head><h3>You have new proposal calls that might interest you</h3></head>
+              <body>
+                <ol> 
+                {}
+                </ol>
+                <br>
+                <br>
+                {}
+              </body>
+            </html>
+            """.format(calls, signature)
+
+            content = MIMEText(html, 'html')
+            body.attach(content)
+            body['Subject'] = 'EU Proposal Calls Alert'
+            if len(calls_to_send) > 0:
+                send_mail(receiver_email=email, message=body)
+
+            response = {'success': 'Finished building consortium successfully!'}
         except:
-            alerts_settings['turned_on'] = False
-        if not alerts_settings.turned_on:
-            return Response(response, status=status.HTTP_200_OK)
-        email = alerts_settings.email
+            response = {'error': 'Error while building consortium.'}
 
-        print("*" * 50)
-        print("START BUILDING CONSORTIUM")
-        print("*" * 50)
-        response = {'Message': 'Error while building the consortium!'}
-
-        # Call.objects.all().delete()
-        # CallTag.objects.all().delete()
-        # calls = get_proposal_calls()
-        #
-        # calls_to_send = []
-        #
-        # for call in calls:
-        #     call = has_consortium(call)
-        #     if call['hasConsortium']:
-        #         calls_to_send.append({'title': call['title']})
-        #         add_call_to_DB(call)
-
-        calls = Call.objects.all()
-        calls_to_send = []
-        for call in calls:
-            calls_to_send.append({'title': call.__dict__['title']})
-
-        body = MIMEMultipart('alternative')
-
-        calls = ''
-        for call in calls_to_send:
-            calls += '<li><b>' + call['title'] + '</b>.</li>'
-
-        signature = 'Sincerly,<br>Consortium Builder Alerts'
-        html = """\
-        <html>
-          <head><h3>You have new proposal calls that might interest you</h3></head>
-          <body>
-            <ol> 
-            {}
-            </ol>
-            <br>
-            <br>
-            {}
-          </body>
-        </html>
-        """.format(calls, signature)
-
-        content = MIMEText(html, 'html')
-        body.attach(content)
-        body['Subject'] = 'EU Proposal Calls Alert'
-        if len(calls_to_send) > 0:
-            send_mail(receiver_email=email, message=body)
-
-        response = {'Message': 'Finished building consortium successfully!'}
         return Response(response, status=status.HTTP_200_OK)
 
     @action(detail=False, methods=['GET'])
@@ -304,7 +311,7 @@ class CallViewSet(viewsets.ModelViewSet):
         :param request: HTTP request
         :return: HTTP Response
         """
-        response = {'calls': ''}
+        response = {'calls': []}
         try:
             calls = Call.objects.all()
             res = []
@@ -315,7 +322,7 @@ class CallViewSet(viewsets.ModelViewSet):
                             'sumbissionProcedure': call.sumbissionProcedure})
             response['calls'] = res
         except:
-            response = {'Message': 'Error while uploading calls!', 'calls': []}
+            response = {'error': 'Error while uploading consortium calls', 'calls': []}
 
         return Response(response, status=status.HTTP_200_OK)
 
@@ -326,10 +333,10 @@ class CallViewSet(viewsets.ModelViewSet):
         :param request: HTTP request
         :return: HTTP Response
         """
-        data = request.query_params['data']
-        data = json.loads(data)
-        id = int(data['ccm2Id'])
         try:
+            data = request.query_params['data']
+            data = json.loads(data)
+            id = int(data['ccm2Id'])
             call = Call.objects.get(ccm2Id=id)
             tags = CallTag.objects.filter(calls=call)
             tagsList = []
@@ -347,7 +354,7 @@ class CallViewSet(viewsets.ModelViewSet):
 
             response = {'EU': EU}
         except:
-            response = {'EU': [], 'Message': 'Error while uploading organizations!'}
+            response = {'EU': [], 'error': 'Error while uploading organizations.'}
 
         return Response(response, status=status.HTTP_200_OK)
 
@@ -375,69 +382,28 @@ class EventViewSet(viewsets.ModelViewSet):
         """
                 method to define API to iimport all the events from B2MATCH and save it to the local DB
         """
-        all_event_b2match = "https://events.b2match.com/?all=true"
-        b2match = "https://events.b2match.com"
-        all_events_page = requests.get(all_event_b2match)
-        all_events_soup = BeautifulSoup(all_events_page.content, 'html.parser')
-        itemes = all_events_soup.find_all(class_="last next")
-        all_events_last_page = itemes[0].find("a")['href']
-        all_events = all_events_soup.find_all(
-            class_="event-card-wrapper col-sm-6 col-md-4")
 
-        for item in all_events:
-            try:
-                url = b2match + item.find("a")['href']
-            except:
-                pass
-            try:
-                event_title = item.find(class_="event-card-title").get_text()
-            except:
-                pass
-            try:
-                event_date_ = item.find(class_="event-card-date").get_text()
-                event_date_ = event_date_.upper()
-                dt = re.findall(
-                    "((([0-9]{2})| ([0-9]{1}))\ (\w+)\,\ [0-9]{4})", event_date_)
-
-            except:
-                pass
-
-            event_date = datetime.datetime.strptime(dt[0][0], '%d %B, %Y')
-
-            url = get_the_participent_urls(url)
-            upComing = False
-            CurrentDate = datetime.datetime.now()
-            if CurrentDate < event_date:
-                upComing = True
-
-            event = Event(event_name=event_title, event_url=url,
-                          event_date=event_date, is_upcoming=upComing)
-            event.save()
-
-        curr_page = "/?all=true&page="
-        i = 2
-        while 1:
-            all_events_page = requests.get(b2match + curr_page + str(i))
-            all_events_soup = BeautifulSoup(
-                all_events_page.content, 'html.parser')
+        try:
+            all_event_b2match = "https://events.b2match.com/?all=true"
+            b2match = "https://events.b2match.com"
+            all_events_page = requests.get(all_event_b2match)
+            all_events_soup = BeautifulSoup(all_events_page.content, 'html.parser')
+            itemes = all_events_soup.find_all(class_="last next")
+            all_events_last_page = itemes[0].find("a")['href']
             all_events = all_events_soup.find_all(
                 class_="event-card-wrapper col-sm-6 col-md-4")
+
             for item in all_events:
                 try:
                     url = b2match + item.find("a")['href']
                 except:
                     pass
                 try:
-                    event_title = item.find(
-                        class_="event-card-title").get_text()
+                    event_title = item.find(class_="event-card-title").get_text()
                 except:
                     pass
-
-                # newEvent = B2match_event(url,date,event_title,event_location,event_text)
-                # all_events_list.append(newEvent)
                 try:
-                    event_date_ = item.find(
-                        class_="event-card-date").get_text()
+                    event_date_ = item.find(class_="event-card-date").get_text()
                     event_date_ = event_date_.upper()
                     dt = re.findall(
                         "((([0-9]{2})| ([0-9]{1}))\ (\w+)\,\ [0-9]{4})", event_date_)
@@ -446,30 +412,76 @@ class EventViewSet(viewsets.ModelViewSet):
                     pass
 
                 event_date = datetime.datetime.strptime(dt[0][0], '%d %B, %Y')
-                try:
-                    url = get_the_participent_urls(url)
-                    upComing = False
-                    CurrentDate = datetime.datetime.now()
-                    if CurrentDate < event_date:
-                        upComing = True
 
-                    event = Event(event_name=event_title, event_url=url,
-                                  event_date=event_date, is_upcoming=upComing)
-                    event.save()
-                except:
-                    pass
+                url = get_the_participent_urls(url)
+                upComing = False
+                CurrentDate = datetime.datetime.now()
+                if CurrentDate < event_date:
+                    upComing = True
 
-                # all_events_list.append({"naem": event_title, "date": date, "location": event_location, "url": url, "event_text": event_text})
+                event = Event(event_name=event_title, event_url=url,
+                              event_date=event_date, is_upcoming=upComing)
+                event.save()
 
-            if (curr_page + str(i) == all_events_last_page):
-                break
+            curr_page = "/?all=true&page="
+            i = 2
+            while 1:
+                all_events_page = requests.get(b2match + curr_page + str(i))
+                all_events_soup = BeautifulSoup(
+                    all_events_page.content, 'html.parser')
+                all_events = all_events_soup.find_all(
+                    class_="event-card-wrapper col-sm-6 col-md-4")
+                for item in all_events:
+                    try:
+                        url = b2match + item.find("a")['href']
+                    except:
+                        pass
+                    try:
+                        event_title = item.find(
+                            class_="event-card-title").get_text()
+                    except:
+                        pass
 
-            i += 1
-        res = Event.objects.all()
-        response = []
-        for val in res:
-            response.append({'event_name': val.event_name,
-                             'event_url': val.event_url})
+                    # newEvent = B2match_event(url,date,event_title,event_location,event_text)
+                    # all_events_list.append(newEvent)
+                    try:
+                        event_date_ = item.find(
+                            class_="event-card-date").get_text()
+                        event_date_ = event_date_.upper()
+                        dt = re.findall(
+                            "((([0-9]{2})| ([0-9]{1}))\ (\w+)\,\ [0-9]{4})", event_date_)
+
+                    except:
+                        pass
+
+                    event_date = datetime.datetime.strptime(dt[0][0], '%d %B, %Y')
+                    try:
+                        url = get_the_participent_urls(url)
+                        upComing = False
+                        CurrentDate = datetime.datetime.now()
+                        if CurrentDate < event_date:
+                            upComing = True
+
+                        event = Event(event_name=event_title, event_url=url,
+                                      event_date=event_date, is_upcoming=upComing)
+                        event.save()
+                    except:
+                        pass
+
+                    # all_events_list.append({"naem": event_title, "date": date, "location": event_location, "url": url, "event_text": event_text})
+
+                if (curr_page + str(i) == all_events_last_page):
+                    break
+
+                i += 1
+            res = Event.objects.all()
+            response = []
+            for val in res:
+                response.append({'event_name': val.event_name,
+                                 'event_url': val.event_url})
+        except:
+            response = {'error': 'Error while adding events.'}
+
         return Response(response, status=status.HTTP_200_OK)
 
     @action(detail=False, methods=['POST'])
@@ -479,133 +491,135 @@ class EventViewSet(viewsets.ModelViewSet):
         """
         print("updating....")
 
-        newEvents = []
-        upcoming_event_b2match = "https://events.b2match.com"
-        b2match = "https://events.b2match.com"
-        upcoming_events_page = requests.get(upcoming_event_b2match)
-        upcoming_events_soup = BeautifulSoup(
-            upcoming_events_page.content, 'html.parser')
-        itemes = upcoming_events_soup.find_all(class_="last next")
-        upcoming_events_last_page = itemes[0].find("a")['href']
-        upcoming_events = upcoming_events_soup.find_all(
-            class_="event-card-wrapper col-sm-6 col-md-4")
-
-        for item in upcoming_events:
-            try:
-                url = b2match + item.find("a")['href']
-            except:
-                pass
-            try:
-                event_title = item.find(class_="event-card-title").get_text()
-            except:
-                pass
-            try:
-                event_date_ = item.find(class_="event-card-date").get_text()
-                event_date_ = event_date_.upper()
-                dt = re.findall(
-                    "((([0-9]{2})| ([0-9]{1}))\ (\w+)\,\ [0-9]{4})", event_date_)
-            except:
-                pass
-
-            event_date = datetime.datetime.strptime(dt[0][0], '%d %B, %Y')
-
-            url = get_the_participent_urls(url)
-            upComing = False
-            CurrentDate = datetime.datetime.now()
-            if CurrentDate < event_date:
-                upComing = True
-
-            event = Event(event_name=event_title, event_url=url,
-                          event_date=event_date, is_upcoming=upComing)
-            newEvents.append(event)
-
-        curr_page = "/?page="
-        i = 2
-        while 1:
-            upcoming_events_page = requests.get(b2match + curr_page + str(i))
+        try:
+            newEvents = []
+            upcoming_event_b2match = "https://events.b2match.com"
+            b2match = "https://events.b2match.com"
+            upcoming_events_page = requests.get(upcoming_event_b2match)
             upcoming_events_soup = BeautifulSoup(
                 upcoming_events_page.content, 'html.parser')
+            itemes = upcoming_events_soup.find_all(class_="last next")
+            upcoming_events_last_page = itemes[0].find("a")['href']
             upcoming_events = upcoming_events_soup.find_all(
                 class_="event-card-wrapper col-sm-6 col-md-4")
+
             for item in upcoming_events:
                 try:
                     url = b2match + item.find("a")['href']
                 except:
                     pass
                 try:
-                    event_title = item.find(
-                        class_="event-card-title").get_text()
+                    event_title = item.find(class_="event-card-title").get_text()
                 except:
                     pass
-
-                # newEvent = B2match_event(url,date,event_title,event_location,event_text)
-                # all_events_list.append(newEvent)
                 try:
-                    event_date_ = item.find(
-                        class_="event-card-date").get_text()
+                    event_date_ = item.find(class_="event-card-date").get_text()
                     event_date_ = event_date_.upper()
                     dt = re.findall(
                         "((([0-9]{2})| ([0-9]{1}))\ (\w+)\,\ [0-9]{4})", event_date_)
-
                 except:
                     pass
 
                 event_date = datetime.datetime.strptime(dt[0][0], '%d %B, %Y')
+
+                url = get_the_participent_urls(url)
+                upComing = False
+                CurrentDate = datetime.datetime.now()
+                if CurrentDate < event_date:
+                    upComing = True
+
+                event = Event(event_name=event_title, event_url=url,
+                              event_date=event_date, is_upcoming=upComing)
+                newEvents.append(event)
+
+            curr_page = "/?page="
+            i = 2
+            while 1:
+                upcoming_events_page = requests.get(b2match + curr_page + str(i))
+                upcoming_events_soup = BeautifulSoup(
+                    upcoming_events_page.content, 'html.parser')
+                upcoming_events = upcoming_events_soup.find_all(
+                    class_="event-card-wrapper col-sm-6 col-md-4")
+                for item in upcoming_events:
+                    try:
+                        url = b2match + item.find("a")['href']
+                    except:
+                        pass
+                    try:
+                        event_title = item.find(
+                            class_="event-card-title").get_text()
+                    except:
+                        pass
+
+                    # newEvent = B2match_event(url,date,event_title,event_location,event_text)
+                    # all_events_list.append(newEvent)
+                    try:
+                        event_date_ = item.find(
+                            class_="event-card-date").get_text()
+                        event_date_ = event_date_.upper()
+                        dt = re.findall(
+                            "((([0-9]{2})| ([0-9]{1}))\ (\w+)\,\ [0-9]{4})", event_date_)
+
+                    except:
+                        pass
+
+                    event_date = datetime.datetime.strptime(dt[0][0], '%d %B, %Y')
+                    try:
+                        url = get_the_participent_urls(url)
+                        upComing = False
+                        CurrentDate = datetime.datetime.now()
+                        if CurrentDate < event_date:
+                            upComing = True
+                        event = Event(event_name=event_title, event_url=url,
+                                      event_date=event_date, is_upcoming=upComing)
+                        newEvents.append(event)
+                    except:
+                        pass
+
+                if (curr_page + str(i) == upcoming_events_last_page):
+                    break
+                print("\t\ti =", i)
+
+                i += 1
+            myEvents = list(Event.objects.filter(is_upcoming=True))
+
+            toupdate = []
+            eventNoLongerUpcoming = []
+            newEvents2 = []
+            for e in newEvents:
+                newEvents2.append(e.event_name)
+
+            for event in myEvents:
+                if event.event_name not in newEvents2:
+                    eventNoLongerUpcoming.append(event)
+                else:
+                    toupdate.append(event)
+
+            changeEventStatus(eventNoLongerUpcoming)
+
+            deleteEventsTree(toupdate)
+
+            for e in toupdate:
+                e.delete()
+
+            for e in newEvents:
                 try:
-                    url = get_the_participent_urls(url)
-                    upComing = False
-                    CurrentDate = datetime.datetime.now()
-                    if CurrentDate < event_date:
-                        upComing = True
-                    event = Event(event_name=event_title, event_url=url,
-                                  event_date=event_date, is_upcoming=upComing)
-                    newEvents.append(event)
+                    e.save()
                 except:
-                    pass
+                    print(e.event_name, "NAME EVENT")
+                # e.save()
 
-            if (curr_page + str(i) == upcoming_events_last_page):
-                break
-            print("\t\ti =", i)
-
-            i += 1
-        myEvents = list(Event.objects.filter(is_upcoming=True))
-
-        toupdate = []
-        eventNoLongerUpcoming = []
-        newEvents2 = []
-        for e in newEvents:
-            newEvents2.append(e.event_name)
-
-        for event in myEvents:
-            if event.event_name not in newEvents2:
-                eventNoLongerUpcoming.append(event)
-            else:
-                toupdate.append(event)
-
-        changeEventStatus(eventNoLongerUpcoming)
+            add_Participants_from_Upcoming_Event()
+            # delete old index and replace with new one
+            deleteOldIndexAndReplace()
+            if not setUpdateSettings(b2matchDate=time.mktime(datetime.datetime.now().timetuple())):
+                raise
+            response = {'success': 'B2MATCH repository updated successfully'}
+        except:
+            response = {'error': 'Error while updating B2match repository.'}
 
 
-        deleteEventsTree(toupdate)
-
-
-        for e in toupdate:
-            e.delete()
-
-
-        for e in newEvents:
-            try:
-                e.save()
-            except:
-                print(e.event_name, "NAME EVENT")
-            # e.save()
-
-        add_Participants_from_Upcoming_Event()
-        # delete old index and replace with new one
-        deleteOldIndexAndReplace()
-
-        setUpdateSettings(b2matchDate=time.mktime(datetime.datetime.now().timetuple()))
-
-        return Response([{'message': 'done, B2MATCH Reposutory updated'}], status=status.HTTP_200_OK)
+        return Response(response, status=status.HTTP_200_OK)
 
 
 class ParticipantsViewSet(viewsets.ModelViewSet):
@@ -620,78 +634,81 @@ class ParticipantsViewSet(viewsets.ModelViewSet):
         """
                 method to define API to import all the participants from the events we have in our DB and save them to the local DB
         """
-        events = Event.objects.all()
-        for event in events:
+        try:
+            events = Event.objects.all()
+            for event in events:
 
-            try:
-                url_arr = getParticipentFromUrl(
-                    event.event_url + "/participants")
-            except:
-                continue
-            for item in url_arr:
                 try:
-                    part_temp = getParticipentDATA(item)
+                    url_arr = getParticipentFromUrl(
+                        event.event_url + "/participants")
                 except:
                     continue
-                location = Location(location=part_temp[3])
-                location.save()
-                try:
-                    participant = Participants(participant_name=part_temp[0], participant_img_url=part_temp[1],
-                                               organization_name=part_temp[2], org_type=part_temp[4],
-                                               org_url=part_temp[5],
-                                               org_icon_url=part_temp[6], description=part_temp[8], location=location)
-
-                    participant.save()
-                    event.event_part.add(participant)
-                except:
-                    continue
-
-                for i in part_temp[7]:
+                for item in url_arr:
                     try:
-                        currTag = TagP.objects.get(tag=i)
-                        currTag.participant.add(participant)
+                        part_temp = getParticipentDATA(item)
                     except:
-                        currTag = TagP(tag=i)
-                        currTag.save()
-                        currTag.participant.add(participant)
-                if not event.is_upcoming:
+                        continue
+                    location = Location(location=part_temp[3])
+                    location.save()
                     try:
-                        # this is the path for the index
-                        # index = load_index(
-                        #     '/Users/mahmoodnael/PycharmProjects/PartnerFinderApril/Backend/src/B2MATCH_Index')
-                        index = load_index('B2MATCH_Index')
-                        print("index loaded......")
+                        participant = Participants(participant_name=part_temp[0], participant_img_url=part_temp[1],
+                                                   organization_name=part_temp[2], org_type=part_temp[4],
+                                                   org_url=part_temp[5],
+                                                   org_icon_url=part_temp[6], description=part_temp[8], location=location)
+
+                        participant.save()
+                        event.event_part.add(participant)
                     except:
-                        index = None
+                        continue
 
-                    if index is None:
-                        # this is the path for the index
-                        # index = build_index(
-                        #     '/Users/mahmoodnael/PycharmProjects/PartnerFinderApril/Backend/src/B2MATCH_Index')
-                        index = build_index('B2MATCH_Index')
-                        print("index built....")
+                    for i in part_temp[7]:
+                        try:
+                            currTag = TagP.objects.get(tag=i)
+                            currTag.participant.add(participant)
+                        except:
+                            currTag = TagP(tag=i)
+                            currTag.save()
+                            currTag.participant.add(participant)
+                    if not event.is_upcoming:
+                        try:
+                            # this is the path for the index
+                            # index = load_index(
+                            #     '/Users/mahmoodnael/PycharmProjects/PartnerFinderApril/Backend/src/B2MATCH_Index')
+                            index = load_index('B2MATCH_Index')
+                            print("index loaded......")
+                        except:
+                            index = None
 
-                    index = add_par_to_index(
-                        index, participant, part_temp[7], False)
-                elif event.is_upcoming:
-                    try:
-                        # this is the path for the index
+                        if index is None:
+                            # this is the path for the index
+                            # index = build_index(
+                            #     '/Users/mahmoodnael/PycharmProjects/PartnerFinderApril/Backend/src/B2MATCH_Index')
+                            index = build_index('B2MATCH_Index')
+                            print("index built....")
 
-                        # index = load_index('/Users/mahmoodnael/PycharmProjects/PartnerFinderApril/Backend/src/B2MATCH_upcoming_Index')
-                        index = load_index('B2MATCH_upcoming_Index')
-                        print("upcoming index loaded......")
-                    except:
-                        index = None
+                        index = add_par_to_index(
+                            index, participant, part_temp[7], False)
+                    elif event.is_upcoming:
+                        try:
+                            # this is the path for the index
 
-                    if index is None:
-                        # this is the path for the index
-                        # index = build_index('/Users/mahmoodnael/PycharmProjects/PartnerFinderApril/Backend/src/B2MATCH_upcoming_Index')
-                        index = build_index('B2MATCH_upcoming_Index')
-                        print("upcoming index built....")
+                            # index = load_index('/Users/mahmoodnael/PycharmProjects/PartnerFinderApril/Backend/src/B2MATCH_upcoming_Index')
+                            index = load_index('B2MATCH_upcoming_Index')
+                            print("upcoming index loaded......")
+                        except:
+                            index = None
 
-                    index = add_par_to_index(
-                        index, participant, part_temp[7], True)
+                        if index is None:
+                            # this is the path for the index
+                            # index = build_index('/Users/mahmoodnael/PycharmProjects/PartnerFinderApril/Backend/src/B2MATCH_upcoming_Index')
+                            index = build_index('B2MATCH_upcoming_Index')
+                            print("upcoming index built....")
 
+                        index = add_par_to_index(
+                            index, participant, part_temp[7], True)
+            response = {'success': 'Adding participant successfully.'}
+        except:
+            response = {'error': 'Error while adding participant'}
         return Response({'message': 'done see DataBase'}, status=status.HTTP_200_OK)
 
 
@@ -712,48 +729,53 @@ class ScoresViewSet(viewsets.ModelViewSet):
         :param request: scores from user about RES, countries and orgs type
         :return: the updated scores
         """
-        data = request.query_params['data']
-        data = json.loads(data)
-
         try:
-            scores = Scores.objects.all()[0]
-            scores.RES = data['RES']
-            scores.Italy = data['Italy']
-            scores.France = data['France']
-            scores.Austria = data['Austria']
-            scores.Germany = data['Germany']
-            scores.Denmark = data['Denmark']
-            scores.Czech_Republic = data['Czech_Republic']
-            scores.Finland = data['Finland']
-            scores.Ireland = data['Ireland']
-            scores.Israel = data['Israel']
-            scores.Portugal = data['Portugal']
-            scores.Ukranie = data['Ukranie']
-            scores.United_Kingdom = data['United_Kingdom']
-            scores.Turkey = data['Turkey']
-            scores.Switzerland = data['Switzerland']
-            scores.Spain = data['Spain']
-            scores.Norway = data['Norway']
-            scores.Association_Agency = data['Association_Agency']
-            scores.University = data['University']
-            scores.R_D_Institution = data['R_D_Institution']
-            scores.Start_Up = data['Start_Up']
-            scores.Others = data['Others']
+            data = request.query_params['data']
+            data = json.loads(data)
+            try:
+                scores = Scores.objects.all()[0]
+                scores.RES = data['RES']
+                scores.Italy = data['Italy']
+                scores.France = data['France']
+                scores.Austria = data['Austria']
+                scores.Germany = data['Germany']
+                scores.Denmark = data['Denmark']
+                scores.Czech_Republic = data['Czech_Republic']
+                scores.Finland = data['Finland']
+                scores.Ireland = data['Ireland']
+                scores.Israel = data['Israel']
+                scores.Portugal = data['Portugal']
+                scores.Ukranie = data['Ukranie']
+                scores.United_Kingdom = data['United_Kingdom']
+                scores.Turkey = data['Turkey']
+                scores.Switzerland = data['Switzerland']
+                scores.Spain = data['Spain']
+                scores.Norway = data['Norway']
+                scores.Association_Agency = data['Association_Agency']
+                scores.University = data['University']
+                scores.R_D_Institution = data['R_D_Institution']
+                scores.Start_Up = data['Start_Up']
+                scores.Others = data['Others']
 
+            except:
+                scores = Scores(RES=data['RES'],
+                                Italy=data['Italy'], France=data['France'], Austria=data['Austria'],
+                                Germany=data['Germany'],
+                                Denmark=data['Denmark'], Czech_Republic=data['Czech_Republic'], Finland=data['Finland'],
+                                Ireland=data['Ireland'], Israel=data['Israel'], Portugal=data['Portugal'],
+                                Ukranie=data['Ukranie'], United_Kingdom=data['United_Kingdom'], Turkey=data['Turkey'],
+                                Switzerland=data['Switzerland'], Spain=data['Spain'], Norway=data['Norway'],
+                                Association_Agency=data['Association_Agency'], University=data['University'],
+                                R_D_Institution=data['R_D_Institution'], Start_Up=data['Start_Up'],
+                                Others=data['Others']
+                                )
+            scores.save()
+            response = {'success': 'Scores updated successfully.' }
         except:
-            scores = Scores(RES=data['RES'],
-                            Italy=data['Italy'], France=data['France'], Austria=data['Austria'],
-                            Germany=data['Germany'],
-                            Denmark=data['Denmark'], Czech_Republic=data['Czech_Republic'], Finland=data['Finland'],
-                            Ireland=data['Ireland'], Israel=data['Israel'], Portugal=data['Portugal'],
-                            Ukranie=data['Ukranie'], United_Kingdom=data['United_Kingdom'], Turkey=data['Turkey'],
-                            Switzerland=data['Switzerland'], Spain=data['Spain'], Norway=data['Norway'],
-                            Association_Agency=data['Association_Agency'], University=data['University'],
-                            R_D_Institution=data['R_D_Institution'], Start_Up=data['Start_Up'], Others=data['Others']
-                            )
-        scores.save()
+            response = {'error': 'Error while updating scores.'}
 
-        return Response({"Message": 'Scores Updated Successfully!'}, status=status.HTTP_200_OK)
+
+        return Response(response, status=status.HTTP_200_OK)
 
     @action(detail=False, methods=['GET'])
     def getscores(self, request):
@@ -762,8 +784,13 @@ class ScoresViewSet(viewsets.ModelViewSet):
         :param request:
         :return:
         """
-        scores = Scores.objects.all()[0]
-        return Response(ScoresSerializer(scores).data, status=status.HTTP_200_OK)
+        try:
+            scores = Scores.objects.all()[0]
+            response = ScoresSerializer(scores).data
+        except:
+            response = {'error': 'Error while uploading scores.'}
+
+        return Response(response, status=status.HTTP_200_OK)
 
 
 class AlertsB2match(viewsets.ModelViewSet):
@@ -780,50 +807,54 @@ class AlertsB2match(viewsets.ModelViewSet):
         :param request:
         :return:
         """
-        events = Event.objects.filter(is_upcoming=True)
-        myEvents = []
-        for event in events:
-            parts = event.event_part.all()
-            count = len(parts)
-            if count < 50:
-                continue
-            else:
-                eventScore = getScoreForEvent(parts)
-                myEvents.append((event, eventScore))
-                print(event.event_name, event.event_url, eventScore)
-                updateAlertsEvents(myEvents)
+        try:
+            events = Event.objects.filter(is_upcoming=True)
+            myEvents = []
+            for event in events:
+                parts = event.event_part.all()
+                count = len(parts)
+                if count < 50:
+                    continue
+                else:
+                    eventScore = getScoreForEvent(parts)
+                    myEvents.append((event, eventScore))
+                    print(event.event_name, event.event_url, eventScore)
+                    updateAlertsEvents(myEvents)
 
-        myEvents.sort(key=operator.itemgetter(1), reverse=True)
-        print(myEvents)
-        alerts_settings = AlertsSettings.objects.all()[0]
-        email = alerts_settings.email
-        body = MIMEMultipart('alternative')
-        ms = ''
-        for ev in myEvents:
-            ms += '<li><b>' + ev[0].event_name + '</b><a href="' + ev[0].event_url + '">' + ev[
-                0].event_url + '</a></li>'
+            myEvents.sort(key=operator.itemgetter(1), reverse=True)
+            print(myEvents)
+            alerts_settings = AlertsSettings.objects.all()[0]
+            email = alerts_settings.email
+            body = MIMEMultipart('alternative')
+            ms = ''
+            for ev in myEvents:
+                ms += '<li><b>' + ev[0].event_name + '</b><a href="' + ev[0].event_url + '">' + ev[
+                    0].event_url + '</a></li>'
 
-        signature = 'Sincerly,<br>B2MATCH Event Alerts'
-        html = """\
-                <html>
-                  <head><h3>You have new proposal calls that might interest you</h3></head>
-                  <body>
-                    <ol> 
-                    {}
-                    </ol>
-                    <br>
-                    <br>
-                    {}
-                  </body>
-                </html>
-                """.format(ms, signature)
+            signature = 'Sincerly,<br>B2MATCH Event Alerts'
+            html = """\
+                    <html>
+                      <head><h3>You have new events that might interest you</h3></head>
+                      <body>
+                        <ol> 
+                        {}
+                        </ol>
+                        <br>
+                        <br>
+                        {}
+                      </body>
+                    </html>
+                    """.format(ms, signature)
 
-        response = {'Message': 'Finished building consortium successfully!'}
+            response = {'success': 'Finished building recommended events successfully.'}
 
-        content = MIMEText(html, 'html')
-        body.attach(content)
-        body['Subject'] = 'B2MATCH Events Alert'
-        send_mail(receiver_email=email, message=body)
+            content = MIMEText(html, 'html')
+            body.attach(content)
+            body['Subject'] = 'B2MATCH Events Alert'
+            send_mail(receiver_email=email, message=body)
+        except:
+            response = {'error': 'Error while building recommended events.'}
+
         return Response(response, status=status.HTTP_200_OK)
 
     @action(detail=False, methods=['GET'])
@@ -833,21 +864,29 @@ class AlertsB2match(viewsets.ModelViewSet):
         :param request:
         :return:
         """
-        events = EventsForAlerts.objects.all()
-        myEvents = sorted(events, key=lambda x: x.event_score, reverse=True)
-        # myEvents.sort(key=event_score, reverse=True)
-        response = []
-        for event in myEvents:
-            response.append({'event_name': event.event_name, 'event_url': event.event_url})
+        try:
+            events = EventsForAlerts.objects.all()
+            myEvents = sorted(events, key=lambda x: x.event_score, reverse=True)
+            # myEvents.sort(key=event_score, reverse=True)
+            response = []
+            for event in myEvents:
+                response.append({'event_name': event.event_name, 'event_url': event.event_url})
+        except:
+            response = {'error': 'Error while uploading recommended events.'}
+
         return Response(response, status=status.HTTP_200_OK)
 
 
 def setUpdateSettings(euDate=None, b2matchDate=None):
     """
-    method to define API to update the update settings.
-    :param request: HTTP request with update times
-    :return: HTTP response
+    method to update the update settings.
+    :param euDate: EU last update
+    :param b2matchDate: B2match last update
+    :return: True/False
     """
+
+    if not b2matchDate and not euDate:
+        return False
 
     if euDate:
         euDate = int(euDate)
@@ -865,3 +904,5 @@ def setUpdateSettings(euDate=None, b2matchDate=None):
         updateSettings = UpdateSettings(
             eu_last_update=euDate, b2match_last_update=b2matchDate, ID=1)
         updateSettings.save()
+
+    return True

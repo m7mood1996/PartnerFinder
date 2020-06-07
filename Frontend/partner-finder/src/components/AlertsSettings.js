@@ -119,6 +119,7 @@ function AlertsSettings(props) {
   const hideAlerts = () => {
     setState({ ...state, 'events': [], 'calls': [] })
   }
+
   const getCalls = () => {
     setState({ ...state, loading: true });
     let url = new URL("http://127.0.0.1:8000/api/calls/get_calls/");
@@ -127,7 +128,14 @@ function AlertsSettings(props) {
     })
       .then((res) => res.json())
       .then((resp) => {
-        if ("calls" in resp && resp.calls.length !== 0) {
+        if ('error' in resp) {
+          setMsgState({
+            title: 'Error',
+            body: 'Error while getting organizations',
+            visible: true
+          });
+          setState({ ...state, loading: false, 'calls': [] });
+        } else {
           let calls = resp["calls"].map((call) => {
             call["deadlineDate"] = moment
               .unix(call.deadlineDate)
@@ -141,9 +149,18 @@ function AlertsSettings(props) {
           })
             .then((res) => res.json())
             .then((resp) => {
-              console.log("state is " + state.loading);
-              // setState({ ...state, loading: false });
-              setState({ ...state, calls, 'events': resp })
+              if ('error' in resp) {
+                setMsgState({
+                  title: 'Error',
+                  body: 'Error while getting organizations',
+                  visible: true
+                });
+                setState({ ...state, loading: false, 'events': [] });
+              }
+              else {
+                setState({ ...state, loading: false });
+                setState({ ...state, calls, 'events': resp })
+              }
             })
             .catch((error) => {
               setMsgState({
@@ -153,12 +170,6 @@ function AlertsSettings(props) {
               });
               setState({ ...state, 'events': [] })
             });
-        } else {
-          setMsgState({
-            title: 'Error',
-            body: 'Error while getting organizations',
-            visible: true
-          });
         }
       })
       .catch((error) => {
@@ -167,6 +178,7 @@ function AlertsSettings(props) {
           body: 'Error while getting organizations',
           visible: true
         });
+        setState({ ...state, loading: false, 'calls': [] });
       });
   };
 
@@ -249,64 +261,82 @@ function AlertsSettings(props) {
       })
         .then((res) => res.json())
         .then((resp) => {
-          console.log("UPDATE SETTINGS", resp);
-          props.setState({
-            ...props.state,
-            email: state.email,
-            turned_on: turned_on,
-          });
-          url = new URL("http://127.0.0.1:8000/api/scores/updatescores/");
-          let data = {
-            RES: state.resScore,
-            Italy: state.italy,
-            France: state.france,
-            Austria: state.austria,
-            Germany: state.germany,
-            Denmark: state.denmark,
-            Czech_Republic: state.czech,
-            Finland: state.finland,
-            Ireland: state.ireland,
-            Israel: state.israel,
-            Portugal: state.portugal,
-            Ukranie: state.ukranie,
-            United_Kingdom: state.uk,
-            Turkey: state.turkey,
-            Switzerland: state.switzerland,
-            Spain: state.spain,
-            Norway: state.norway,
-            Association_Agency: state.agency,
-            University: state.uni,
-            Company: state.company,
-            R_D_Institution: state.RD,
-            Start_Up: state.start,
-            Others: state.oth,
-          };
-          params = { data: JSON.stringify(data) };
-          Object.keys(params).forEach((key) =>
-            url.searchParams.append(key, params[key])
-          );
-          fetch(url, {
-            method: "POST",
-          })
-            .then((res) => res.json())
-            .then((resp) => {
-              props.setState({ ...props.state, ...state });
-              setState({ ...state, loading: false });
-              setMsgState({
-                title: 'Success',
-                body: 'Alerts settings has been updated successfully',
-                visible: true
-              });
-
+          if ('error' in resp) {
+            setMsgState({
+              title: 'Error',
+              body: 'Error while updating alerts settings',
+              visible: true
             })
-            .catch((error) => {
-              setMsgState({
-                title: 'Error',
-                body: 'Error while updating alerts settings',
-                visible: true
-              })
-              setState({ ...state, loading: false });
+            setState({ ...state, loading: false });
+          }
+          else {
+            props.setState({
+              ...props.state,
+              email: state.email,
+              turned_on: turned_on,
             });
+            url = new URL("http://127.0.0.1:8000/api/scores/updatescores/");
+            let data = {
+              RES: state.resScore,
+              Italy: state.italy,
+              France: state.france,
+              Austria: state.austria,
+              Germany: state.germany,
+              Denmark: state.denmark,
+              Czech_Republic: state.czech,
+              Finland: state.finland,
+              Ireland: state.ireland,
+              Israel: state.israel,
+              Portugal: state.portugal,
+              Ukranie: state.ukranie,
+              United_Kingdom: state.uk,
+              Turkey: state.turkey,
+              Switzerland: state.switzerland,
+              Spain: state.spain,
+              Norway: state.norway,
+              Association_Agency: state.agency,
+              University: state.uni,
+              Company: state.company,
+              R_D_Institution: state.RD,
+              Start_Up: state.start,
+              Others: state.oth,
+            };
+            params = { data: JSON.stringify(data) };
+            Object.keys(params).forEach((key) =>
+              url.searchParams.append(key, params[key])
+            );
+            fetch(url, {
+              method: "POST",
+            })
+              .then((res) => res.json())
+              .then((resp) => {
+                if ('error' in resp) {
+                  setMsgState({
+                    title: 'Error',
+                    body: 'Error while updating alerts settings',
+                    visible: true
+                  })
+                  setState({ ...state, loading: false });
+                }
+                else {
+                  props.setState({ ...props.state, ...state });
+                  setState({ ...state, loading: false });
+                  setMsgState({
+                    title: 'Success',
+                    body: 'Alerts settings has been updated successfully',
+                    visible: true
+                  });
+                }
+              })
+              .catch((error) => {
+                setMsgState({
+                  title: 'Error',
+                  body: 'Error while updating alerts settings',
+                  visible: true
+                })
+                setState({ ...state, loading: false });
+              });
+          }
         })
         .catch((error) => {
           setMsgState({

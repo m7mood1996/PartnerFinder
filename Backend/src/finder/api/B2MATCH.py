@@ -429,7 +429,7 @@ def getParticipantsByTags(tags):
 
 def getB2MatchParByCountry(countries):
     """
-    function to get all Participants that locates in one of the countries list.
+    function to get all Participants that locates in one of the countries list
     :param countries:  list of countries
     :return: list of participants
     """

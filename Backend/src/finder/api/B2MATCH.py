@@ -19,7 +19,7 @@ def deleteEventsTree(toupdate):
         currEvent = Event.objects.get(event_name=event.event_name)
         # get all the participant from each Event
 
-        participants = list(currEvent.event_part.all())
+        participants = currEvent.event_part.all()
         for part in participants:
             tags = part.tagsAndKeywordsP.all()
             for tag in tags:
@@ -57,7 +57,7 @@ def getTagsForPart(part):
     :return: list of tags
     """
     myTags = []
-    tags = TagP.objects.filter(participants=part).tag
+    tags = TagP.objects.filter(participant=part)
     for tagp in tags:
         myTags.append(tagp.tag)
     return myTags
@@ -69,14 +69,19 @@ def addEventsParToMainIndex(event):
     :param event:
     :return:
     """
-    partsipants = event.event_part
-
-    # index = load_index('/Users/mahmoodnael/PycharmProjects/PartnerFinderApril/Backend/src/B2MATCH_Index')
+    partsipants = event.event_part.all()
+    if partsipants is None:
+        return
     index = load_index('B2MATCH_Index')
+
     for part in partsipants:
         tags = getTagsForPart(part)
         des = get_document_from_par(part, tags)
-        index = add_par_to_index(index, part, des, False)
+        try:
+            index = add_par_to_index(index, part, des, False)
+        except:
+            continue
+
 
 
 def changeEventStatus(eventNoLongerUpcoming):
@@ -138,7 +143,7 @@ def add_Participants_from_Upcoming_Event():
                 # this is the path for the index
 
                 # index = load_index('/Users/mahmoodnael/PycharmProjects/PartnerFinderApril/Backend/src/B2MATCH_upcoming_Index')
-                index = load_index('B2MATCH_upcoming_Index')
+                index = load_index('B2MATCH_upcoming_Index_temp')
 
                 print("upcoming index loaded......")
             except:
@@ -147,7 +152,7 @@ def add_Participants_from_Upcoming_Event():
             if index is None:
                 # this is the path for the index
                 # index = build_index('/Users/mahmoodnael/PycharmProjects/PartnerFinderApril/Backend/src/B2MATCH_upcoming_Index')
-                index = build_index('B2MATCH_upcoming_Index')
+                index = build_index('B2MATCH_upcoming_Index_temp')
 
                 print("upcoming index built....")
 
@@ -241,8 +246,11 @@ def getParticipentDATA(url_):
 
     driver.get(url_)
     sleep(1)
-    participant_panel_detail = driver.execute_script(
-        "return document.getElementsByClassName(\"participant-panel-detail shadow-component\")[0].innerHTML")
+    try:
+        participant_panel_detail = driver.execute_script(
+            "return document.getElementsByClassName(\"participant-panel-detail shadow-component\")[0].innerHTML")
+    except:
+        return "", "", "", "", "", "", "", [], ""
     soup = BeautifulSoup(participant_panel_detail, 'html.parser')
     img_src = None
     participant_name = None
@@ -386,12 +394,12 @@ def getParticipantsByTags(tags):
     """
     tags = ' '.join(tags)
     index1 = load_index('B2MATCH_Index')  # B2match_index
-    index2 = load_index('B2MATCH_upcoming_Index')  # B2match_upcoming_index
+    index2 = load_index('B2MATCH_upcoming_Index.0')  # B2match_upcoming_index
+
     corpus = NLP_Processor([tags])
-    print(corpus)
     res1 = index1[corpus]
-    res2 = index2[corpus]
-    print(res1, res2)
+
+    res2 = index2[corpus[:]]
 
     res1 = process_query_result(res1)
     res2 = process_query_result(res2)
@@ -452,11 +460,11 @@ def getB2MATCHPartByCountriesAndTags(tags, countries):
     :param countries: list of countries to get participants
     :return: list of participants
     """
+
     apaarticipantsByCountries = getB2MatchParByCountry(countries)
     ParticipantsByTags = getParticipantsByTags(tags)
 
     res = getPartIntersection(apaarticipantsByCountries, ParticipantsByTags)
-
     # write method to rank the orgs by tags
 
     return res

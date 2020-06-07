@@ -3,7 +3,7 @@ from celery.task import periodic_task
 import requests
 
 
-@periodic_task(run_every=(crontab(minute=0, hour=9)),
+@periodic_task(run_every=(crontab(minute=0, hour=6)),
                name="consortium_builder", ignore_result=True)
 def consortium_builder():
     """
@@ -26,7 +26,7 @@ def update_organizations():
 
 @periodic_task(run_every=(crontab(minute=0, hour=15, day_of_week='fri')),
                name="update_events", ignore_result=True)
-def update_organizations():
+def update_events():
     """
     automatic task to update Events and participants from B2MATCH.
     :return:

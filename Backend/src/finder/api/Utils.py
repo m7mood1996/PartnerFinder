@@ -2,7 +2,7 @@ from googletrans import Translator
 import collections
 import smtplib
 import ssl
-
+import os
 
 def translateData(data):
     """
@@ -57,3 +57,10 @@ def send_mail(receiver_email, message):
         print("SENT")
     except Exception as e:
         print("ERROR", e)
+
+
+def deleteOldIndexAndReplace():
+    os.remove("B2MATCH_upcoming_Index")
+    os.remove("B2MATCH_upcoming_Index.0")
+    os.rename("B2MATCH_upcoming_Index_temp","B2MATCH_upcoming_Index")
+    os.rename("B2MATCH_upcoming_Index_temp.0","B2MATCH_upcoming_Index.0")

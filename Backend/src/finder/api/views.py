@@ -9,7 +9,7 @@ from ..models import Event, TagP, Participants, Location, MapIDsB2match, \
 
 from .serializers import OrganizationProfileSerializer, AddressSerializer, TagSerializer, EventSerializer, \
     ParticipantsSerializer, CallSerializer, CallTagSerializer, \
-    AlertsSettingsSerializer, UpdateSettingsSerializer, ScoresSerializer
+    AlertsSettingsSerializer, UpdateSettingsSerializer, ScoresSerializer, EventsForAlertsSerializer
 import json
 
 import operator
@@ -20,7 +20,7 @@ from celery.schedules import crontab
 from celery.task import periodic_task
 
 from .EU import *
-from .B2MATH import *
+from .B2MATCH import *
 import datetime
 
 from email.mime.multipart import MIMEMultipart
@@ -48,44 +48,44 @@ class OrganizationProfileViewSet(viewsets.ModelViewSet):
         print("START UPDATING EU DB")
         print("*" * 50)
 
-        MapIds.objects.all().delete()
-
-        response = {'Message': 'Error while updating the organizations!'}
-        try:
-            index = load_index('EU_Index')
-        except:
-            index = None
-
-        if index is None:
-            index = build_index('EU_Index')
-        else:
-            index.destroy()
-            index = build_index('EU_Index')
-
-        status = {}
-        graph = Graph()
-        visitngQueue = collections.deque()
-        startOrg = '999993953'
-        visitngQueue.append(startOrg)
-        status[startOrg] = 'visiting'
-        while len(visitngQueue) > 0:
-            currPic = visitngQueue.popleft()
-            try:
-                currOrg = getOrganizationProfileFromEUByPIC(currPic)
-                currAdjacent = getPicsFromCollaborations(
-                    currOrg['collaborations'])
-            except:
-                continue
-            for pic in currAdjacent:
-                if pic not in graph.vertices or status[pic] == 'notVisited':
-                    graph.add(currPic, pic)
-                    status[pic] = 'visiting'
-                    visitngQueue.append(pic)
-
-            currOrg = translateData(currOrg)
-            addOrganizationToDB(currOrg)
-            index = add_org_to_index(index, currOrg)
-            status[currPic] = 'visited'
+        # MapIds.objects.all().delete()
+        #
+        # response = {'Message': 'Error while updating the organizations!'}
+        # try:
+        #     index = load_index('EU_Index')
+        # except:
+        #     index = None
+        #
+        # if index is None:
+        #     index = build_index('EU_Index')
+        # else:
+        #     index.destroy()
+        #     index = build_index('EU_Index')
+        #
+        # status = {}
+        # graph = Graph()
+        # visitngQueue = collections.deque()
+        # startOrg = '999993953'
+        # visitngQueue.append(startOrg)
+        # status[startOrg] = 'visiting'
+        # while len(visitngQueue) > 0:
+        #     currPic = visitngQueue.popleft()
+        #     try:
+        #         currOrg = getOrganizationProfileFromEUByPIC(currPic)
+        #         currAdjacent = getPicsFromCollaborations(
+        #             currOrg['collaborations'])
+        #     except:
+        #         continue
+        #     for pic in currAdjacent:
+        #         if pic not in graph.vertices or status[pic] == 'notVisited':
+        #             graph.add(currPic, pic)
+        #             status[pic] = 'visiting'
+        #             visitngQueue.append(pic)
+        #
+        #     currOrg = translateData(currOrg)
+        #     addOrganizationToDB(currOrg)
+        #     index = add_org_to_index(index, currOrg)
+        #     status[currPic] = 'visited'
 
         response = {'Message': 'Organizations updated successfully!'}
         setUpdateSettings(euDate=time.mktime(datetime.datetime.now().timetuple()))
@@ -100,29 +100,32 @@ class OrganizationProfileViewSet(viewsets.ModelViewSet):
         :return:
         """
 
-        data = request.query_params['data']
-        data = json.loads(data)
-        countries = data['countries']
-        tags = data['tags']
-        EURes = getOrgsByCountriesAndTags(tags, countries)
-        B2MATCHRes = getB2MATCHPartByCountriesAndTags(tags, countries)
-        B2MATCH = []
-        EU = []
-        for val in EURes:
-            EU.append({'legalName': val.legalName,
-                       'country': val.address.country,
-                       'description': val.description, 'classificationType': val.classificationType,
-                       'dataStatus': val.dataStatus, 'numberOfProjects': val.numberOfProjects,
-                       'consorsiumRoles': val.consorsiumRoles})
+        try:
+            data = request.query_params['data']
+            data = json.loads(data)
+            countries = data['countries']
+            tags = data['tags']
+            EURes = getOrgsByCountriesAndTags(tags, countries)
+            B2MATCHRes = getB2MATCHPartByCountriesAndTags(tags, countries)
+            B2MATCH = []
+            EU = []
+            for val in EURes:
+                EU.append({'legalName': val.legalName,
+                           'country': val.address.country,
+                           'description': val.description, 'classificationType': val.classificationType,
+                           'dataStatus': val.dataStatus, 'numberOfProjects': val.numberOfProjects,
+                           'consorsiumRoles': val.consorsiumRoles})
 
-        for val in B2MATCHRes:
-            B2MATCH.append({'participant_name': val.participant_name, 'organization_name': val.organization_name,
-                            'org_type': val.org_type,
-                            'address': val.location.location, 'description': val.description,
-                            'participant_img': val.participant_img_url,
-                            'org_url': val.org_url, 'org_icon_url': val.org_icon_url})
+            for val in B2MATCHRes:
+                B2MATCH.append({'participant_name': val.participant_name, 'organization_name': val.organization_name,
+                                'org_type': val.org_type,
+                                'address': val.location.location, 'description': val.description,
+                                'participant_img': val.participant_img_url,
+                                'org_url': val.org_url, 'org_icon_url': val.org_icon_url})
 
-        response = {'EU': EU, 'B2MATCH': B2MATCH}
+            response = {'EU': EU, 'B2MATCH': B2MATCH}
+        except:
+            response = {'EU': [], 'B2MATCH': []}
 
         return Response(response, status=status.HTTP_200_OK)
 
@@ -229,7 +232,7 @@ class CallViewSet(viewsets.ModelViewSet):
         """
         method to build a consortium for EU grants calls that have at least three months
         it checks if there is a potential partners from at least three different countries
-        if yes it sends an alert to the user's mail
+        if yes it sends an alert to the user's mail with these calls
         :param request: HTTP request
         :return: HTTP Response
         """
@@ -268,7 +271,7 @@ class CallViewSet(viewsets.ModelViewSet):
 
         calls = ''
         for call in calls_to_send:
-            calls += '<li><b>' + call['title'] + '</b></li>'
+            calls += '<li><b>' + call['title'] + '</b>.</li>'
 
         signature = 'Sincerly,<br>Consortium Builder Alerts'
         html = """\
@@ -285,13 +288,13 @@ class CallViewSet(viewsets.ModelViewSet):
         </html>
         """.format(calls, signature)
 
-        response = {'Message': 'Finished building consortium successfully!'}
-
         content = MIMEText(html, 'html')
         body.attach(content)
         body['Subject'] = 'EU Proposal Calls Alert'
         if len(calls_to_send) > 0:
             send_mail(receiver_email=email, message=body)
+
+        response = {'Message': 'Finished building consortium successfully!'}
         return Response(response, status=status.HTTP_200_OK)
 
     @action(detail=False, methods=['GET'])
@@ -312,7 +315,7 @@ class CallViewSet(viewsets.ModelViewSet):
                             'sumbissionProcedure': call.sumbissionProcedure})
             response['calls'] = res
         except:
-            response = {'Message': 'Error while uploading calls!'}
+            response = {'Message': 'Error while uploading calls!', 'calls': []}
 
         return Response(response, status=status.HTTP_200_OK)
 
@@ -326,22 +329,25 @@ class CallViewSet(viewsets.ModelViewSet):
         data = request.query_params['data']
         data = json.loads(data)
         id = int(data['ccm2Id'])
-        call = Call.objects.get(ccm2Id=id)
-        tags = CallTag.objects.filter(calls=call)
-        tagsList = []
-        for tag in tags:
-            tagsList.append(tag.tag)
+        try:
+            call = Call.objects.get(ccm2Id=id)
+            tags = CallTag.objects.filter(calls=call)
+            tagsList = []
+            for tag in tags:
+                tagsList.append(tag.tag)
 
-        EURes = getOrgsByCountriesAndTags(tags=tagsList, countries=[])
-        EU = []
-        for val in EURes:
-            EU.append({'legalName': val.legalName,
-                       'country': val.address.country,
-                       'description': val.description, 'classificationType': val.classificationType,
-                       'dataStatus': val.dataStatus, 'numberOfProjects': val.numberOfProjects,
-                       'consorsiumRoles': val.consorsiumRoles})
+            EURes = getOrgsByCountriesAndTags(tags=tagsList, countries=[])
+            EU = []
+            for val in EURes:
+                EU.append({'legalName': val.legalName,
+                           'country': val.address.country,
+                           'description': val.description, 'classificationType': val.classificationType,
+                           'dataStatus': val.dataStatus, 'numberOfProjects': val.numberOfProjects,
+                           'consorsiumRoles': val.consorsiumRoles})
 
-        response = {'EU': EU}
+            response = {'EU': EU}
+        except:
+            response = {'EU': [], 'Message': 'Error while uploading organizations!'}
 
         return Response(response, status=status.HTTP_200_OK)
 
@@ -472,9 +478,7 @@ class EventViewSet(viewsets.ModelViewSet):
                 updating upcoming events in the database <not tested yet>
         """
         print("updating....")
-        # index = load_index('/Users/mahmoodnael/PycharmProjects/PartnerFinderApril/Backend/src/B2MATCH_upcoming_Index')
-        index = load_index('B2MATCH_upcoming_Index')
-        index.destroy()
+
         newEvents = []
         upcoming_event_b2match = "https://events.b2match.com"
         b2match = "https://events.b2match.com"
@@ -561,6 +565,7 @@ class EventViewSet(viewsets.ModelViewSet):
 
             if (curr_page + str(i) == upcoming_events_last_page):
                 break
+            print("\t\ti =", i)
 
             i += 1
         myEvents = list(Event.objects.filter(is_upcoming=True))
@@ -579,15 +584,25 @@ class EventViewSet(viewsets.ModelViewSet):
 
         changeEventStatus(eventNoLongerUpcoming)
 
+
         deleteEventsTree(toupdate)
+
 
         for e in toupdate:
             e.delete()
 
+
         for e in newEvents:
-            e.save()
-        print("Adding new Participants....\n")
+            try:
+                e.save()
+            except:
+                print(e.event_name, "NAME EVENT")
+            # e.save()
+
         add_Participants_from_Upcoming_Event()
+        # delete old index and replace with new one
+        deleteOldIndexAndReplace()
+
         setUpdateSettings(b2matchDate=time.mktime(datetime.datetime.now().timetuple()))
 
         return Response([{'message': 'done, B2MATCH Reposutory updated'}], status=status.HTTP_200_OK)
@@ -811,6 +826,21 @@ class AlertsB2match(viewsets.ModelViewSet):
         send_mail(receiver_email=email, message=body)
         return Response(response, status=status.HTTP_200_OK)
 
+    @action(detail=False, methods=['GET'])
+    def getEventFromAlerts(self, request):
+        """
+        function to send response of events returned from alerts
+        :param request:
+        :return:
+        """
+        events = EventsForAlerts.objects.all()
+        myEvents = sorted(events, key=lambda x: x.event_score, reverse=True)
+        # myEvents.sort(key=event_score, reverse=True)
+        response = []
+        for event in myEvents:
+            response.append({'event_name': event.event_name, 'event_url': event.event_url})
+        return Response(response, status=status.HTTP_200_OK)
+
 
 def setUpdateSettings(euDate=None, b2matchDate=None):
     """
@@ -825,7 +855,6 @@ def setUpdateSettings(euDate=None, b2matchDate=None):
         b2matchDate = int(b2matchDate)
 
     try:
-        print("TRY")
         UpdateSettings.objects.get(ID=1)
         if euDate:
             UpdateSettings.objects.filter(ID=1).update(eu_last_update=euDate)
@@ -833,7 +862,6 @@ def setUpdateSettings(euDate=None, b2matchDate=None):
             UpdateSettings.objects.filter(ID=1).update(
                 b2match_last_update=b2matchDate)
     except:
-        print("EXCEPT")
         updateSettings = UpdateSettings(
             eu_last_update=euDate, b2match_last_update=b2matchDate, ID=1)
         updateSettings.save()

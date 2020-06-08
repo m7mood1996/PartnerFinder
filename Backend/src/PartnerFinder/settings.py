@@ -11,6 +11,14 @@ https://docs.djangoproject.com/en/3.0/ref/settings/
 """
 
 import os
+import re
+from decouple import config
+
+IGNORABLE_404_URLS = [
+    re.compile(r'^/apple-touch-icon.*\.png$'),
+    re.compile(r'^/favicon\.ico$'),
+    re.compile(r'^/robots\.txt$'),
+]
 
 # Build paths inside the project like this: os.path.join(BASE_DIR, ...)
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -18,13 +26,14 @@ BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/3.0/howto/deployment/checklist/
 
-# SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = 'm#@ajkk0-wjmbrv97%1-^7#&b%s*2*x=^s1$)-8me8m@li-l)0'
+# SECRET_KEY = 'm#@ajkk0-wjmbrv97%1-^7#&b%s*2*x=^s1$)-8me8m@li-l)0'
+SECRET_KEY = config('SECRET_KEY')
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+# DEBUG = False
+DEBUG = config('DEBUG')
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ['localhost', '127.0.0.1', '[::1]', '62.90.89.14', 'parnerfinder.jce.ac.il']
 
 # Application definition
 
@@ -37,7 +46,6 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     'rest_framework',
     'finder',
-
     'corsheaders',
 ]
 
@@ -51,11 +59,29 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
+
+    'django.middleware.common.BrokenLinkEmailsMiddleware',
+    'django.middleware.common.CommonMiddleware',
+
 ]
 
-# CORS_ORIGIN_WHITELIST = [
-#     'http://localhost:3000'
-# ]
+APPEND_SLASH = True
+CACHES = {
+    'default': {
+        'BACKEND': 'django.core.cache.backends.db.DatabaseCache',
+    }
+}
+CSRF_COOKIE_AGE = 31449600
+CACHE_MIDDLEWARE_SECONDS = 600
+CACHE_MIDDLEWARE_SECONDS = '/'
+
+def make_key(key, key_prefix, version):
+    return '%s:%s:%s' % (key_prefix, version, key)
+
+CORS_ORIGIN_WHITELIST = [
+    'http://localhost:8000',
+    'http://partnerfinder.jce.ac.il',
+ ]
 CORS_ORIGIN_ALLOW_ALL = True
 
 ROOT_URLCONF = 'PartnerFinder.urls'
@@ -125,6 +151,16 @@ USE_TZ = True
 # https://docs.djangoproject.com/en/3.0/howto/static-files/
 
 STATIC_URL = '/static/'
+STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
+STATICFILES_STORAGE = 'django.contrib.staticfiles.storage.StaticFilesStorage'
+STATICFILES_FINDERS = [
+    'django.contrib.staticfiles.finders.FileSystemFinder',
+    'django.contrib.staticfiles.finders.AppDirectoriesFinder',
+]
+
+CSRF_COOKIE_SECURE = True
+SESSION_COCKIE_SECURE = True
+
 
 REST_FRAMEWORK = {
     # Use Django's standard `django.contrib.auth` permissions,

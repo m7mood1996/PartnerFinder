@@ -12,7 +12,8 @@ import "react-phone-number-input/style.css";
 import PhoneInput from "react-phone-number-input";
 import { WithContext as ReactTags } from "react-tag-input";
 import SearchResults from "./SearchResults";
-import { BeatLoader } from 'react-spinners'
+import { BeatLoader } from 'react-spinners';
+import { Msgtoshow } from "./Msgtoshow";
 import { makeStyles, Dialog, DialogTitle, DialogContent } from '@material-ui/core/';
 import { companyTypesOptions, BACKEND_URL } from '../utils';
 
@@ -32,8 +33,10 @@ const useStyles = makeStyles(theme => ({
 }));
 
 function SearchDetails(props) {
+
   const classes = useStyles();
   const [type, setType] = React.useState("");
+  const [msgState, setMsgState] = React.useState({ title: '', body: '', visible: false });
   const [country, setCountry] = React.useState([]);
   const [data, setData] = React.useState([]);
   const [name, setName] = React.useState("");
@@ -124,25 +127,16 @@ function SearchDetails(props) {
 
   const searchCompany = () => {
     if (formValidation()) {
-      // TODO: show error message
+      setMsgState({
+        title: 'Error',
+        body: 'Please fill all the fields',
+        visible: true
+      });
     }
     else {
       searchByTagsAndCountires(tags, countrySearched);
     }
   };
-
-  const validate = () => {
-    let check = true;
-    let emailError = "";
-    if (!state.email.includes('@')) {
-      emailError = 'invalid email !'
-    }
-    if (emailError) {
-      setState(...setState, emailError);
-      return check = false;
-    }
-    return check;
-  }
 
   const searchByTagsAndCountires = (tags, countries) => {
     setState({ loading: true });
@@ -159,12 +153,27 @@ function SearchDetails(props) {
     })
       .then((res) => res.json())
       .then((resp) => {
-        setState({ loading: false });
-        setData(resp);
+        if ('error' in resp) {
+          setMsgState({
+            title: 'Failed',
+            body: 'Error while searching for organizations',
+            visible: true
+          });
+          setState({ loading: false });
+          setData([]);
+        }
+        else {
+          setState({ loading: false });
+          setData(resp);
+        }
       })
       .catch((error) => {
         setData([])
-        //TODO: show error message
+        setMsgState({
+          title: 'Failed',
+          body: 'Error while searching for organizations',
+          visible: true
+        });
         setState({ loading: false });
       });
   };
@@ -241,6 +250,9 @@ function SearchDetails(props) {
 
   return (
     <React.Fragment>
+      <div style={{ display: 'flex', justifyContent: 'center', marginTop: 100 }}>
+        <Msgtoshow {...msgState} handleClose={() => setMsgState({ ...msgState, visible: false })} />
+      </div>
       <div className="Org_Details">
         <h1>Simple Partner Search</h1>
         <h2>Organization Details</h2>
@@ -311,6 +323,18 @@ function SearchDetails(props) {
               variant="outlined"
               error={formState.email}
             />
+
+            {formState.email ? (
+              <Typography
+                variant="caption"
+                display="block"
+                gutterBottom
+                style={{ color: "red" }}
+              >
+                Enter a valid email
+              </Typography>
+            ) : null}
+
           </div>
         </div>
         <div className="second_row">

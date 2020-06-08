@@ -25,14 +25,23 @@ function Updates(props) {
     })
       .then((res) => res.json())
       .then((resp) => {
-        setMsgState({
-          title: 'Success',
-          body: 'B2match has been updated successfully',
-          visible: true
-        });
+        if ('error' in resp) {
+          setMsgState({
+            title: 'Failed',
+            body: 'Error while updating the events',
+            visible: true
+          });
+        }
+        else {
+          setMsgState({
+            title: 'Success',
+            body: 'B2match has been updated successfully',
+            visible: true
+          });
+        }
       })
       .catch((error) => setMsgState({
-        title: 'Error',
+        title: 'Failed',
         body: 'Error while updating B2match data',
         visible: true
       }));
@@ -47,15 +56,24 @@ function Updates(props) {
     })
       .then((res) => res.json())
       .then((resp) => {
-        setMsgState({
-          title: 'Success',
-          body: 'EU has been updated successfully.',
-          visible: true
-        });
+        if ('error' in resp) {
+          setMsgState({
+            title: 'Failed',
+            body: 'Error while updating the EU data.',
+            visible: true
+          });
+        }
+        else {
+          setMsgState({
+            title: 'Success',
+            body: 'EU has been updated successfully.',
+            visible: true
+          });
+        }
       })
       .catch((error) => setMsgState({
-        title: 'Error',
-        body: 'Error while updating EU data',
+        title: 'Failed',
+        body: 'Error while updating EU data.',
         visible: true
       }));
   };

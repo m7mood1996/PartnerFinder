@@ -3,6 +3,7 @@ import collections
 import smtplib
 import ssl
 import os
+from decouple import config
 
 def translateData(data):
     """
@@ -44,8 +45,8 @@ def send_mail(receiver_email, message):
     :return:
     """
 
-    sender_mail = 'PartnerFinderAlerts@gmail.com'
-    password = 'Alerts_123'
+    sender_mail = config('EMAIL')
+    password = config('PASSWORD')
     ssl_port = 465
     smtp_server = 'smtp.gmail.com'
 

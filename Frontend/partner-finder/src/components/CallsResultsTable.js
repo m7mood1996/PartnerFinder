@@ -2,6 +2,8 @@ import React from "react";
 import MaterialTable from "material-table";
 import { forwardRef } from "react";
 import ResultsTable from "./ResultsTable";
+import { Msgtoshow } from "./Msgtoshow";
+import { BeatLoader } from 'react-spinners';
 import {
   makeStyles,
   Button,
@@ -74,13 +76,16 @@ const tableIcons = {
 
 function CallsResultsTable(props) {
   const [data, setData] = React.useState(props.data);
+  const [msgState, setMsgState] = React.useState({ title: '', body: '', visible: false });
   const [columns] = React.useState(props.columns);
   const [title] = React.useState(props.title);
   const [visible, setVisible] = React.useState(false);
   const [searchResult, setSearchResult] = React.useState([]);
   const [searchTitle, setSearchTitle] = React.useState("");
   const classes = useStyles();
-
+  const [state, setState] = React.useState({
+    loading: false,
+  })
   React.useEffect(
     function effectFunction() {
       setData(props.data);
@@ -95,7 +100,7 @@ function CallsResultsTable(props) {
   };
 
   const searchOrganizations = (rowData) => {
-    //TODO: loading
+    setState({ loading: true });
     console.log("COLSS", EU_columns)
     let url = new URL(BACKEND_URL + "calls/search_organizations/");
     let params = {
@@ -109,14 +114,37 @@ function CallsResultsTable(props) {
     })
       .then((res) => res.json())
       .then((resp) => {
-        //TODO: end loading
-        setSearchTitle(rowData["title"]);
-        setSearchResult(resp.EU);
-        setVisible(true);
+        if ('error' in resp) {
+          setMsgState({
+            title: 'Failed',
+            body: 'Error while searching organizations',
+            visible: true
+          });
+          setState({ loading: false });
+          setSearchTitle("");
+          setSearchResult([]);
+          setVisible(false);
+        }
+        else {
+          setState({ loading: false });
+          setSearchTitle(rowData["title"]);
+          setSearchResult(resp.EU);
+          setVisible(true);
+        }
       })
-      // TODO: show error message and end loading
-      .catch((error) => console.log(error));
-  };
+      .catch((error) => {
+        setMsgState({
+          title: 'Failed',
+          body: 'Error while searching organizations',
+          visible: true
+        });
+        setState({ loading: false });
+        setSearchTitle("");
+        setSearchResult([]);
+        setVisible(false);
+      });
+  }
+
 
   const handleDelete = (oldData) => {
     let newData = [...data];
@@ -126,6 +154,9 @@ function CallsResultsTable(props) {
 
   return (
     <React.Fragment>
+      <div style={{ display: 'flex', justifyContent: 'center', marginTop: 100 }}>
+        <Msgtoshow {...msgState} handleClose={() => setMsgState({ ...msgState, visible: false })} />
+      </div>
       <div>
         {data.length === 0 ? null : (
           <MaterialTable
@@ -190,6 +221,17 @@ function CallsResultsTable(props) {
           </Dialog>
         )}
       </div>
+      {state.loading ? <Dialog
+        disableBackdropClick
+        disableEscapeKeyDown
+        open={true}
+        aria-labelledby="alert-dialog-title"
+        aria-describedby="alert-dialog-description">
+        <DialogTitle className={classes.title}>LOADING</DialogTitle>
+        <DialogContent style={{ 'margin-left': '17px' }}>
+          <BeatLoader />
+        </DialogContent>
+      </Dialog> : null}
     </React.Fragment>
   );
 }

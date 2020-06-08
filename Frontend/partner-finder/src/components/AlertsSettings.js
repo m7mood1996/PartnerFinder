@@ -133,7 +133,7 @@ function AlertsSettings(props) {
       .then((resp) => {
         if ('error' in resp) {
           setMsgState({
-            title: 'Error',
+            title: 'Failed',
             body: 'Error while uploading alerts results',
             visible: true
           });
@@ -154,7 +154,7 @@ function AlertsSettings(props) {
             .then((resp) => {
               if ('error' in resp) {
                 setMsgState({
-                  title: 'Error',
+                  title: 'Failed',
                   body: 'Error while uploading alerts results',
                   visible: true
                 });
@@ -167,7 +167,7 @@ function AlertsSettings(props) {
             })
             .catch((error) => {
               setMsgState({
-                title: 'Error',
+                title: 'Failed',
                 body: 'Error while uploading alerts results',
                 visible: true
               });
@@ -177,7 +177,7 @@ function AlertsSettings(props) {
       })
       .catch((error) => {
         setMsgState({
-          title: 'Error',
+          title: 'Failed',
           body: 'Error while uploading alerts results',
           visible: true
         });
@@ -266,7 +266,7 @@ function AlertsSettings(props) {
         .then((resp) => {
           if ('error' in resp) {
             setMsgState({
-              title: 'Error',
+              title: 'Failed',
               body: 'Error while updating alerts settings',
               visible: true
             })
@@ -315,7 +315,7 @@ function AlertsSettings(props) {
               .then((resp) => {
                 if ('error' in resp) {
                   setMsgState({
-                    title: 'Error',
+                    title: 'Failed',
                     body: 'Error while updating alerts settings',
                     visible: true
                   })
@@ -333,7 +333,7 @@ function AlertsSettings(props) {
               })
               .catch((error) => {
                 setMsgState({
-                  title: 'Error',
+                  title: 'Failed',
                   body: 'Error while updating alerts settings',
                   visible: true
                 })
@@ -343,7 +343,7 @@ function AlertsSettings(props) {
         })
         .catch((error) => {
           setMsgState({
-            title: 'Error',
+            title: 'Failed',
             body: 'Error while updating alerts settings',
             visible: true
           })

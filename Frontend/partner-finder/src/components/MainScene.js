@@ -127,15 +127,29 @@ export default function NavTabs() {
     })
       .then((res) => res.json())
       .then((resp) => {
-        setUpdatesState({
-          EU: moment.unix(resp.EU).format("MMMM Do YYYY, h:mm:ss a"),
-          B2MATCH: moment.unix(resp.B2MATCH).format("MMMM Do YYYY, h:mm:ss a"),
-          firstLoading: false,
-        });
+        if ('error' in resp) {
+          setMsgState({
+            title: 'Failed',
+            body: 'Error while getting updates settings',
+            visible: true
+          })
+          setUpdatesState({
+            EU: '',
+            B2MATCH: '',
+            firstLoading: false,
+          })
+        }
+        else {
+          setUpdatesState({
+            EU: moment.unix(resp.EU).format("MMMM Do YYYY, h:mm:ss a"),
+            B2MATCH: moment.unix(resp.B2MATCH).format("MMMM Do YYYY, h:mm:ss a"),
+            firstLoading: false,
+          });
+        }
       })
       .catch((error) => {
         setMsgState({
-          title: 'Error',
+          title: 'Failed',
           body: 'Error while getting updates settings',
           visible: true
         })
@@ -157,54 +171,74 @@ export default function NavTabs() {
     })
       .then((res) => res.json())
       .then((resp) => {
-        turned_on = resp.turned_on;
-        newMail = resp.email;
-        url = new URL(BACKEND_URL + "scores/getscores/");
-        fetch(url, {
-          method: "GET",
-        })
-          .then((res) => res.json())
-          .then((resp) => {
-            newState["resScore"] = resp.RES;
-            newState["italy"] = resp.Italy;
-            newState["france"] = resp.France;
-            newState["austria"] = resp.Austria;
-            newState["germany"] = resp.Germany;
-            newState["denmark"] = resp.Denmark;
-            newState["czech"] = resp.Czech_Republic;
-            newState["finland"] = resp.Finland;
-            newState["ireland"] = resp.Ireland;
-            newState["israel"] = resp.Israel;
-            newState["portugal"] = resp.Portugal;
-            newState["ukranie"] = resp.Ukranie;
-            newState["uk"] = resp.United_Kingdom;
-            newState["turkey"] = resp.Turkey;
-            newState["switzerland"] = resp.Switzerland;
-            newState["spain"] = resp.Spain;
-            newState["norway"] = resp.Norway;
-            newState["agency"] = resp.Association_Agency;
-            newState["uni"] = resp.University;
-            newState["company"] = resp.Company;
-            newState["RD"] = resp.R_D_Institution;
-            newState["start"] = resp.Start_Up;
-            newState["oth"] = resp.Others;
-            newState["email"] = newMail;
-            newState["turned_on"] = turned_on;
-            setAlertsState(newState);
+        if ('error' in resp) {
+          setMsgState({
+            title: 'Failed',
+            body: 'Error while uploading alerts settings',
+            visible: true
           })
-          .catch((error) => {
-            setMsgState({
-              title: 'Error',
-              body: 'Error while getting alerts settings',
-              visible: true
+          setAlertsState(newState);
+        }
+        else {
+          turned_on = resp.turned_on;
+          newMail = resp.email;
+          url = new URL(BACKEND_URL + "scores/getscores/");
+          fetch(url, {
+            method: "GET",
+          })
+            .then((res) => res.json())
+            .then((resp) => {
+              if ('error' in resp) {
+                setMsgState({
+                  title: 'Failed',
+                  body: 'Error while uploading alerts settings',
+                  visible: true
+                })
+                setAlertsState(newState);
+              }
+              else {
+                newState["resScore"] = resp.RES;
+                newState["italy"] = resp.Italy;
+                newState["france"] = resp.France;
+                newState["austria"] = resp.Austria;
+                newState["germany"] = resp.Germany;
+                newState["denmark"] = resp.Denmark;
+                newState["czech"] = resp.Czech_Republic;
+                newState["finland"] = resp.Finland;
+                newState["ireland"] = resp.Ireland;
+                newState["israel"] = resp.Israel;
+                newState["portugal"] = resp.Portugal;
+                newState["ukranie"] = resp.Ukranie;
+                newState["uk"] = resp.United_Kingdom;
+                newState["turkey"] = resp.Turkey;
+                newState["switzerland"] = resp.Switzerland;
+                newState["spain"] = resp.Spain;
+                newState["norway"] = resp.Norway;
+                newState["agency"] = resp.Association_Agency;
+                newState["uni"] = resp.University;
+                newState["company"] = resp.Company;
+                newState["RD"] = resp.R_D_Institution;
+                newState["start"] = resp.Start_Up;
+                newState["oth"] = resp.Others;
+                newState["email"] = newMail;
+                newState["turned_on"] = turned_on;
+                setAlertsState(newState);
+              }
             })
-            setAlertsState(newState);
-          });
+            .catch((error) => {
+              setMsgState({
+                title: 'Failed',
+                body: 'Error while uploading alerts settings',
+                visible: true
+              })
+              setAlertsState(newState);
+            });
+        }
       })
       .catch((error) => {
         setMsgState({
-          title: 'Error',
-          body: 'Error while getting alerts settings',
+          title: 'Failed',
+          body: 'Error while uploading alerts settings',
           visible: true
         })
         setAlertsState(newState);

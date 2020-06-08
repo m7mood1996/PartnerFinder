@@ -5,7 +5,7 @@ const EU_columns = [
     { title: "Data Status", field: "dataStatus" },
     { title: "Number of EU Projects", field: "numberOfProjects" },
     { title: "Description", field: "description" },
-    { title: "Consorsium Role", field: "consorsiumRoles" },
+    { title: "Was Coordinator?", field: "consorsiumRoles", render: rowData => rowData.consorsiumRoles ? 'Yes' : 'No' }
 ];
 
 const B2Match_columns = [

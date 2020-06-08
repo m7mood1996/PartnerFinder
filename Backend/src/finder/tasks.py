@@ -11,7 +11,7 @@ def consortium_builder():
     automatic task to build consortium and send mail to the user.
     :return:
     """
-    url = URL + '/calls/consortium_builder/'
+    url = URL + 'calls/consortium_builder/'
     response = requests.get(url)
 
 # , day_of_month='1-8'

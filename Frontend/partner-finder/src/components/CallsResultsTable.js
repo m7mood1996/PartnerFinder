@@ -64,15 +64,6 @@ const tableIcons = {
   ViewColumn: forwardRef((props, ref) => <ViewColumn {...props} ref={ref} />),
 };
 
-// const EU_columns = [
-//   { title: "Name", field: "legalName" },
-//   { title: "Type", field: "classificationType" },
-//   { title: "Country", field: "country" },
-//   { title: "Data Status", field: "dataStatus" },
-//   { title: "Number of EU Projects", field: "numberOfProjects" },
-//   { title: "Description", field: "description" },
-//   { title: "Consorsium Role", field: "consorsiumRoles" },
-// ];
 
 function CallsResultsTable(props) {
   const [data, setData] = React.useState(props.data);

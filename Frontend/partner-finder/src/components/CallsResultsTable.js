@@ -28,7 +28,7 @@ import Remove from "@material-ui/icons/Remove";
 import SaveAlt from "@material-ui/icons/SaveAlt";
 import Search from "@material-ui/icons/Search";
 import ViewColumn from "@material-ui/icons/ViewColumn";
-import { EU_columns } from '../utils';
+import { EU_columns, BACKEND_URL } from '../utils';
 
 
 const useStyles = makeStyles((theme) => ({
@@ -97,7 +97,7 @@ function CallsResultsTable(props) {
   const searchOrganizations = (rowData) => {
     //TODO: loading
     console.log("COLSS", EU_columns)
-    let url = new URL("http://127.0.0.1:8000/api/calls/search_organizations/");
+    let url = new URL(BACKEND_URL + "calls/search_organizations/");
     let params = {
       data: JSON.stringify({ ccm2Id: rowData["ccm2Id"] }),
     };

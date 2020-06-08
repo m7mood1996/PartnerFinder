@@ -11,6 +11,8 @@ import { Msgtoshow } from "./Msgtoshow"
 import ResultsTable from "./ResultsTable";
 import { BeatLoader } from 'react-spinners'
 import { makeStyles, Dialog, DialogTitle, DialogContent } from '@material-ui/core/';
+import { BACKEND_URL } from '../utils';
+
 const calls_columns = [
   { title: "Title", field: "title" },
   { title: "Call Title", field: "callTitle" },
@@ -120,9 +122,10 @@ function AlertsSettings(props) {
     setState({ ...state, 'events': [], 'calls': [] })
   }
 
+
   const getCalls = () => {
     setState({ ...state, loading: true });
-    let url = new URL("http://127.0.0.1:8000/api/calls/get_calls/");
+    let url = new URL(BACKEND_URL + "calls/get_calls/");
     fetch(url, {
       method: "GET",
     })
@@ -143,7 +146,7 @@ function AlertsSettings(props) {
             return call;
           });
           setState({ ...state, calls });
-          url = new URL("http://127.0.0.1:8000/api/b2matchalerts/getEventFromAlerts/");
+          url = new URL(BACKEND_URL + "b2matchalerts/getEventFromAlerts/");
           fetch(url, {
             method: "GET",
           })
@@ -249,7 +252,7 @@ function AlertsSettings(props) {
 
     } else {
       setState({ ...state, loading: true });
-      let url = new URL("http://127.0.0.1:8000/api/alerts/setSettings/");
+      let url = new URL(BACKEND_URL + "alerts/setSettings/");
       let params = {
         data: JSON.stringify({ 'email': state.email, 'turned_on': turned_on }),
       };
@@ -275,7 +278,7 @@ function AlertsSettings(props) {
               email: state.email,
               turned_on: turned_on,
             });
-            url = new URL("http://127.0.0.1:8000/api/scores/updatescores/");
+            url = new URL(BACKEND_URL + "scores/updatescores/");
             let data = {
               RES: state.resScore,
               Italy: state.italy,

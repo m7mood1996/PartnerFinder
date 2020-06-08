@@ -27,4 +27,6 @@ const companyTypesOptions = [
     "Other",
 ];
 
-export { EU_columns, B2Match_columns, companyTypesOptions }
+const BACKEND_URL = 'http://62.90.89.14:8000/api/'
+
+export { EU_columns, B2Match_columns, companyTypesOptions, BACKEND_URL }

@@ -1,6 +1,7 @@
 import React from "react";
 import { Button } from "@material-ui/core";
 import { Msgtoshow } from "./Msgtoshow"
+import { BACKEND_URL } from '../utils';
 
 function Updates(props) {
   const [state, setState] = React.useState({
@@ -17,7 +18,7 @@ function Updates(props) {
 
   const updateB2match = (event) => {
     let url = new URL(
-      "http://127.0.0.1:8000/api/events/update_upcoming_events/"
+      BACKEND_URL + "events/update_upcoming_events/"
     );
     fetch(url, {
       method: "POST",
@@ -39,7 +40,7 @@ function Updates(props) {
 
   const updateEU = (event) => {
     let url = new URL(
-      "http://127.0.0.1:8000/api/organizations/updateOrganizations/"
+      BACKEND_URL + "organizations/updateOrganizations/"
     );
     fetch(url, {
       method: "GET",

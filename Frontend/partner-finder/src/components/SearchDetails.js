@@ -14,7 +14,7 @@ import { WithContext as ReactTags } from "react-tag-input";
 import SearchResults from "./SearchResults";
 import { BeatLoader } from 'react-spinners'
 import { makeStyles, Dialog, DialogTitle, DialogContent } from '@material-ui/core/';
-import { companyTypesOptions } from '../utils';
+import { companyTypesOptions, BACKEND_URL } from '../utils';
 
 const KeyCodes = {
   comma: 188,
@@ -148,7 +148,7 @@ function SearchDetails(props) {
     setState({ loading: true });
     tags = tags.map((tag) => tag.text);
     let url = new URL(
-      "http://127.0.0.1:8000/api/genericSearch/searchByCountriesAndTags/"
+      BACKEND_URL + "genericSearch/searchByCountriesAndTags/"
     );
     let params = { data: JSON.stringify({ tags: tags, countries: countries }) };
     Object.keys(params).forEach((key) =>

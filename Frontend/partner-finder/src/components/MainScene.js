@@ -11,6 +11,7 @@ import Typography from "@material-ui/core/Typography";
 import Box from "@material-ui/core/Box";
 import moment from "moment";
 import { Msgtoshow } from './Msgtoshow';
+import { BACKEND_URL } from '../utils';
 
 function MainScene(props) {
   const { children, value, index, ...other } = props;
@@ -70,7 +71,7 @@ export default function NavTabs() {
   const [msgState, setMsgState] = React.useState({ title: '', body: '', visible: false });
   const [alertsState, setAlertsState] = React.useState({
     firstLoading: true,
-    loading:false,
+    loading: false,
     turned_on: false,
     email: "",
     resScore: 0,
@@ -120,7 +121,7 @@ export default function NavTabs() {
 
 
   if (updatesState.firstLoading) {
-    let url = new URL("http://127.0.0.1:8000/api/updates/getSettings/");
+    let url = new URL(BACKEND_URL + "updates/getSettings/");
     fetch(url, {
       method: "GET",
     })
@@ -150,7 +151,7 @@ export default function NavTabs() {
     let newState = { ...alertsState, firstLoading: false };
     let newMail = "";
     let turned_on = false;
-    let url = new URL("http://127.0.0.1:8000/api/alerts/getSettings/");
+    let url = new URL(BACKEND_URL + "alerts/getSettings/");
     fetch(url, {
       method: "GET",
     })
@@ -158,7 +159,7 @@ export default function NavTabs() {
       .then((resp) => {
         turned_on = resp.turned_on;
         newMail = resp.email;
-        url = new URL("http://127.0.0.1:8000/api/scores/getscores/");
+        url = new URL(BACKEND_URL + "scores/getscores/");
         fetch(url, {
           method: "GET",
         })

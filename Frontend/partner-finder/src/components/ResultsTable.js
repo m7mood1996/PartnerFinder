@@ -63,7 +63,7 @@ function ResultsTable(props) {
   return (
     <React.Fragment>
       <div>
-        {data.length === 0 ? null : (
+        {data && data.length === 0 ? null : (
           <MaterialTable
             icons={tableIcons}
             title={title}

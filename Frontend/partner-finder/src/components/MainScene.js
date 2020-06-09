@@ -98,21 +98,11 @@ export default function NavTabs() {
     start: 0,
     oth: 0,
   });
-
   const [searchState, setSearchState] = React.useState({
-    type: '',
-    country: '',
-    data: [],
-    name: '',
-    email: '',
-    number: '',
-    phone_num: '',
     tags: [],
     countrySearched: [],
-    firstLoading: false,
-    loading: false,
+    data: []
   })
-
   const [updatesState, setUpdatesState] = React.useState({
     EU: '',
     B2MATCH: '',

@@ -33,7 +33,7 @@ function SearchDetails(props) {
 
   const classes = useStyles();
   const [msgState, setMsgState] = React.useState({ title: '', body: '', visible: false });
-  const [data, setData] = React.useState([]);
+  const [data, setData] = React.useState({});
   const [tags, setTags] = React.useState([]);
   const [countrySearched, setCountrySearched] = React.useState([]);
   const [state, setState] = React.useState({
@@ -46,17 +46,23 @@ function SearchDetails(props) {
   });
 
   if (state.firstLoading) {
+    console.log('PROPS', props.state)
+    setTags([...props.state.tags])
+    setCountrySearched([...props.state.countrySearched])
+    setData({ ...props.state.data })
     setState({ ...state, firstLoading: false })
   }
 
-  
+
 
   const handleCountrySearched = (event) => {
     setCountrySearched(event.target.value);
+    props.setState({ ...props.state, 'countrySearched': event.target.value });
   };
 
   const addTag = (tag) => {
     setTags([...tags, tag]);
+    props.setState({ ...props.state, 'tags': [...props.state.tags, tag] })
   };
 
   const changeTagInput = (event) => {
@@ -85,7 +91,7 @@ function SearchDetails(props) {
   };
 
   const searchByTagsAndCountires = (tags, countries) => {
-    setState({ loading: true });
+    setState({ ...state, loading: true });
     tags = tags.map((tag) => tag.text);
     let url = new URL(
       BACKEND_URL + "genericSearch/searchByCountriesAndTags/"
@@ -100,34 +106,40 @@ function SearchDetails(props) {
       .then((res) => res.json())
       .then((resp) => {
         if ('error' in resp) {
+          console.log("ERROR", resp)
           setMsgState({
             title: 'Failed',
             body: 'Error while searching for organizations',
             visible: true
           });
-          setState({ loading: false });
-          setData([]);
+          setState({ ...state, loading: false });
+          setData({});
+          props.setState({ ...props.state, 'data': {} })
         }
         else {
-          setState({ loading: false });
+          console.log(resp)
+          setState({ ...state, loading: false });
           setData(resp);
+          props.setState({ ...props.state, 'data': { ...resp } })
         }
       })
       .catch((error) => {
-        setData([])
+        console.log("ERROR", error)
+        setData({})
+        props.setState({ ...props.state, 'data': {} })
         setMsgState({
           title: 'Failed',
           body: 'Error while searching for organizations',
           visible: true
         });
-        setState({ loading: false });
+        setState({ ...state, loading: false });
       });
   };
 
   const formValidation = () => {
     let res = {};
     let check = false;
-    
+
     if (tags.length === 0 || tags === undefined || tags === null) {
       res = { ...res, tags: true };
       setFormState(res);
@@ -144,9 +156,9 @@ function SearchDetails(props) {
       <div style={{ display: 'flex', justifyContent: 'center', marginTop: 100 }}>
         <Msgtoshow {...msgState} handleClose={() => setMsgState({ ...msgState, visible: false })} />
       </div>
-      
-        <h1>Simple Partner Search</h1>
-        
+
+      <h1>Simple Partner Search</h1>
+
       <div className="Search_Details">
         <h1 style={{ "margin-left": "1%" }}>Search Details</h1>
         <div className="third_row">

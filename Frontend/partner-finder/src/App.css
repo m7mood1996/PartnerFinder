@@ -80,25 +80,10 @@ body {
   display: grid;
   grid-template-columns: 0.1fr 0.2fr;
 }
-.first_sc {
+.countries_scores {
   color: black;
   display: grid;
-  grid-template-columns: 0.2fr 0.4fr 0.2fr 0.4fr 0.2fr 0.4fr 0.2fr 0.4fr;
-}
-.second_sc {
-  color: black;
-  display: grid;
-  grid-template-columns: 0.2fr 0.4fr 0.2fr 0.4fr 0.2fr 0.4fr 0.2fr 0.4fr;
-}
-.third_sc {
-  color: black;
-  display: grid;
-  grid-template-columns: 0.2fr 0.4fr 0.2fr 0.4fr 0.2fr 0.4fr 0.2fr 0.4fr;
-}
-.fourth_sc {
-  color: black;
-  display: grid;
-  grid-template-columns: 0.2fr 0.4fr 0.2fr 0.4fr 0.2fr 0.4fr 0.2fr 0.4fr;
+  grid-template-columns: 17% 17% 17% 17% 17% 17% 17% 17%;
 }
 .line {
   border-top: 5px solid black;
@@ -109,7 +94,7 @@ body {
 .first_ty {
   color: black;
   display: grid;
-  grid-template-columns: 0.29fr 0.3fr 0.15fr 0.3fr 0.15fr 0.3fr;
+  grid-template-columns: 0.3fr 0.2fr 0.13fr 0.2fr 0.13fr 0.2fr;
 }
 .Projects {
   display: grid;

@@ -73,6 +73,7 @@ function SearchDetails(props) {
   const deleteTag = (idx) => {
     let newTags = tags.filter((val, i) => i !== idx);
     setTags(newTags);
+    props.setState({ ...props.state, 'tags': [...newTags] })
   };
 
   const dragTag = (tag, currPos, newPos) => { };

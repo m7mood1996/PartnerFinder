@@ -416,7 +416,7 @@ function AlertsSettings(props) {
       <div>
         <h1 style={{ "margin-left": "50px" }}>Countries Score</h1>
       </div>
-      <div className="first_sc">
+      <div className="countries_scores">
         <h2 style={{ "margin-left": "50px" }}>Italy</h2>
         <Grid container spacing={2} alignItems="center">
           <Grid item>
@@ -474,26 +474,9 @@ function AlertsSettings(props) {
             />
           </Grid>
         </Grid>
-        <h2>Germany</h2>
-        <Grid container spacing={2} alignItems="center">
-          <Grid item>
-            <TextField
-              style={{ width: "40%" }}
-              id="germany"
-              label=""
-              type="number"
-              value={state.germany}
-              onChange={handleInputChange}
-              error={formState.germany}
-              InputLabelProps={{
-                shrink: true,
-              }}
-              variant="outlined"
-            />
-          </Grid>
-        </Grid>
+      
       </div>
-      <div className="second_sc">
+      <div className="countries_scores">
         <h2 style={{ "margin-left": "50px" }}>Denmark</h2>
         <Grid container spacing={2} alignItems="center">
           <Grid item>
@@ -548,26 +531,9 @@ function AlertsSettings(props) {
             />
           </Grid>
         </Grid>
-        <h2>Ireland</h2>
-        <Grid container spacing={2} alignItems="center">
-          <Grid item>
-            <TextField
-              style={{ width: "40%" }}
-              id="ireland"
-              label=""
-              type="number"
-              value={state.ireland}
-              onChange={handleInputChange}
-              error={formState.ireland}
-              InputLabelProps={{
-                shrink: true,
-              }}
-              variant="outlined"
-            />
-          </Grid>
-        </Grid>
+        
       </div>
-      <div className="third_sc">
+      <div className="countries_scores">
         <h2 style={{ "margin-left": "50px" }}>Israel</h2>
         <Grid container spacing={2} alignItems="center">
           <Grid item>
@@ -622,26 +588,9 @@ function AlertsSettings(props) {
             />
           </Grid>
         </Grid>
-        <h2>United Kingdom</h2>
-        <Grid container spacing={2} alignItems="center">
-          <Grid item>
-            <TextField
-              style={{ width: "40%" }}
-              id="uk"
-              label=""
-              type="number"
-              value={state.uk}
-              onChange={handleInputChange}
-              error={formState.uk}
-              InputLabelProps={{
-                shrink: true,
-              }}
-              variant="outlined"
-            />
-          </Grid>
-        </Grid>
+        
       </div>
-      <div className="fourth_sc">
+      <div className="countries_scores">
         <h2 style={{ "margin-left": "50px" }}>Turkey</h2>
         <Grid container spacing={2} alignItems="center">
           <Grid item>
@@ -696,17 +645,37 @@ function AlertsSettings(props) {
             />
           </Grid>
         </Grid>
-        <h2>Norway</h2>
+      </div>
+      <div className="countries_scores">
+        <h2 style={{ "margin-left": "50px" }}>Germany</h2>
+          <Grid container spacing={2} alignItems="center">
+            <Grid item>
+              <TextField
+                style={{ width: "40%" }}
+                id="germany"
+                label=""
+                type="number"
+                value={state.germany}
+                onChange={handleInputChange}
+                error={formState.germany}
+                InputLabelProps={{
+                  shrink: true,
+                }}
+                variant="outlined"
+              />
+            </Grid>
+          </Grid>
+          <h2>Ireland</h2>
         <Grid container spacing={2} alignItems="center">
           <Grid item>
             <TextField
               style={{ width: "40%" }}
-              id="norway"
+              id="ireland"
               label=""
               type="number"
-              value={state.norway}
+              value={state.ireland}
               onChange={handleInputChange}
-              error={formState.norway}
+              error={formState.ireland}
               InputLabelProps={{
                 shrink: true,
               }}
@@ -714,6 +683,44 @@ function AlertsSettings(props) {
             />
           </Grid>
         </Grid>
+        <h2>United Kingdom</h2>
+        <Grid container spacing={2} alignItems="center">
+          <Grid item>
+            <TextField
+              style={{ width: "40%" }}
+              id="uk"
+              label=""
+              type="number"
+              value={state.uk}
+              onChange={handleInputChange}
+              error={formState.uk}
+              InputLabelProps={{
+                shrink: true,
+              }}
+              variant="outlined"
+            />
+          </Grid>
+        </Grid>
+      </div>
+      <div className="countries_scores">
+        <h2 style={{ "margin-left": "50px" }}>Norway</h2>
+          <Grid container spacing={2} alignItems="center">
+            <Grid item>
+              <TextField
+                style={{ width: "40%" }}
+                id="norway"
+                label=""
+                type="number"
+                value={state.norway}
+                onChange={handleInputChange}
+                error={formState.norway}
+                InputLabelProps={{
+                  shrink: true,
+                }}
+                variant="outlined"
+              />
+            </Grid>
+          </Grid>
       </div>
       <div className="line"></div>
       <div>

@@ -849,7 +849,7 @@ function AlertsSettings(props) {
           color="primary"
           round
           variant="contained"
-          id="ButtonText"
+          id="Button"
           onClick={() => updateAlert()}
         >
           Update
@@ -858,7 +858,8 @@ function AlertsSettings(props) {
 
       <div className="Buttons">
         <Button
-          color="secondary"
+          id="Button"
+          color="primary"
           round
           variant="contained"
           onClick={() => getCalls()}

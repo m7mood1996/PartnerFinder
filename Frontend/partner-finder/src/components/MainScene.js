@@ -3,15 +3,15 @@ import SearchDetails from "./SearchDetails";
 import AlertsSettings from "./AlertsSettings";
 import Updates from "./Updates";
 import PropTypes from "prop-types";
-import { makeStyles } from "@material-ui/core/styles";
+import { makeStyles } from "@material-ui/core";
 import AppBar from "@material-ui/core/AppBar";
 import Tabs from "@material-ui/core/Tabs";
 import Tab from "@material-ui/core/Tab";
 import Typography from "@material-ui/core/Typography";
 import Box from "@material-ui/core/Box";
 import moment from "moment";
-import { Msgtoshow } from './Msgtoshow';
-import { BACKEND_URL } from '../utils';
+import { Msgtoshow } from "./Msgtoshow";
+import { BACKEND_URL } from "../utils";
 
 function MainScene(props) {
   const { children, value, index, ...other } = props;
@@ -63,12 +63,21 @@ const useStyles = makeStyles((theme) => ({
     flexGrow: 1,
     // backgroundColor: theme.palette.background.paper,
   },
+  tabsText: {
+    fontSize: "24px",
+    fontWeight: "300",
+  },
+  indicator: { backgroundColor: "#557A95" },
 }));
 
 export default function NavTabs() {
   const classes = useStyles();
   const [value, setValue] = React.useState(0);
-  const [msgState, setMsgState] = React.useState({ title: '', body: '', visible: false });
+  const [msgState, setMsgState] = React.useState({
+    title: "",
+    body: "",
+    visible: false,
+  });
   const [alertsState, setAlertsState] = React.useState({
     firstLoading: true,
     loading: false,
@@ -101,14 +110,13 @@ export default function NavTabs() {
   const [searchState, setSearchState] = React.useState({
     tags: [],
     countrySearched: [],
-    data: []
-  })
+    data: [],
+  });
   const [updatesState, setUpdatesState] = React.useState({
-    EU: '',
-    B2MATCH: '',
+    EU: "",
+    B2MATCH: "",
     firstLoading: true,
   });
-
 
   if (updatesState.firstLoading) {
     let url = new URL(BACKEND_URL + "updates/getSettings/");
@@ -117,37 +125,38 @@ export default function NavTabs() {
     })
       .then((res) => res.json())
       .then((resp) => {
-        if ('error' in resp) {
+        if ("error" in resp) {
           setMsgState({
-            title: 'Failed',
-            body: 'Error while getting updates settings',
-            visible: true
-          })
+            title: "Failed",
+            body: "Error while getting updates settings",
+            visible: true,
+          });
           setUpdatesState({
-            EU: '',
-            B2MATCH: '',
+            EU: "",
+            B2MATCH: "",
             firstLoading: false,
-          })
-        }
-        else {
+          });
+        } else {
           setUpdatesState({
             EU: moment.unix(resp.EU).format("MMMM Do YYYY, h:mm:ss a"),
-            B2MATCH: moment.unix(resp.B2MATCH).format("MMMM Do YYYY, h:mm:ss a"),
+            B2MATCH: moment
+              .unix(resp.B2MATCH)
+              .format("MMMM Do YYYY, h:mm:ss a"),
             firstLoading: false,
           });
         }
       })
       .catch((error) => {
         setMsgState({
-          title: 'Failed',
-          body: 'Error while getting updates settings',
-          visible: true
-        })
+          title: "Failed",
+          body: "Error while getting updates settings",
+          visible: true,
+        });
         setUpdatesState({
-          EU: '',
-          B2MATCH: '',
+          EU: "",
+          B2MATCH: "",
           firstLoading: false,
-        })
+        });
       });
   }
 
@@ -161,15 +170,14 @@ export default function NavTabs() {
     })
       .then((res) => res.json())
       .then((resp) => {
-        if ('error' in resp) {
+        if ("error" in resp) {
           setMsgState({
-            title: 'Failed',
-            body: 'Error while uploading alerts settings',
-            visible: true
-          })
+            title: "Failed",
+            body: "Error while uploading alerts settings",
+            visible: true,
+          });
           setAlertsState(newState);
-        }
-        else {
+        } else {
           turned_on = resp.turned_on;
           newMail = resp.email;
           url = new URL(BACKEND_URL + "scores/getscores/");
@@ -178,15 +186,14 @@ export default function NavTabs() {
           })
             .then((res) => res.json())
             .then((resp) => {
-              if ('error' in resp) {
+              if ("error" in resp) {
                 setMsgState({
-                  title: 'Failed',
-                  body: 'Error while uploading alerts settings',
-                  visible: true
-                })
+                  title: "Failed",
+                  body: "Error while uploading alerts settings",
+                  visible: true,
+                });
                 setAlertsState(newState);
-              }
-              else {
+              } else {
                 newState["resScore"] = resp.RES;
                 newState["italy"] = resp.Italy;
                 newState["france"] = resp.France;
@@ -217,20 +224,20 @@ export default function NavTabs() {
             })
             .catch((error) => {
               setMsgState({
-                title: 'Failed',
-                body: 'Error while uploading alerts settings',
-                visible: true
-              })
+                title: "Failed",
+                body: "Error while uploading alerts settings",
+                visible: true,
+              });
               setAlertsState(newState);
             });
         }
       })
       .catch((error) => {
         setMsgState({
-          title: 'Failed',
-          body: 'Error while uploading alerts settings',
-          visible: true
-        })
+          title: "Failed",
+          body: "Error while uploading alerts settings",
+          visible: true,
+        });
         setAlertsState(newState);
       });
   }
@@ -240,17 +247,43 @@ export default function NavTabs() {
   };
   return (
     <div className={classes.root}>
-      <AppBar position="static">
-        <Tabs inkBarStyle={{ 'backgroundColor': 'red' }}
+      <AppBar id="Button" position="static">
+        <Tabs
+          classes={{
+            indicator: classes.indicator,
+          }}
           variant="fullWidth"
-
           value={value}
           onChange={handleChange}
           aria-label="nav tabs example"
         >
-          <LinkTab inkBarStyle={{ 'backgroundColor': 'red' }} label="Basic Search" href="/search" {...a11yProps(0)} />
-          <LinkTab label="Alerts Settings" href="/settings" {...a11yProps(1)} />
-          <LinkTab label="Updates" href="/updates" {...a11yProps(2)} />
+          <LinkTab
+            label={
+              <span id="textFontFamily" className={classes.tabsText}>
+                Basic Search
+              </span>
+            }
+            href="/search"
+            {...a11yProps(0)}
+          />
+          <LinkTab
+            label={
+              <span id="textFontFamily" className={classes.tabsText}>
+                Alerts Settings
+              </span>
+            }
+            href="/settings"
+            {...a11yProps(1)}
+          />
+          <LinkTab
+            label={
+              <span id="textFontFamily" className={classes.tabsText}>
+                Updates
+              </span>
+            }
+            href="/updates"
+            {...a11yProps(2)}
+          />
         </Tabs>
       </AppBar>
       <MainScene value={value} index={0}>

@@ -158,7 +158,7 @@ function SearchDetails(props) {
         {...msgState}
         handleClose={() => setMsgState({ ...msgState, visible: false })}
       />
-      <h1>Simple Partner Search</h1>
+      <h1 id="textFontFamily">Simple Partner Search</h1>
 
       <div className="Search_Details">
         <h1 style={{ "margin-left": "1%" }}>Search Details</h1>
@@ -213,7 +213,7 @@ function SearchDetails(props) {
           color="primary"
           round
           variant="contained"
-          id="ButtonText"
+          id="Button"
           onClick={() => searchCompany()}
           disabled={state.loading}
         >

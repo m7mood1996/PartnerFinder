@@ -3,7 +3,7 @@ import MaterialTable from "material-table";
 import { forwardRef } from "react";
 import ResultsTable from "./ResultsTable";
 import { Msgtoshow } from "./Msgtoshow";
-import { BeatLoader } from 'react-spinners';
+import { BeatLoader } from "react-spinners";
 import {
   makeStyles,
   Button,
@@ -30,8 +30,7 @@ import Remove from "@material-ui/icons/Remove";
 import SaveAlt from "@material-ui/icons/SaveAlt";
 import Search from "@material-ui/icons/Search";
 import ViewColumn from "@material-ui/icons/ViewColumn";
-import { EU_columns, BACKEND_URL } from '../utils';
-
+import { EU_columns, BACKEND_URL } from "../utils";
 
 const useStyles = makeStyles((theme) => ({
   title: {
@@ -64,10 +63,13 @@ const tableIcons = {
   ViewColumn: forwardRef((props, ref) => <ViewColumn {...props} ref={ref} />),
 };
 
-
 function CallsResultsTable(props) {
   const [data, setData] = React.useState(props.data);
-  const [msgState, setMsgState] = React.useState({ title: '', body: '', visible: false });
+  const [msgState, setMsgState] = React.useState({
+    title: "",
+    body: "",
+    visible: false,
+  });
   const [columns] = React.useState(props.columns);
   const [title] = React.useState(props.title);
   const [visible, setVisible] = React.useState(false);
@@ -76,7 +78,7 @@ function CallsResultsTable(props) {
   const classes = useStyles();
   const [state, setState] = React.useState({
     loading: false,
-  })
+  });
   React.useEffect(
     function effectFunction() {
       setData(props.data);
@@ -92,7 +94,7 @@ function CallsResultsTable(props) {
 
   const searchOrganizations = (rowData) => {
     setState({ loading: true });
-    console.log("COLSS", EU_columns)
+    console.log("COLSS", EU_columns);
     let url = new URL(BACKEND_URL + "calls/search_organizations/");
     let params = {
       data: JSON.stringify({ ccm2Id: rowData["ccm2Id"] }),
@@ -105,18 +107,17 @@ function CallsResultsTable(props) {
     })
       .then((res) => res.json())
       .then((resp) => {
-        if ('error' in resp) {
+        if ("error" in resp) {
           setMsgState({
-            title: 'Failed',
-            body: 'Error while searching organizations',
-            visible: true
+            title: "Failed",
+            body: "Error while searching organizations",
+            visible: true,
           });
           setState({ loading: false });
           setSearchTitle("");
           setSearchResult([]);
           setVisible(false);
-        }
-        else {
+        } else {
           setState({ loading: false });
           setSearchTitle(rowData["title"]);
           setSearchResult(resp.EU);
@@ -125,17 +126,16 @@ function CallsResultsTable(props) {
       })
       .catch((error) => {
         setMsgState({
-          title: 'Failed',
-          body: 'Error while searching organizations',
-          visible: true
+          title: "Failed",
+          body: "Error while searching organizations",
+          visible: true,
         });
         setState({ loading: false });
         setSearchTitle("");
         setSearchResult([]);
         setVisible(false);
       });
-  }
-
+  };
 
   const handleDelete = (oldData) => {
     let newData = [...data];
@@ -145,8 +145,13 @@ function CallsResultsTable(props) {
 
   return (
     <React.Fragment>
-      <div style={{ display: 'flex', justifyContent: 'center', marginTop: 100 }}>
-        <Msgtoshow {...msgState} handleClose={() => setMsgState({ ...msgState, visible: false })} />
+      <div
+        style={{ display: "flex", justifyContent: "center", marginTop: 100 }}
+      >
+        <Msgtoshow
+          {...msgState}
+          handleClose={() => setMsgState({ ...msgState, visible: false })}
+        />
       </div>
       <div>
         {data.length === 0 ? null : (
@@ -212,17 +217,20 @@ function CallsResultsTable(props) {
           </Dialog>
         )}
       </div>
-      {state.loading ? <Dialog
-        disableBackdropClick
-        disableEscapeKeyDown
-        open={true}
-        aria-labelledby="alert-dialog-title"
-        aria-describedby="alert-dialog-description">
-        <DialogTitle className={classes.title}>LOADING</DialogTitle>
-        <DialogContent style={{ 'margin-left': '17px' }}>
-          <BeatLoader />
-        </DialogContent>
-      </Dialog> : null}
+      {state.loading ? (
+        <Dialog
+          disableBackdropClick
+          disableEscapeKeyDown
+          open={true}
+          aria-labelledby="alert-dialog-title"
+          aria-describedby="alert-dialog-description"
+        >
+          <DialogTitle className={classes.title}>LOADING</DialogTitle>
+          <DialogContent style={{ "margin-left": "17px" }}>
+            <BeatLoader />
+          </DialogContent>
+        </Dialog>
+      ) : null}
     </React.Fragment>
   );
 }

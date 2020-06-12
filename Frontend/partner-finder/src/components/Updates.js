@@ -101,7 +101,7 @@ function Updates(props) {
           color="primary"
           round
           variant="contained"
-          id="ButtonText"
+          id="Button"
           onClick={updateB2match}
           style={{ width: "20%" }}
         >
@@ -120,7 +120,7 @@ function Updates(props) {
           color="primary"
           round
           variant="contained"
-          id="ButtonText"
+          id="Button"
           onClick={updateEU}
           style={{ width: "20%" }}
         >

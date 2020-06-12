@@ -1,25 +1,103 @@
 body {
-  background-color: #7395AE ;
-}
-.MuiTypography-body1{
-  font-family: 'Balsamiq Sans', cursive;
+  background-color: #7395ae;
 }
 
+#textFontFamily {
+  font-family: "Lucida Sans Typewriter", "Lucida Console", monaco,
+    "Bitstream Vera Sans Mono", monospace;
+  font-style: normal;
+  font-variant: normal;
+}
+
+h3 {
+  font-family: "Lucida Sans Typewriter", "Lucida Console", monaco,
+    "Bitstream Vera Sans Mono", monospace;
+  font-style: normal;
+  font-variant: normal;
+  font-size: 14px;
+  font-weight: 700;
+  line-height: 15.4px;
+}
+p {
+  font-family: "Lucida Sans Typewriter", "Lucida Console", monaco,
+    "Bitstream Vera Sans Mono", monospace;
+  font-style: normal;
+  font-variant: normal;
+  font-size: 14px;
+  font-weight: 400;
+  line-height: 20px;
+}
+blockquote {
+  font-family: "Lucida Sans Typewriter", "Lucida Console", monaco,
+    "Bitstream Vera Sans Mono", monospace;
+  font-style: normal;
+  font-variant: normal;
+  font-size: 21px;
+  font-weight: 400;
+  line-height: 30px;
+}
+pre {
+  font-family: "Lucida Sans Typewriter", "Lucida Console", monaco,
+    "Bitstream Vera Sans Mono", monospace;
+  font-style: normal;
+  font-variant: normal;
+  font-size: 13px;
+  font-weight: 400;
+  line-height: 18.5714px;
+}
+
+h3 {
+  font-family: "Lucida Sans Typewriter", "Lucida Console", monaco,
+    "Bitstream Vera Sans Mono", monospace;
+  font-style: normal;
+  font-variant: normal;
+  font-size: 14px;
+  font-weight: 700;
+  line-height: 15.4px;
+}
+p {
+  font-family: "Lucida Sans Typewriter", "Lucida Console", monaco,
+    "Bitstream Vera Sans Mono", monospace;
+  font-style: normal;
+  font-variant: normal;
+  font-size: 14px;
+  font-weight: 400;
+  line-height: 20px;
+}
+blockquote {
+  font-family: "Lucida Sans Typewriter", "Lucida Console", monaco,
+    "Bitstream Vera Sans Mono", monospace;
+  font-style: normal;
+  font-variant: normal;
+  font-size: 21px;
+
+  font-weight: 400;
+  line-height: 30px;
+}
+
+pre {
+  font-family: "Lucida Sans Typewriter", "Lucida Console", monaco,
+    "Bitstream Vera Sans Mono", monospace;
+  font-style: normal;
+  font-variant: normal;
+  font-size: 13px;
+  font-weight: 400;
+  line-height: 18.5714px;
+}
 
 .App {
   text-align: center;
-  background-color: white;
-  min-height: 100vh;
+  /* min-height: 100vh; */
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
   font-size: calc(10px + 2vmin);
-  color: white;
 }
+
 .Header {
   text-align: center;
-  height: 50%;
+  /* height: 50%; */
 }
 .Search {
   color: white;
@@ -109,17 +187,18 @@ body {
   margin-top: 42px;
   text-align: center;
 }
+
 .update {
-  display:grid;
+  display: grid;
   grid-template-columns: 0.29fr 0.3fr;
 }
-#ButtonText {
-  width: 125px;
+#Button {
+  background-color: #5d5c61;
 }
 
-/* #app {
+#app {
   padding: 40px;
-} */
+}
 
 div.ReactTags__tags {
   position: relative;

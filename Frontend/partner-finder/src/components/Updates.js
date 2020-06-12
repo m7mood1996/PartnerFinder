@@ -1,88 +1,91 @@
 import React from "react";
 import { Button } from "@material-ui/core";
-import { Msgtoshow } from "./Msgtoshow"
-import { BACKEND_URL } from '../utils';
+import { Msgtoshow } from "./Msgtoshow";
+import { BACKEND_URL } from "../utils";
 
 function Updates(props) {
   const [state, setState] = React.useState({
-    EU: '',
-    B2MATCH: '',
+    EU: "",
+    B2MATCH: "",
     firstLoading: true,
   });
 
-  const [msgState, setMsgState] = React.useState({ title: '', body: '', visible: false });
+  const [msgState, setMsgState] = React.useState({
+    title: "",
+    body: "",
+    visible: false,
+  });
 
   if (state.firstLoading) {
     setState({ ...props.state });
   }
 
   const updateB2match = (event) => {
-    let url = new URL(
-      BACKEND_URL + "events/update_upcoming_events/"
-    );
+    let url = new URL(BACKEND_URL + "events/update_upcoming_events/");
     fetch(url, {
       method: "POST",
     })
       .then((res) => res.json())
       .then((resp) => {
-        if ('error' in resp) {
+        if ("error" in resp) {
           setMsgState({
-            title: 'Failed',
-            body: 'Error while updating the events',
-            visible: true
+            title: "Failed",
+            body: "Error while updating the events",
+            visible: true,
           });
-        }
-        else {
+        } else {
           setMsgState({
-            title: 'Success',
-            body: 'B2match has been updated successfully',
-            visible: true
+            title: "Success",
+            body: "B2match has been updated successfully",
+            visible: true,
           });
         }
       })
-      .catch((error) => setMsgState({
-        title: 'Failed',
-        body: 'Error while updating B2match data',
-        visible: true
-      }));
+      .catch((error) =>
+        setMsgState({
+          title: "Failed",
+          body: "Error while updating B2match data",
+          visible: true,
+        })
+      );
   };
 
   const updateEU = (event) => {
-    let url = new URL(
-      BACKEND_URL + "organizations/updateOrganizations/"
-    );
+    let url = new URL(BACKEND_URL + "organizations/updateOrganizations/");
     fetch(url, {
       method: "GET",
     })
       .then((res) => res.json())
       .then((resp) => {
-        if ('error' in resp) {
+        if ("error" in resp) {
           setMsgState({
-            title: 'Failed',
-            body: 'Error while updating the EU data.',
-            visible: true
+            title: "Failed",
+            body: "Error while updating the EU data.",
+            visible: true,
           });
-        }
-        else {
+        } else {
           setMsgState({
-            title: 'Success',
-            body: 'EU has been updated successfully.',
-            visible: true
+            title: "Success",
+            body: "EU has been updated successfully.",
+            visible: true,
           });
         }
       })
-      .catch((error) => setMsgState({
-        title: 'Failed',
-        body: 'Error while updating EU data.',
-        visible: true
-      }));
+      .catch((error) =>
+        setMsgState({
+          title: "Failed",
+          body: "Error while updating EU data.",
+          visible: true,
+        })
+      );
   };
 
   return (
     <React.Fragment>
-      <div style={{ display: 'flex', justifyContent: 'center', marginTop: 100 }}>
-        <Msgtoshow {...msgState} handleClose={() => setMsgState({ ...msgState, visible: false })} />
-      </div>
+      <Msgtoshow
+        {...msgState}
+        handleClose={() => setMsgState({ ...msgState, visible: false })}
+      />
       <div>
         <h1>Updates</h1>
       </div>
@@ -132,7 +135,8 @@ function Updates(props) {
             "font-weight": "bold",
           }}
         >
-          ** There is an automatically updates every month for both EU & B2MATCH **
+          ** There is an automatically updates every month for both EU & B2MATCH
+          **
         </h1>
       </div>
     </React.Fragment>

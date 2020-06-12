@@ -7,11 +7,16 @@ import Grid from "@material-ui/core/Grid";
 import { Button } from "@material-ui/core";
 import CallsResultsTable from "./CallsResultsTable";
 import moment from "moment";
-import { Msgtoshow } from "./Msgtoshow"
+import { Msgtoshow } from "./Msgtoshow";
 import ResultsTable from "./ResultsTable";
-import { BeatLoader } from 'react-spinners'
-import { makeStyles, Dialog, DialogTitle, DialogContent } from '@material-ui/core/';
-import { BACKEND_URL } from '../utils';
+import { BeatLoader } from "react-spinners";
+import {
+  makeStyles,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+} from "@material-ui/core/";
+import { BACKEND_URL } from "../utils";
 
 const calls_columns = [
   { title: "Title", field: "title" },
@@ -23,25 +28,33 @@ const calls_columns = [
   { title: "Submission Procedure Role", field: "sumbissionProcedure" },
 ];
 
-const useStyles = makeStyles(theme => ({
+const useStyles = makeStyles((theme) => ({
   title: {
-    textAlign: 'center',
+    textAlign: "center",
     fontSize: 30,
   },
-
-
 }));
 
 const events_columns = [
   { title: "Name", field: "event_name" },
   {
-    title: "URL", field: "event_url", render: rowData => <a href={rowData.event_url} target="_blank">{rowData.event_url} </a>
+    title: "URL",
+    field: "event_url",
+    render: (rowData) => (
+      <a href={rowData.event_url} target="_blank">
+        {rowData.event_url}{" "}
+      </a>
+    ),
   },
 ];
 
 function AlertsSettings(props) {
   const classes = useStyles();
-  const [msgState, setMsgState] = React.useState({ title: '', body: '', visible: false });
+  const [msgState, setMsgState] = React.useState({
+    title: "",
+    body: "",
+    visible: false,
+  });
   const [turned_on, setturned_on] = React.useState(false);
   const [state, setState] = React.useState({
     firstLoading: true,
@@ -105,7 +118,7 @@ function AlertsSettings(props) {
     setturned_on(newState.turned_on);
     delete newState["turned_on"];
     newState["calls"] = [];
-    newState['events'] = [];
+    newState["events"] = [];
     setState(newState);
   }
 
@@ -113,15 +126,14 @@ function AlertsSettings(props) {
     let temp = false;
     setturned_on((prev) => {
       temp = !prev;
-      return temp
+      return temp;
     });
-    props.setState({ ...props.state, 'turned_on': temp })
+    props.setState({ ...props.state, turned_on: temp });
   };
 
   const hideAlerts = () => {
-    setState({ ...state, 'events': [], 'calls': [] })
-  }
-
+    setState({ ...state, events: [], calls: [] });
+  };
 
   const getCalls = () => {
     setState({ ...state, loading: true });
@@ -131,13 +143,13 @@ function AlertsSettings(props) {
     })
       .then((res) => res.json())
       .then((resp) => {
-        if ('error' in resp) {
+        if ("error" in resp) {
           setMsgState({
-            title: 'Failed',
-            body: 'Error while uploading alerts results',
-            visible: true
+            title: "Failed",
+            body: "Error while uploading alerts results",
+            visible: true,
           });
-          setState({ ...state, loading: false, 'calls': [] });
+          setState({ ...state, loading: false, calls: [] });
         } else {
           let calls = resp["calls"].map((call) => {
             call["deadlineDate"] = moment
@@ -152,36 +164,35 @@ function AlertsSettings(props) {
           })
             .then((res) => res.json())
             .then((resp) => {
-              if ('error' in resp) {
+              if ("error" in resp) {
                 setMsgState({
-                  title: 'Failed',
-                  body: 'Error while uploading alerts results',
-                  visible: true
+                  title: "Failed",
+                  body: "Error while uploading alerts results",
+                  visible: true,
                 });
-                setState({ ...state, loading: false, 'events': [] });
-              }
-              else {
+                setState({ ...state, loading: false, events: [] });
+              } else {
                 setState({ ...state, loading: false });
-                setState({ ...state, calls, 'events': resp })
+                setState({ ...state, calls, events: resp });
               }
             })
             .catch((error) => {
               setMsgState({
-                title: 'Failed',
-                body: 'Error while uploading alerts results',
-                visible: true
+                title: "Failed",
+                body: "Error while uploading alerts results",
+                visible: true,
               });
-              setState({ ...state, 'events': [] })
+              setState({ ...state, events: [] });
             });
         }
       })
       .catch((error) => {
         setMsgState({
-          title: 'Failed',
-          body: 'Error while uploading alerts results',
-          visible: true
+          title: "Failed",
+          body: "Error while uploading alerts results",
+          visible: true,
         });
-        setState({ ...state, loading: false, 'calls': [] });
+        setState({ ...state, loading: false, calls: [] });
       });
   };
 
@@ -189,7 +200,7 @@ function AlertsSettings(props) {
     let newState = { ...state };
     newState[event.target.id] = event.target.value;
     setState(newState);
-    props.setState({ ...props.state, ...newState })
+    props.setState({ ...props.state, ...newState });
     let newFormState = { ...formState };
     if (
       event.target.id !== "email" &&
@@ -213,15 +224,13 @@ function AlertsSettings(props) {
         } else {
           res[key] = false;
         }
-      }
-      else if (key === 'email') {
+      } else if (key === "email") {
         if (!state[key].match(/^([\w.%+-]+)@([\w-]+\.)+([\w]{2,})$/i)) {
-          console.log("What the hell !!")
+          console.log("What the hell !!");
           setFormState({ ...formState, valid_email: true });
           console.log("state of email" + "\t" + formState.valid_email);
           check = true;
-        }
-        else {
+        } else {
           res[key] = false;
         }
       }
@@ -236,25 +245,23 @@ function AlertsSettings(props) {
       if (formState.valid_email) {
         console.log("Invalid Email");
         setMsgState({
-          title: 'Failed',
-          body: 'Invalid Email',
-          visible: true
+          title: "Failed",
+          body: "Invalid Email",
+          visible: true,
         });
-      }
-      else {
+      } else {
         console.log("form" + formState.valid_email);
         setMsgState({
-          title: 'Failed',
-          body: 'Scores must be between 0 and 1',
-          visible: true
+          title: "Failed",
+          body: "Scores must be between 0 and 1",
+          visible: true,
         });
       }
-
     } else {
       setState({ ...state, loading: true });
       let url = new URL(BACKEND_URL + "alerts/setSettings/");
       let params = {
-        data: JSON.stringify({ 'email': state.email, 'turned_on': turned_on }),
+        data: JSON.stringify({ email: state.email, turned_on: turned_on }),
       };
       Object.keys(params).forEach((key) =>
         url.searchParams.append(key, params[key])
@@ -264,15 +271,14 @@ function AlertsSettings(props) {
       })
         .then((res) => res.json())
         .then((resp) => {
-          if ('error' in resp) {
+          if ("error" in resp) {
             setMsgState({
-              title: 'Failed',
-              body: 'Error while updating alerts settings',
-              visible: true
-            })
+              title: "Failed",
+              body: "Error while updating alerts settings",
+              visible: true,
+            });
             setState({ ...state, loading: false });
-          }
-          else {
+          } else {
             props.setState({
               ...props.state,
               email: state.email,
@@ -313,40 +319,39 @@ function AlertsSettings(props) {
             })
               .then((res) => res.json())
               .then((resp) => {
-                if ('error' in resp) {
+                if ("error" in resp) {
                   setMsgState({
-                    title: 'Failed',
-                    body: 'Error while updating alerts settings',
-                    visible: true
-                  })
+                    title: "Failed",
+                    body: "Error while updating alerts settings",
+                    visible: true,
+                  });
                   setState({ ...state, loading: false });
-                }
-                else {
+                } else {
                   props.setState({ ...props.state, ...state });
                   setState({ ...state, loading: false });
                   setMsgState({
-                    title: 'Success',
-                    body: 'Alerts settings has been updated successfully',
-                    visible: true
+                    title: "Success",
+                    body: "Alerts settings has been updated successfully",
+                    visible: true,
                   });
                 }
               })
               .catch((error) => {
                 setMsgState({
-                  title: 'Failed',
-                  body: 'Error while updating alerts settings',
-                  visible: true
-                })
+                  title: "Failed",
+                  body: "Error while updating alerts settings",
+                  visible: true,
+                });
                 setState({ ...state, loading: false });
               });
           }
         })
         .catch((error) => {
           setMsgState({
-            title: 'Failed',
-            body: 'Error while updating alerts settings',
-            visible: true
-          })
+            title: "Failed",
+            body: "Error while updating alerts settings",
+            visible: true,
+          });
           setState({ ...state, loading: false });
         });
     }
@@ -354,9 +359,10 @@ function AlertsSettings(props) {
 
   return (
     <React.Fragment>
-      <div style={{ display: 'flex', justifyContent: 'center', marginTop: 100 }}>
-        <Msgtoshow {...msgState} handleClose={() => setMsgState({ ...msgState, visible: false })} />
-      </div>
+      <Msgtoshow
+        {...msgState}
+        handleClose={() => setMsgState({ ...msgState, visible: false })}
+      />
       <div className="title">
         <h1>Alerts Settings</h1>
       </div>
@@ -375,7 +381,9 @@ function AlertsSettings(props) {
           variant="outlined"
         />
 
-        <h3 style={{ 'margin-left': '14px', 'margin-top': '24px' }}>Enable/Disable Alerts</h3>
+        <h3 style={{ "margin-left": "14px", "margin-top": "24px" }}>
+          Enable/Disable Alerts
+        </h3>
         <FormGroup style={{ "margin-top": "15px" }}>
           <FormControlLabel
             control={
@@ -474,7 +482,6 @@ function AlertsSettings(props) {
             />
           </Grid>
         </Grid>
-      
       </div>
       <div className="countries_scores">
         <h2 style={{ "margin-left": "50px" }}>Denmark</h2>
@@ -531,7 +538,6 @@ function AlertsSettings(props) {
             />
           </Grid>
         </Grid>
-        
       </div>
       <div className="countries_scores">
         <h2 style={{ "margin-left": "50px" }}>Israel</h2>
@@ -588,7 +594,6 @@ function AlertsSettings(props) {
             />
           </Grid>
         </Grid>
-        
       </div>
       <div className="countries_scores">
         <h2 style={{ "margin-left": "50px" }}>Turkey</h2>
@@ -648,24 +653,24 @@ function AlertsSettings(props) {
       </div>
       <div className="countries_scores">
         <h2 style={{ "margin-left": "50px" }}>Germany</h2>
-          <Grid container spacing={2} alignItems="center">
-            <Grid item>
-              <TextField
-                style={{ width: "40%" }}
-                id="germany"
-                label=""
-                type="number"
-                value={state.germany}
-                onChange={handleInputChange}
-                error={formState.germany}
-                InputLabelProps={{
-                  shrink: true,
-                }}
-                variant="outlined"
-              />
-            </Grid>
+        <Grid container spacing={2} alignItems="center">
+          <Grid item>
+            <TextField
+              style={{ width: "40%" }}
+              id="germany"
+              label=""
+              type="number"
+              value={state.germany}
+              onChange={handleInputChange}
+              error={formState.germany}
+              InputLabelProps={{
+                shrink: true,
+              }}
+              variant="outlined"
+            />
           </Grid>
-          <h2>Ireland</h2>
+        </Grid>
+        <h2>Ireland</h2>
         <Grid container spacing={2} alignItems="center">
           <Grid item>
             <TextField
@@ -704,23 +709,23 @@ function AlertsSettings(props) {
       </div>
       <div className="countries_scores">
         <h2 style={{ "margin-left": "50px" }}>Norway</h2>
-          <Grid container spacing={2} alignItems="center">
-            <Grid item>
-              <TextField
-                style={{ width: "40%" }}
-                id="norway"
-                label=""
-                type="number"
-                value={state.norway}
-                onChange={handleInputChange}
-                error={formState.norway}
-                InputLabelProps={{
-                  shrink: true,
-                }}
-                variant="outlined"
-              />
-            </Grid>
+        <Grid container spacing={2} alignItems="center">
+          <Grid item>
+            <TextField
+              style={{ width: "40%" }}
+              id="norway"
+              label=""
+              type="number"
+              value={state.norway}
+              onChange={handleInputChange}
+              error={formState.norway}
+              InputLabelProps={{
+                shrink: true,
+              }}
+              variant="outlined"
+            />
           </Grid>
+        </Grid>
       </div>
       <div className="line"></div>
       <div>
@@ -881,7 +886,9 @@ function AlertsSettings(props) {
         )}
       </div>
       <div className="Buttons">
-        {state && ((state.events && state.events.length !== 0) || (state.calls && state.calls.length !== 0)) ? (
+        {state &&
+        ((state.events && state.events.length !== 0) ||
+          (state.calls && state.calls.length !== 0)) ? (
           <Button
             color="secondary"
             round
@@ -889,20 +896,23 @@ function AlertsSettings(props) {
             onClick={() => hideAlerts()}
           >
             Hide Alerts Results
-        </Button>)
-          : null}
+          </Button>
+        ) : null}
       </div>
-      {state && state.loading ? <Dialog
-        disableBackdropClick
-        disableEscapeKeyDown
-        open={true}
-        aria-labelledby="alert-dialog-title"
-        aria-describedby="alert-dialog-description">
-        <DialogTitle className={classes.title}>LOADING</DialogTitle>
-        <DialogContent style={{ 'margin-left': '17px' }}>
-          <BeatLoader />
-        </DialogContent>
-      </Dialog> : null}
+      {state && state.loading ? (
+        <Dialog
+          disableBackdropClick
+          disableEscapeKeyDown
+          open={true}
+          aria-labelledby="alert-dialog-title"
+          aria-describedby="alert-dialog-description"
+        >
+          <DialogTitle className={classes.title}>LOADING</DialogTitle>
+          <DialogContent style={{ "margin-left": "17px" }}>
+            <BeatLoader />
+          </DialogContent>
+        </Dialog>
+      ) : null}
     </React.Fragment>
   );
 }

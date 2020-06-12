@@ -61,7 +61,7 @@ function LinkTab(props) {
 const useStyles = makeStyles((theme) => ({
   root: {
     flexGrow: 1,
-    backgroundColor: theme.palette.background.paper,
+    // backgroundColor: theme.palette.background.paper,
   },
 }));
 
@@ -241,13 +241,14 @@ export default function NavTabs() {
   return (
     <div className={classes.root}>
       <AppBar position="static">
-        <Tabs
+        <Tabs inkBarStyle={{ 'backgroundColor': 'red' }}
           variant="fullWidth"
+
           value={value}
           onChange={handleChange}
           aria-label="nav tabs example"
         >
-          <LinkTab label="Basic Search" href="/search" {...a11yProps(0)} />
+          <LinkTab inkBarStyle={{ 'backgroundColor': 'red' }} label="Basic Search" href="/search" {...a11yProps(0)} />
           <LinkTab label="Alerts Settings" href="/settings" {...a11yProps(1)} />
           <LinkTab label="Updates" href="/updates" {...a11yProps(2)} />
         </Tabs>

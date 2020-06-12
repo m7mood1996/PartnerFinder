@@ -153,93 +153,97 @@ function SearchDetails(props) {
   };
 
   return (
-    <React.Fragment>
+    <React.Fragment style={{ 'backgroundColor': '#7395AE' }}>
       <div style={{ display: 'flex', justifyContent: 'center', marginTop: 100 }}>
         <Msgtoshow {...msgState} handleClose={() => setMsgState({ ...msgState, visible: false })} />
       </div>
+        <h1 >Simple Partner Search</h1>
 
-      <h1>Simple Partner Search</h1>
+        <div className="Search_Details" >
+          <h1 style={{ "margin-left": "1%" }}>Search Details</h1>
+          <div className="third_row">
+            <div className="Tags">
+              <h1>Tags and Keywords</h1>
+              <ReactTags
+                tags={tags}
+                handleDelete={deleteTag}
+                handleAddition={addTag}
+                handleDrag={dragTag}
+                delimiters={delimiters}
+                handleInputChange={changeTagInput}
+              />
 
-      <div className="Search_Details">
-        <h1 style={{ "margin-left": "1%" }}>Search Details</h1>
-        <div className="third_row">
-          <div className="Tags">
-            <h1>Tags and Keywords</h1>
-            <ReactTags
-              tags={tags}
-              handleDelete={deleteTag}
-              handleAddition={addTag}
-              handleDrag={dragTag}
-              delimiters={delimiters}
-              handleInputChange={changeTagInput}
-            />
-
-            {formState && formState.tags ? (
-              <Typography
-                variant="caption"
-                display="block"
-                gutterBottom
-                style={{ color: "red" }}
-              >
-                Enter at least one tag
+              {formState && formState.tags ? (
+                <Typography
+                  variant="caption"
+                  display="block"
+                  gutterBottom
+                  style={{ color: "red" }}
+                >
+                  Enter at least one tag
               </Typography>
-            ) : null}
-          </div>
-          <div className="SCountry">
-            <h1>Country</h1>
-            <FormControl className={SearchDetails.formControl} id="tab">
-              <InputLabel
-                id="demo-mutiple-name-label"
-              >
-                Country
+              ) : null}
+            </div>
+            <div className="SCountry">
+              <h1>Country</h1>
+              <FormControl className={SearchDetails.formControl} id="tab">
+                <InputLabel
+                  id="demo-mutiple-name-label"
+                >
+                  Country
               </InputLabel>
-              <Select
-                options={countryList().getData()}
-                value={countrySearched}
-                onChange={handleCountrySearched}
-                labelId="demo-mutiple-name-label"
-                id="demo-mutiple-name"
-                multiple
-              >
-                {countryList()
-                  .getData()
-                  .map((val) => {
-                    return <MenuItem value={val.label}>{val.label}</MenuItem>;
-                  })}
-              </Select>
-            </FormControl>
+                <Select
+                  options={countryList().getData()}
+                  value={countrySearched}
+                  onChange={handleCountrySearched}
+                  labelId="demo-mutiple-name-label"
+                  id="demo-mutiple-name"
+                  multiple
+                >
+                  {countryList()
+                    .getData()
+                    .map((val) => {
+                      return <MenuItem value={val.label}>{val.label}</MenuItem>;
+                    })}
+                </Select>
+              </FormControl>
+            </div>
           </div>
         </div>
-      </div>
-      <div className="Buttons">
-        <Button
-          color="primary"
-          round
-          variant="contained"
-          id="ButtonText"
-          onClick={() => searchCompany()}
-          disabled={state.loading}
-        >
-          {state && state.loading && <i className="fa fa-refresh fa-spin"></i>}
-          {state && state.loading && <Dialog
-            disableBackdropClick
-            disableEscapeKeyDown
-            open={true}
-            aria-labelledby="alert-dialog-title"
-            aria-describedby="alert-dialog-description">
-            <DialogTitle className={classes.title}>LOADING</DialogTitle>
-            <DialogContent style={{ 'margin-left': '17px' }}>
-              <BeatLoader />
-            </DialogContent>
-          </Dialog>}
-          {state && !state.loading && <span>Search</span>}
-        </Button>
-      </div>
-      {data && data.length === 0 ? null : (
-        <div style={{ "margin-top": "10px" }}>
-          <SearchResults data={data} />
+
+
+
+
+
+        <div className="Buttons">
+          <Button
+            color="primary"
+            round
+            variant="contained"
+            id="ButtonText"
+            onClick={() => searchCompany()}
+            disabled={state.loading}
+          >
+            {state && state.loading && <i className="fa fa-refresh fa-spin"></i>}
+            {state && state.loading && <Dialog
+              disableBackdropClick
+              disableEscapeKeyDown
+              open={true}
+              aria-labelledby="alert-dialog-title"
+              aria-describedby="alert-dialog-description">
+              <DialogTitle className={classes.title}>LOADING</DialogTitle>
+              <DialogContent style={{ 'margin-left': '17px' }}>
+                <BeatLoader />
+              </DialogContent>
+            </Dialog>}
+            {state && !state.loading && <span>Search</span>}
+          </Button>
         </div>
-      )}
+        {data && data.length === 0 ? null : (
+          <div style={{ "margin-top": "10px" }}>
+            <SearchResults data={data} />
+          </div>
+        )}
     </React.Fragment>
   );
 }

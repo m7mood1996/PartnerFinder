@@ -409,9 +409,9 @@ def getParticipantsByTags(tags):
     res2 = sorted(res2, key=lambda pair: pair[1], reverse=True)
     res2 = res2[:101]
 
-    res1 = [pair for pair in res1 if pair[1] > 0.3]
+    res1 = [pair for pair in res1 if pair[1] > 0.6]
     res1 = [MapIDsB2match.objects.get(indexID=pair[0]) for pair in res1]
-    res2 = [pair for pair in res2 if pair[1] > 0.3]
+    res2 = [pair for pair in res2 if pair[1] > 0.6]
     res2 = [MapIDsB2matchUpcoming.objects.get(
         indexID=pair[0]) for pair in res2]
 

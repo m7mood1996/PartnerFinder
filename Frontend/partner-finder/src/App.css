@@ -1,6 +1,11 @@
 body {
-  background-color: transparent;
+  background-color: #7395AE ;
 }
+.MuiTypography-body1{
+  font-family: 'Balsamiq Sans', cursive;
+}
+
+
 .App {
   text-align: center;
   background-color: white;
@@ -112,9 +117,9 @@ body {
   width: 125px;
 }
 
-#app {
+/* #app {
   padding: 40px;
-}
+} */
 
 div.ReactTags__tags {
   position: relative;

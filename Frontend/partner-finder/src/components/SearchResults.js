@@ -16,7 +16,7 @@ function SearchResults(props) {
 
   return (
     <React.Fragment>
-      <div>
+      <div style={{ 'backgroundColor': '#557A95' }}>
         {data && data.length === 0 ? null : (
           <ResultsTable
             title={"EU Funding and Tenders Portal Results"}
@@ -25,7 +25,7 @@ function SearchResults(props) {
           />
         )}
       </div>
-      <div style={{ "margin-top": "10px" }}>
+      <div style={{ "margin-top": "10px", 'backgroundColor': '#557A95' }}>
         {data && data.length === 0 ? null : (
           <ResultsTable
             title={"B2MATCH Results"}

@@ -192,6 +192,7 @@ pre {
   display: grid;
   grid-template-columns: 0.29fr 0.3fr;
 }
+
 #Button {
   background-color: #5d5c61;
 }
@@ -202,29 +203,38 @@ pre {
 
 div.ReactTags__tags {
   position: relative;
+  color: white;
+  font-size: 20;
 }
 
 /* Styles for the input */
 div.ReactTags__tagInput {
-  width: 200px;
-  border-radius: 2px;
+  width: 150px;
+  border-radius: 3px;
   display: inline-block;
+  font-size: 16px;
 }
 div.ReactTags__tagInput input.ReactTags__tagInputField,
-div.ReactTags__tagInput input.ReactTags__tagInputField:focus {
+div.ReactTags__tagInput input.ReactTags__tagInputField {
   height: 31px;
   margin: 0;
-  font-size: 12px;
+  font-size: 14px;
   width: 100%;
-  border: 1px solid #eee;
+  border: 1px solid #557a95;
   padding: 0 4px;
+  background-color: #557a95;
+  color: white;
+}
+
+div.ReactTags__tagInput input.ReactTags__tagInputField::placeholder {
+  color: white;
 }
 
 /* Styles for selected tags */
 div.ReactTags__selected span.ReactTags__tag {
-  border: 1px solid #ddd;
-  background: #eee;
-  font-size: 12px;
+  border: 1px solid #557a95;
+  background: #557a95;
+  font-size: 16px;
   display: inline-block;
   padding: 5px;
   margin: 0 5px;
@@ -232,34 +242,36 @@ div.ReactTags__selected span.ReactTags__tag {
   border-radius: 2px;
 }
 div.ReactTags__selected a.ReactTags__remove {
-  color: #aaa;
-  margin-left: 5px;
+  color: white;
+  margin-left: 10px;
   cursor: pointer;
 }
 
 /* Styles for suggestions */
 div.ReactTags__suggestions {
   position: absolute;
+  color: white;
 }
 div.ReactTags__suggestions ul {
   list-style-type: none;
-  box-shadow: 0.05em 0.01em 0.5em rgba(0, 0, 0, 0.2);
-  background: white;
+  /* box-shadow: 0.05em 0.01em 0.5em rgba(0, 0, 0, 0.2); */
+  background: #557a95;
   width: 200px;
 }
 div.ReactTags__suggestions li {
-  border-bottom: 1px solid #ddd;
+  border-bottom: 1px solid #557a95;
   padding: 5px 10px;
   margin: 0;
 }
 div.ReactTags__suggestions li mark {
   text-decoration: underline;
-  background: none;
+  background: #557a95;
   font-weight: 600;
 }
 div.ReactTags__suggestions ul li.ReactTags__activeSuggestion {
-  background: #b7cfe0;
+  background: #557a95;
   cursor: pointer;
+  color: white;
 }
 
 .MuiDivider {

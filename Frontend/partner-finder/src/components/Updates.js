@@ -93,8 +93,8 @@ function Updates(props) {
         <h1 style={{ "margin-left": "50px" }}>B2MATCH</h1>
       </div>
       <div className="update">
-        <h2 style={{ "margin-left": "50px" }}>Last Update</h2>
-        <h3 style={{'marginTop' : '8%'}}>{state.B2MATCH}</h3>
+        <h2 id='textFontFamily' style={{ "margin-left": "50px" }}>Last Update</h2>
+        <h3 style={{ 'marginTop': '8%', 'fontSize': '15px' }}>{state.B2MATCH}</h3>
       </div>
       <div style={{ "margin-left": "50px", "margin-top": "50px" }}>
         <Button
@@ -112,8 +112,8 @@ function Updates(props) {
         <h1 style={{ "margin-left": "50px" }}>EU</h1>
       </div>
       <div className="update">
-        <h2 style={{ "margin-left": "50px" }}>Last Update</h2>
-        <h3 style={{'marginTop' : '8.5%'}}>{state.EU}</h3>
+        <h2 id='textFontFamily' style={{ "margin-left": "50px" }}>Last Update</h2>
+        <h3 style={{ 'marginTop': '8.5%', 'fontSize': '15px' }}>{state.EU}</h3>
       </div>
       <div style={{ "margin-left": "50px", "margin-top": "50px" }}>
         <Button
@@ -128,15 +128,15 @@ function Updates(props) {
         </Button>
       </div>
       <div style={{ "margin-top": "10%" }}>
-        <h1
+        <h2
           style={{
-            "margin-left": "45px",
-            "font-weight": "600",
+            'textAlign': 'center',
+            "font-weight": "500",
           }}
         >
           ** There is an automatically updates every month for both EU & B2MATCH
           **
-        </h1>
+        </h2>
       </div>
     </React.Fragment>
   );

@@ -364,12 +364,12 @@ function AlertsSettings(props) {
         handleClose={() => setMsgState({ ...msgState, visible: false })}
       />
       <div className="title">
-        <h1 id="textFontFamily" style={{'color':'white'}}>Alerts Settings</h1>
+        <h1 id="textFontFamily" style={{ 'color': 'white' }}>Alerts Settings</h1>
       </div>
       <div className="alert_email">
         <TextField
           id="email"
-          style={{  'borderRadius': '3px', 'backgroundColor' : '#557A95'}}
+          style={{ 'borderRadius': '3px', 'backgroundColor': '#557A95' }}
           label="E-mail"
           onChange={handleInputChange}
           className={AlertsSettings.textField}
@@ -382,10 +382,10 @@ function AlertsSettings(props) {
           variant="outlined"
         />
 
-        <h3 style={{ "margin-left": "60px", "margin-top": "35px" , 'color': 'white'}} id="textFontFamily" >
+        <h3 style={{ "margin-left": "60px", "margin-top": "35px", 'color': 'white', 'fontWeight': 'bold' }} id="textFontFamily" >
           Email is mutual for B2MATCH & EU
         </h3>
-        <h3 style={{ "marginLeft": "100px", "margin-top": "35px" , 'color': 'white'}} id="textFontFamily" >
+        <h3 style={{ "marginLeft": "100px", "margin-top": "35px", 'color': 'white', 'fontWeight': 'bold' }} id="textFontFamily" >
           Enable/Disable Alerts
         </h3>
         <FormGroup style={{ "margin-top": "25px" }}>
@@ -403,14 +403,14 @@ function AlertsSettings(props) {
         </FormGroup>
       </div>
       <div>
-        <h1 id="textFontFamily" style={{'color':'white'}}>B2MATCH</h1>
+        <h1 id="textFontFamily" style={{ 'color': 'white' }}>B2MATCH</h1>
       </div>
       <div className="res_score">
-        <h3 style={{ "margin-left": "50px" , 'color' : 'white', 'marginTop' : '11%', 'fontSize' : '17px'}} id="textFontFamily">RES SCORE</h3>
+        <h3 style={{ "margin-left": "50px", 'color': 'white', 'marginTop': '11%', 'fontSize': '17px' }} id="textFontFamily">RES SCORE</h3>
         <Grid container spacing={2} alignItems="center">
           <Grid item>
             <TextField
-              style={{ width: "40%" , 'borderRadius': '3px', 'backgroundColor' : '#557A95'}}
+              style={{ width: "40%", 'borderRadius': '3px', 'backgroundColor': '#557A95' }}
               id="resScore"
               label=""
               value={state.resScore}
@@ -425,14 +425,14 @@ function AlertsSettings(props) {
         </Grid>
       </div>
       <div>
-        <h1 style={{ "margin-left": "50px" , 'color' : 'white'}} id="textFontFamily" >Countries Score</h1>
+        <h1 style={{ "margin-left": "50px", 'color': 'white' }} id="textFontFamily" >Countries Score</h1>
       </div>
       <div className="countries_scores">
-        <h2 style={{ "margin-left": "50px" ,'color' : 'white'}} id="textFontFamily" >Italy</h2>
+        <h2 style={{ "margin-left": "50px", 'color': 'white' }} id="textFontFamily" >Italy</h2>
         <Grid container spacing={2} alignItems="center">
           <Grid item>
             <TextField
-              style={{ width: "40%" , 'borderRadius': '3px', 'backgroundColor' : '#557A95'}}
+              style={{ width: "40%", 'borderRadius': '3px', 'backgroundColor': '#557A95' }}
               id="italy"
               label=""
               value={state.italy}
@@ -446,11 +446,11 @@ function AlertsSettings(props) {
           </Grid>
         </Grid>
 
-        <h2 id="textFontFamily" style={{'color':'white'}}>France</h2>
+        <h2 id="textFontFamily" style={{ 'color': 'white' }}>France</h2>
         <Grid container spacing={2} alignItems="center">
           <Grid item>
             <TextField
-              style={{ width: "40%" , 'borderRadius': '3px', 'backgroundColor' : '#557A95'}}
+              style={{ width: "40%", 'borderRadius': '3px', 'backgroundColor': '#557A95' }}
               id="france"
               label=""
               value={state.france}
@@ -467,7 +467,7 @@ function AlertsSettings(props) {
         <Grid container spacing={2} alignItems="center">
           <Grid item>
             <TextField
-              style={{ width: "40%" , 'borderRadius': '3px', 'backgroundColor' : '#557A95'}}
+              style={{ width: "40%", 'borderRadius': '3px', 'backgroundColor': '#557A95' }}
               id="austria"
               label=""
               value={state.austria}
@@ -486,7 +486,7 @@ function AlertsSettings(props) {
         <Grid container spacing={2} alignItems="center">
           <Grid item>
             <TextField
-              style={{ width: "40%" , 'borderRadius': '3px', 'backgroundColor' : '#557A95'}}
+              style={{ width: "40%", 'borderRadius': '3px', 'backgroundColor': '#557A95' }}
               id="denmark"
               label=""
               value={state.denmark}
@@ -503,7 +503,7 @@ function AlertsSettings(props) {
         <Grid container spacing={2} alignItems="center">
           <Grid item>
             <TextField
-              style={{ width: "40%" , 'borderRadius': '3px', 'backgroundColor' : '#557A95'}}
+              style={{ width: "40%", 'borderRadius': '3px', 'backgroundColor': '#557A95' }}
               id="czech"
               label=""
               value={state.czech}
@@ -520,7 +520,7 @@ function AlertsSettings(props) {
         <Grid container spacing={2} alignItems="center">
           <Grid item>
             <TextField
-              style={{ width: "40%" , 'borderRadius': '3px', 'backgroundColor' : '#557A95'}}
+              style={{ width: "40%", 'borderRadius': '3px', 'backgroundColor': '#557A95' }}
               id="finland"
               label=""
               value={state.finland}
@@ -539,7 +539,7 @@ function AlertsSettings(props) {
         <Grid container spacing={2} alignItems="center">
           <Grid item>
             <TextField
-              style={{ width: "40%" , 'borderRadius': '3px', 'backgroundColor' : '#557A95'}}
+              style={{ width: "40%", 'borderRadius': '3px', 'backgroundColor': '#557A95' }}
               id="israel"
               label=""
               value={state.israel}
@@ -556,7 +556,7 @@ function AlertsSettings(props) {
         <Grid container spacing={2} alignItems="center">
           <Grid item>
             <TextField
-              style={{ width: "40%" , 'borderRadius': '3px', 'backgroundColor' : '#557A95'}}
+              style={{ width: "40%", 'borderRadius': '3px', 'backgroundColor': '#557A95' }}
               id="portugal"
               label=""
               value={state.portugal}
@@ -573,7 +573,7 @@ function AlertsSettings(props) {
         <Grid container spacing={2} alignItems="center">
           <Grid item>
             <TextField
-              style={{ width: "40%" , 'borderRadius': '3px', 'backgroundColor' : '#557A95'}}
+              style={{ width: "40%", 'borderRadius': '3px', 'backgroundColor': '#557A95' }}
               id="ukraine"
               label=""
               value={state.ukranie}
@@ -592,7 +592,7 @@ function AlertsSettings(props) {
         <Grid container spacing={2} alignItems="center">
           <Grid item>
             <TextField
-              style={{ width: "40%" , 'borderRadius': '3px', 'backgroundColor' : '#557A95'}}
+              style={{ width: "40%", 'borderRadius': '3px', 'backgroundColor': '#557A95' }}
               id="turkey"
               label=""
               value={state.turkey}
@@ -609,7 +609,7 @@ function AlertsSettings(props) {
         <Grid container spacing={2} alignItems="center">
           <Grid item>
             <TextField
-              style={{ width: "40%" , 'borderRadius': '3px', 'backgroundColor' : '#557A95'}}
+              style={{ width: "40%", 'borderRadius': '3px', 'backgroundColor': '#557A95' }}
               id="switzerland"
               label=""
               value={state.switzerland}
@@ -626,7 +626,7 @@ function AlertsSettings(props) {
         <Grid container spacing={2} alignItems="center">
           <Grid item>
             <TextField
-              style={{ width: "40%" , 'borderRadius': '3px', 'backgroundColor' : '#557A95'}}
+              style={{ width: "40%", 'borderRadius': '3px', 'backgroundColor': '#557A95' }}
               id="spain"
               label=""
               value={state.spain}
@@ -645,7 +645,7 @@ function AlertsSettings(props) {
         <Grid container spacing={2} alignItems="center">
           <Grid item>
             <TextField
-              style={{ width: "40%" , 'borderRadius': '3px', 'backgroundColor' : '#557A95'}}
+              style={{ width: "40%", 'borderRadius': '3px', 'backgroundColor': '#557A95' }}
               id="germany"
               label=""
               value={state.germany}
@@ -662,7 +662,7 @@ function AlertsSettings(props) {
         <Grid container spacing={2} alignItems="center">
           <Grid item>
             <TextField
-              style={{ width: "40%" , 'borderRadius': '3px', 'backgroundColor' : '#557A95'}}
+              style={{ width: "40%", 'borderRadius': '3px', 'backgroundColor': '#557A95' }}
               id="ireland"
               label=""
               value={state.ireland}
@@ -679,7 +679,7 @@ function AlertsSettings(props) {
         <Grid container spacing={2} alignItems="center">
           <Grid item>
             <TextField
-              style={{ width: "40%" , 'borderRadius': '3px', 'backgroundColor' : '#557A95'}}
+              style={{ width: "40%", 'borderRadius': '3px', 'backgroundColor': '#557A95' }}
               id="uk"
               label=""
               value={state.uk}
@@ -698,7 +698,7 @@ function AlertsSettings(props) {
         <Grid container spacing={2} alignItems="center">
           <Grid item>
             <TextField
-              style={{ width: "40%" , 'borderRadius': '3px', 'backgroundColor' : '#557A95'}}
+              style={{ width: "40%", 'borderRadius': '3px', 'backgroundColor': '#557A95' }}
               id="norway"
               label=""
               value={state.norway}
@@ -721,7 +721,7 @@ function AlertsSettings(props) {
         <Grid container spacing={2} alignItems="center">
           <Grid item>
             <TextField
-              style={{ width: "40%" , 'borderRadius': '3px', 'backgroundColor' : '#557A95'}}
+              style={{ width: "40%", 'borderRadius': '3px', 'backgroundColor': '#557A95' }}
               id="agency"
               label=""
               value={state.agency}
@@ -738,7 +738,7 @@ function AlertsSettings(props) {
         <Grid container spacing={2} alignItems="center">
           <Grid item>
             <TextField
-              style={{ width: "40%" , 'borderRadius': '3px', 'backgroundColor' : '#557A95'}}
+              style={{ width: "40%", 'borderRadius': '3px', 'backgroundColor': '#557A95' }}
               id="uni"
               label=""
               value={state.uni}
@@ -755,7 +755,7 @@ function AlertsSettings(props) {
         <Grid container spacing={2} alignItems="center">
           <Grid item>
             <TextField
-              style={{ width: "40%" , 'borderRadius': '3px', 'backgroundColor' : '#557A95'}}
+              style={{ width: "40%", 'borderRadius': '3px', 'backgroundColor': '#557A95' }}
               id="company"
               label=""
               value={state.company}
@@ -774,7 +774,7 @@ function AlertsSettings(props) {
         <Grid container spacing={2} alignItems="center">
           <Grid item>
             <TextField
-              style={{ width: "41%" , 'borderRadius': '3px', 'backgroundColor' : '#557A95'}}
+              style={{ width: "41%", 'borderRadius': '3px', 'backgroundColor': '#557A95' }}
               id="RD"
               label=""
               value={state.RD}
@@ -791,7 +791,7 @@ function AlertsSettings(props) {
         <Grid container spacing={2} alignItems="center">
           <Grid item>
             <TextField
-              style={{ width: "41%" , 'borderRadius': '3px', 'backgroundColor' : '#557A95'}}
+              style={{ width: "41%", 'borderRadius': '3px', 'backgroundColor': '#557A95' }}
               id="start"
               label=""
               value={state.start}
@@ -808,7 +808,7 @@ function AlertsSettings(props) {
         <Grid container spacing={2} alignItems="center">
           <Grid item>
             <TextField
-              style={{ width: "41%" , 'borderRadius': '3px', 'backgroundColor' : '#557A95'}}
+              style={{ width: "41%", 'borderRadius': '3px', 'backgroundColor': '#557A95' }}
               id="oth"
               label=""
               value={state.oth}
@@ -867,17 +867,17 @@ function AlertsSettings(props) {
       </div>
       <div className="Buttons">
         {state &&
-        ((state.events && state.events.length !== 0) ||
-          (state.calls && state.calls.length !== 0)) ? (
-          <Button
-            color="secondary"
-            round
-            variant="contained"
-            onClick={() => hideAlerts()}
-          >
-            Hide Alerts Results
+          ((state.events && state.events.length !== 0) ||
+            (state.calls && state.calls.length !== 0)) ? (
+            <Button
+              color="secondary"
+              round
+              variant="contained"
+              onClick={() => hideAlerts()}
+            >
+              Hide Alerts Results
           </Button>
-        ) : null}
+          ) : null}
       </div>
       {state && state.loading ? (
         <Dialog

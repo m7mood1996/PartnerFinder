@@ -153,18 +153,27 @@ function SearchDetails(props) {
   };
 
   return (
-    <React.Fragment style={{ backgroundColor: "#7395AE" }}>
+    <React.Fragment>
       <Msgtoshow
         {...msgState}
         handleClose={() => setMsgState({ ...msgState, visible: false })}
       />
-      <h1 id="textFontFamily" style={{'color':'white'}}>Simple Partner Search</h1>
+      <h1 id="textFontFamily" style={{ color: "#02203c" }}>
+        Simple Partner Search
+      </h1>
 
-      <div className="Search_Details" >
-        <h1 style={{ "margin-left": "1%" , 'color':'white'}} id="textFontFamily">Search Details</h1>
+      <div className="Search_Details">
+        <h1
+          style={{ "margin-left": "1%", color: "#02203c" }}
+          id="textFontFamily"
+        >
+          Search Details
+        </h1>
         <div className="third_row">
           <div className="Tags">
-            <h1 id="textFontFamily" style={{'color':'white'}}>Tags and Keywords</h1>
+            <h1 id="textFontFamily" style={{ color: "#02203c" }}>
+              Tags and Keywords
+            </h1>
             <ReactTags
               tags={tags}
               handleDelete={deleteTag}
@@ -179,18 +188,27 @@ function SearchDetails(props) {
                 variant="caption"
                 display="block"
                 gutterBottom
-                style={{ color: "red" }}
+                style={{ color: "red", fontWeight: "bold" }}
               >
                 Enter at least one tag
               </Typography>
             ) : null}
           </div>
           <div className="SCountry">
-            <h1 id="textFontFamily" style={{'color':'white'}}>Country</h1>
+            <h1 id="textFontFamily" style={{ color: "#02203c" }}>
+              Country
+            </h1>
             <FormControl className={SearchDetails.formControl} id="tab">
-              <InputLabel id="demo-mutiple-name-label" id="textFontFamily" style={{'color':'white'}}>Country</InputLabel>
+              <InputLabel
+                id="demo-mutiple-name-label"
+                id="textFontFamily"
+                style={{ color:"#02203c" }}
+              >
+                Country
+              </InputLabel>
               <Select
-              id="textFontFamily" style={{'color':'white'}}
+                id="textFontFamily"
+                style={{ color: "#02203c" }}
                 options={countryList().getData()}
                 value={countrySearched}
                 onChange={handleCountrySearched}
@@ -214,7 +232,7 @@ function SearchDetails(props) {
           color="primary"
           round
           variant="contained"
-          id="Button"
+          id="BackgroundColor"
           onClick={() => searchCompany()}
           disabled={state.loading}
         >

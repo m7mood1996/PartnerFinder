@@ -209,7 +209,7 @@ function CallsResultsTable(props) {
                 onClick={_handleClose}
                 variant="contained"
                 color="secondary"
-                className={classes.button}
+                id="exitColor"
               >
                 Exit
               </Button>

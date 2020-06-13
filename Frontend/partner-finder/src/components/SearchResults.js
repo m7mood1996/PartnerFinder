@@ -1,8 +1,6 @@
 import React from "react";
 import ResultsTable from "./ResultsTable";
-import { EU_columns, B2Match_columns } from '../utils';
-
-
+import { EU_columns, B2Match_columns } from "../utils";
 
 function SearchResults(props) {
   const [data, setData] = React.useState([]);
@@ -16,7 +14,7 @@ function SearchResults(props) {
 
   return (
     <React.Fragment>
-      <div style={{ 'backgroundColor': '#557A95' }}>
+      <div>
         {data && data.length === 0 ? null : (
           <ResultsTable
             title={"EU Funding and Tenders Portal Results"}
@@ -25,7 +23,7 @@ function SearchResults(props) {
           />
         )}
       </div>
-      <div style={{ "margin-top": "10px", 'backgroundColor': '#557A95' }}>
+      <div style={{ "margin-top": "10px" }}>
         {data && data.length === 0 ? null : (
           <ResultsTable
             title={"B2MATCH Results"}

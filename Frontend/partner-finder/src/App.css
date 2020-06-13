@@ -1,5 +1,5 @@
 body {
-  background-color: #7395ae;
+  background-color: #ececec;
 }
 
 #textFontFamily {
@@ -11,10 +11,10 @@ body {
 
 h1 {
   font-family: "Lucida Sans Typewriter", "Lucida Console", monaco,
-  "Bitstream Vera Sans Mono", monospace;
+    "Bitstream Vera Sans Mono", monospace;
   font-style: normal;
   font-variant: normal;
-  color: white;
+  color: #02203c;
 }
 
 h2 {
@@ -22,7 +22,7 @@ h2 {
     "Bitstream Vera Sans Mono", monospace;
   font-style: normal;
   font-variant: normal;
-  color: white;
+  color: #02203c;
 }
 
 h3 {
@@ -33,7 +33,7 @@ h3 {
   font-size: 14px;
   font-weight: 700;
   line-height: 15.4px;
-  color: white;
+  color: #02203c;
 }
 p {
   font-family: "Lucida Sans Typewriter", "Lucida Console", monaco,
@@ -178,7 +178,7 @@ pre {
 
 .alert_email {
   display: grid;
-  grid-template-columns: 30% 28% 25% 25%;
+  grid-template-columns: 8% 30% 28% 25% 1%;
 }
 .res_score {
   display: grid;
@@ -190,7 +190,7 @@ pre {
   grid-template-columns: 17% 17% 17.5% 17% 17.5% 17%;
 }
 .line {
-  border-top: 5px solid #5d5c61;
+  border-top: 5px solid #02203c;
   width: 80%;
   margin-left: 130px;
   margin-top: 20px;
@@ -214,8 +214,8 @@ pre {
   grid-template-columns: 0.29fr 0.3fr;
 }
 
-#Button {
-  background-color: #5d5c61;
+#BackgroundColor {
+  background-color: #02203c;
 }
 
 #app {
@@ -241,9 +241,9 @@ div.ReactTags__tagInput input.ReactTags__tagInputField {
   margin: 0;
   font-size: 14px;
   width: 100%;
-  border: 1px solid #557a95;
+  border: 1px solid #02203c;
   padding: 0 4px;
-  background-color: #557a95;
+  background-color: #02203c;
   color: white;
 }
 
@@ -253,8 +253,8 @@ div.ReactTags__tagInput input.ReactTags__tagInputField::placeholder {
 
 /* Styles for selected tags */
 div.ReactTags__selected span.ReactTags__tag {
-  border: 1px solid #557a95;
-  background: #557a95;
+  border: 1px solid #02203c;
+  background: #02203c;
   font-size: 16px;
   display: inline-block;
   padding: 5px;
@@ -276,21 +276,21 @@ div.ReactTags__suggestions {
 div.ReactTags__suggestions ul {
   list-style-type: none;
   /* box-shadow: 0.05em 0.01em 0.5em rgba(0, 0, 0, 0.2); */
-  background: #557a95;
+  background: #02203c;
   width: 200px;
 }
 div.ReactTags__suggestions li {
-  border-bottom: 1px solid #557a95;
+  border-bottom: 1px solid #02203c;
   padding: 5px 10px;
   margin: 0;
 }
 div.ReactTags__suggestions li mark {
   text-decoration: underline;
-  background: #557a95;
+  background: #02203c;
   font-weight: 600;
 }
 div.ReactTags__suggestions ul li.ReactTags__activeSuggestion {
-  background: #557a95;
+  background: #02203c;
   cursor: pointer;
   color: white;
 }
@@ -300,15 +300,57 @@ div.ReactTags__suggestions ul li.ReactTags__activeSuggestion {
   margin: 100px;
 }
 
-#italy,#france,#germany,#denmark,#switzerland,#uk,
-#ireland,#norway,#spain,#portugal,#czech,#finland,
-#austria,#ukraine,#turkey,#israel,#resScore,#email,
-#oth,#uni,#agency,#start,#RD,#company {
+#exitColor {
+  background-color: red;
+}
+/* .MuiTable-root {
+  background-color: #02203c !important;
+  color: white !important;
+}
+
+.MuiTableHead-root {
+  background-color: #02203c !important;
+  color: white !important;
+}
+
+.MuiTable-stickyHeader {
+  background-color: #02203c !important;
+  color: white !important;
+}
+
+.MuiTableFooter-root {
+  background-color: #02203c !important;
+  color: white !important;
+  color-adjust: white;
+} */
+
+#italy,
+#france,
+#germany,
+#denmark,
+#switzerland,
+#uk,
+#ireland,
+#norway,
+#spain,
+#portugal,
+#czech,
+#finland,
+#austria,
+#ukraine,
+#turkey,
+#israel,
+#resScore,
+#email,
+#oth,
+#uni,
+#agency,
+#start,
+#RD,
+#company {
   font-family: "Lucida Sans Typewriter", "Lucida Console", monaco,
     "Bitstream Vera Sans Mono", monospace;
   font-style: normal;
   font-variant: normal;
-  color:white;
+  color: white;
 }
-
-

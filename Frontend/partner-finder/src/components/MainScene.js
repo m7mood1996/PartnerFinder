@@ -67,7 +67,7 @@ const useStyles = makeStyles((theme) => ({
     fontSize: "24px",
     fontWeight: "300",
   },
-  indicator: { backgroundColor: "#557A95" },
+  indicator: { backgroundColor: "#ececec" },
 }));
 
 export default function NavTabs() {
@@ -247,7 +247,7 @@ export default function NavTabs() {
   };
   return (
     <div className={classes.root}>
-      <AppBar id="Button" position="static">
+      <AppBar id="BackgroundColor" position="static">
         <Tabs
           classes={{
             indicator: classes.indicator,
@@ -255,7 +255,6 @@ export default function NavTabs() {
           variant="fullWidth"
           value={value}
           onChange={handleChange}
-          aria-label="nav tabs example"
         >
           <LinkTab
             label={

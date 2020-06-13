@@ -89,38 +89,42 @@ function Updates(props) {
       <div>
         <h1>Updates</h1>
       </div>
-      <div style={{ "margin-top": "50px" }}>
-        <h1 style={{ "margin-left": "50px" }}>B2MATCH</h1>
+      <div style={{ "margin-top": "30px" }}>
+        <h1 style={{ "margin-left": "30px" }}>B2MATCH</h1>
       </div>
       <div className="update">
-        <h2 id='textFontFamily' style={{ "margin-left": "50px" }}>Last Update</h2>
-        <h3 style={{ 'marginTop': '8%', 'fontSize': '15px' }}>{state.B2MATCH}</h3>
+        <h2 id="textFontFamily" style={{ "margin-left": "50px" }}>
+          Last Update
+        </h2>
+        <h3 style={{ marginTop: "8%", fontSize: "15px" }}>{state.B2MATCH}</h3>
       </div>
       <div style={{ "margin-left": "50px", "margin-top": "50px" }}>
         <Button
           color="primary"
           round
           variant="contained"
-          id="Button"
+          id="BackgroundColor"
           onClick={updateB2match}
           style={{ width: "20%" }}
         >
           Update Now
         </Button>
       </div>
-      <div style={{ "margin-top": "50px" }}>
-        <h1 style={{ "margin-left": "50px" }}>EU</h1>
+      <div style={{ "margin-top": "30px" }}>
+        <h1 style={{ "margin-left": "30px" }}>EU</h1>
       </div>
       <div className="update">
-        <h2 id='textFontFamily' style={{ "margin-left": "50px" }}>Last Update</h2>
-        <h3 style={{ 'marginTop': '8.5%', 'fontSize': '15px' }}>{state.EU}</h3>
+        <h2 id="textFontFamily" style={{ "margin-left": "50px" }}>
+          Last Update
+        </h2>
+        <h3 style={{ marginTop: "8.5%", fontSize: "15px" }}>{state.EU}</h3>
       </div>
       <div style={{ "margin-left": "50px", "margin-top": "50px" }}>
         <Button
           color="primary"
           round
           variant="contained"
-          id="Button"
+          id="BackgroundColor"
           onClick={updateEU}
           style={{ width: "20%" }}
         >
@@ -130,7 +134,7 @@ function Updates(props) {
       <div style={{ "margin-top": "10%" }}>
         <h2
           style={{
-            'textAlign': 'center',
+            textAlign: "center",
             "font-weight": "500",
           }}
         >

@@ -9,6 +9,22 @@ body {
   font-variant: normal;
 }
 
+h1 {
+  font-family: "Lucida Sans Typewriter", "Lucida Console", monaco,
+  "Bitstream Vera Sans Mono", monospace;
+  font-style: normal;
+  font-variant: normal;
+  color: white;
+}
+
+h2 {
+  font-family: "Lucida Sans Typewriter", "Lucida Console", monaco,
+    "Bitstream Vera Sans Mono", monospace;
+  font-style: normal;
+  font-variant: normal;
+  color: white;
+}
+
 h3 {
   font-family: "Lucida Sans Typewriter", "Lucida Console", monaco,
     "Bitstream Vera Sans Mono", monospace;
@@ -17,6 +33,7 @@ h3 {
   font-size: 14px;
   font-weight: 700;
   line-height: 15.4px;
+  color: white;
 }
 p {
   font-family: "Lucida Sans Typewriter", "Lucida Console", monaco,
@@ -44,6 +61,10 @@ pre {
   font-size: 13px;
   font-weight: 400;
   line-height: 18.5714px;
+}
+
+#email-label {
+  color: white;
 }
 
 h3 {
@@ -157,19 +178,19 @@ pre {
 
 .alert_email {
   display: grid;
-  grid-template-columns: 0.25fr 0.21fr 0.2fr 0.2fr;
+  grid-template-columns: 30% 28% 25% 25%;
 }
 .res_score {
   display: grid;
-  grid-template-columns: 0.1fr 0.2fr;
+  grid-template-columns: 17% 17%;
 }
 .countries_scores {
   color: black;
   display: grid;
-  grid-template-columns: 17% 17% 17% 17% 17% 17% 17% 17%;
+  grid-template-columns: 17% 17% 17.5% 17% 17.5% 17%;
 }
 .line {
-  border-top: 5px solid black;
+  border-top: 5px solid #5d5c61;
   width: 80%;
   margin-left: 130px;
   margin-top: 20px;
@@ -177,7 +198,7 @@ pre {
 .first_ty {
   color: black;
   display: grid;
-  grid-template-columns: 0.3fr 0.2fr 0.13fr 0.2fr 0.13fr 0.2fr;
+  grid-template-columns: 0.36fr 0.2fr 0.18fr 0.2fr 0.16fr 0.2fr;
 }
 .Projects {
   display: grid;
@@ -278,3 +299,16 @@ div.ReactTags__suggestions ul li.ReactTags__activeSuggestion {
   font-weight: 900;
   margin: 100px;
 }
+
+#italy,#france,#germany,#denmark,#switzerland,#uk,
+#ireland,#norway,#spain,#portugal,#czech,#finland,
+#austria,#ukraine,#turkey,#israel,#resScore,#email,
+#oth,#uni,#agency,#start,#RD,#company {
+  font-family: "Lucida Sans Typewriter", "Lucida Console", monaco,
+    "Bitstream Vera Sans Mono", monospace;
+  font-style: normal;
+  font-variant: normal;
+  color:white;
+}
+
+

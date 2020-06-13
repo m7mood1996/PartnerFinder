@@ -158,13 +158,13 @@ function SearchDetails(props) {
         {...msgState}
         handleClose={() => setMsgState({ ...msgState, visible: false })}
       />
-      <h1 id="textFontFamily">Simple Partner Search</h1>
+      <h1 id="textFontFamily" style={{'color':'white'}}>Simple Partner Search</h1>
 
-      <div className="Search_Details">
-        <h1 style={{ "margin-left": "1%" }}>Search Details</h1>
+      <div className="Search_Details" >
+        <h1 style={{ "margin-left": "1%" , 'color':'white'}} id="textFontFamily">Search Details</h1>
         <div className="third_row">
           <div className="Tags">
-            <h1>Tags and Keywords</h1>
+            <h1 id="textFontFamily" style={{'color':'white'}}>Tags and Keywords</h1>
             <ReactTags
               tags={tags}
               handleDelete={deleteTag}
@@ -186,10 +186,11 @@ function SearchDetails(props) {
             ) : null}
           </div>
           <div className="SCountry">
-            <h1>Country</h1>
+            <h1 id="textFontFamily" style={{'color':'white'}}>Country</h1>
             <FormControl className={SearchDetails.formControl} id="tab">
-              <InputLabel id="demo-mutiple-name-label">Country</InputLabel>
+              <InputLabel id="demo-mutiple-name-label" id="textFontFamily" style={{'color':'white'}}>Country</InputLabel>
               <Select
+              id="textFontFamily" style={{'color':'white'}}
                 options={countryList().getData()}
                 value={countrySearched}
                 onChange={handleCountrySearched}

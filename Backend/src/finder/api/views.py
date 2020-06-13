@@ -48,43 +48,42 @@ class OrganizationProfileViewSet(viewsets.ModelViewSet):
         print("START UPDATING EU DB")
         print("*" * 50)
         try:
-            # MapIds.objects.all().delete()
-            # try:
-            #     index = load_index('EU_Index')
-            # except:
-            #     index = None
-            #
-            # if index is None:
-            #     index = build_index('EU_Index')
-            # else:
-            #     index.destroy()
-            #     index = build_index('EU_Index')
-            #
-            # status = {}
-            # graph = Graph()
-            # visitngQueue = collections.deque()
-            # startOrg = '999993953'
-            # visitngQueue.append(startOrg)
-            # status[startOrg] = 'visiting'
-            # while len(visitngQueue) > 0:
-            #     currPic = visitngQueue.popleft()
-            #     try:
-            #         currOrg = getOrganizationProfileFromEUByPIC(currPic)
-            #         currAdjacent = getPicsFromCollaborations(
-            #             currOrg['collaborations'])
-            #     except:
-            #         continue
-            #     for pic in currAdjacent:
-            #         if pic not in graph.vertices or status[pic] == 'notVisited':
-            #             graph.add(currPic, pic)
-            #             status[pic] = 'visiting'
-            #             visitngQueue.append(pic)
-            #
-            #     currOrg = translateData(currOrg)
-            #     addOrganizationToDB(currOrg)
-            #     index = add_org_to_index(index, currOrg)
-            #     status[currPic] = 'visited'
+            MapIds.objects.all().delete()
+            try:
+                index = load_index('EU_Index')
+            except:
+                index = None
 
+            if index is None:
+                index = build_index('EU_Index')
+            else:
+                index.destroy()
+                index = build_index('EU_Index')
+
+            status = {}
+            graph = Graph()
+            visitngQueue = collections.deque()
+            startOrg = '999993953'
+            visitngQueue.append(startOrg)
+            status[startOrg] = 'visiting'
+            while len(visitngQueue) > 0:
+                currPic = visitngQueue.popleft()
+                try:
+                    currOrg = getOrganizationProfileFromEUByPIC(currPic)
+                    currAdjacent = getPicsFromCollaborations(
+                        currOrg['collaborations'])
+                except:
+                    continue
+                for pic in currAdjacent:
+                    if pic not in graph.vertices or status[pic] == 'notVisited':
+                        graph.add(currPic, pic)
+                        status[pic] = 'visiting'
+                        visitngQueue.append(pic)
+
+                currOrg = translateData(currOrg)
+                addOrganizationToDB(currOrg)
+                index = add_org_to_index(index, currOrg)
+                status[currPic] = 'visited'
             response = {'success': 'Organizations updated successfully!'}
             if not setUpdateSettings(euDate=time.mktime(datetime.datetime.now().timetuple())):
                 raise
@@ -254,22 +253,22 @@ class CallViewSet(viewsets.ModelViewSet):
             print("START BUILDING CONSORTIUM")
             print("*" * 50)
 
-            # Call.objects.all().delete()
-            # CallTag.objects.all().delete()
-            # calls = get_proposal_calls()
-            #
-            # calls_to_send = []
-            #
-            # for call in calls:
-            #     call = has_consortium(call)
-            #     if call['hasConsortium']:
-            #         calls_to_send.append({'title': call['title']})
-            #         add_call_to_DB(call)
+            Call.objects.all().delete()
+            CallTag.objects.all().delete()
+            calls = get_proposal_calls()
 
-            calls = Call.objects.all()
             calls_to_send = []
+
             for call in calls:
-                calls_to_send.append({'title': call.__dict__['title']})
+                call = has_consortium(call)
+                if call['hasConsortium']:
+                    calls_to_send.append({'title': call['title']})
+                    add_call_to_DB(call)
+
+            # calls = Call.objects.all()
+            # calls_to_send = []
+            # for call in calls:
+            #     calls_to_send.append({'title': call.__dict__['title']})
 
             body = MIMEMultipart('alternative')
 

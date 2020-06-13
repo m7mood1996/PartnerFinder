@@ -364,11 +364,12 @@ function AlertsSettings(props) {
         handleClose={() => setMsgState({ ...msgState, visible: false })}
       />
       <div className="title">
-        <h1>Alerts Settings</h1>
+        <h1 id="textFontFamily" style={{'color':'white'}}>Alerts Settings</h1>
       </div>
       <div className="alert_email">
         <TextField
           id="email"
+          style={{  'borderRadius': '3px', 'backgroundColor' : '#557A95'}}
           label="E-mail"
           onChange={handleInputChange}
           className={AlertsSettings.textField}
@@ -381,10 +382,13 @@ function AlertsSettings(props) {
           variant="outlined"
         />
 
-        <h3 style={{ "margin-left": "14px", "margin-top": "24px" }}>
+        <h3 style={{ "margin-left": "60px", "margin-top": "35px" , 'color': 'white'}} id="textFontFamily" >
+          Email is mutual for B2MATCH & EU
+        </h3>
+        <h3 style={{ "marginLeft": "100px", "margin-top": "35px" , 'color': 'white'}} id="textFontFamily" >
           Enable/Disable Alerts
         </h3>
-        <FormGroup style={{ "margin-top": "15px" }}>
+        <FormGroup style={{ "margin-top": "25px" }}>
           <FormControlLabel
             control={
               <Switch
@@ -399,17 +403,16 @@ function AlertsSettings(props) {
         </FormGroup>
       </div>
       <div>
-        <h1>B2MATCH</h1>
+        <h1 id="textFontFamily" style={{'color':'white'}}>B2MATCH</h1>
       </div>
       <div className="res_score">
-        <h3 style={{ "margin-left": "50px" }}>RES SCORE</h3>
+        <h3 style={{ "margin-left": "50px" , 'color' : 'white', 'marginTop' : '11%', 'fontSize' : '17px'}} id="textFontFamily">RES SCORE</h3>
         <Grid container spacing={2} alignItems="center">
           <Grid item>
             <TextField
-              style={{ width: "40%" }}
+              style={{ width: "40%" , 'borderRadius': '3px', 'backgroundColor' : '#557A95'}}
               id="resScore"
               label=""
-              type="number"
               value={state.resScore}
               onChange={handleInputChange}
               error={formState.resScore}
@@ -422,19 +425,16 @@ function AlertsSettings(props) {
         </Grid>
       </div>
       <div>
-        <h1 style={{ "margin-left": "50px" }}>Countries Score</h1>
+        <h1 style={{ "margin-left": "50px" , 'color' : 'white'}} id="textFontFamily" >Countries Score</h1>
       </div>
       <div className="countries_scores">
-        <h2 style={{ "margin-left": "50px" }}>Italy</h2>
+        <h2 style={{ "margin-left": "50px" ,'color' : 'white'}} id="textFontFamily" >Italy</h2>
         <Grid container spacing={2} alignItems="center">
           <Grid item>
             <TextField
-              style={{ width: "40%" }}
+              style={{ width: "40%" , 'borderRadius': '3px', 'backgroundColor' : '#557A95'}}
               id="italy"
               label=""
-              type="number"
-              min="0"
-              max="1"
               value={state.italy}
               onChange={handleInputChange}
               error={formState.italy}
@@ -446,14 +446,13 @@ function AlertsSettings(props) {
           </Grid>
         </Grid>
 
-        <h2>France</h2>
+        <h2 id="textFontFamily" style={{'color':'white'}}>France</h2>
         <Grid container spacing={2} alignItems="center">
           <Grid item>
             <TextField
-              style={{ width: "40%" }}
+              style={{ width: "40%" , 'borderRadius': '3px', 'backgroundColor' : '#557A95'}}
               id="france"
               label=""
-              type="number"
               value={state.france}
               onChange={handleInputChange}
               error={formState.france}
@@ -468,10 +467,9 @@ function AlertsSettings(props) {
         <Grid container spacing={2} alignItems="center">
           <Grid item>
             <TextField
-              style={{ width: "40%" }}
+              style={{ width: "40%" , 'borderRadius': '3px', 'backgroundColor' : '#557A95'}}
               id="austria"
               label=""
-              type="number"
               value={state.austria}
               onChange={handleInputChange}
               error={formState.austria}
@@ -488,10 +486,9 @@ function AlertsSettings(props) {
         <Grid container spacing={2} alignItems="center">
           <Grid item>
             <TextField
-              style={{ width: "40%" }}
+              style={{ width: "40%" , 'borderRadius': '3px', 'backgroundColor' : '#557A95'}}
               id="denmark"
               label=""
-              type="number"
               value={state.denmark}
               onChange={handleInputChange}
               error={formState.denmark}
@@ -506,10 +503,9 @@ function AlertsSettings(props) {
         <Grid container spacing={2} alignItems="center">
           <Grid item>
             <TextField
-              style={{ width: "40%" }}
+              style={{ width: "40%" , 'borderRadius': '3px', 'backgroundColor' : '#557A95'}}
               id="czech"
               label=""
-              type="number"
               value={state.czech}
               onChange={handleInputChange}
               error={formState.czech}
@@ -524,10 +520,9 @@ function AlertsSettings(props) {
         <Grid container spacing={2} alignItems="center">
           <Grid item>
             <TextField
-              style={{ width: "40%" }}
+              style={{ width: "40%" , 'borderRadius': '3px', 'backgroundColor' : '#557A95'}}
               id="finland"
               label=""
-              type="number"
               value={state.finland}
               onChange={handleInputChange}
               error={formState.finland}
@@ -544,10 +539,9 @@ function AlertsSettings(props) {
         <Grid container spacing={2} alignItems="center">
           <Grid item>
             <TextField
-              style={{ width: "40%" }}
+              style={{ width: "40%" , 'borderRadius': '3px', 'backgroundColor' : '#557A95'}}
               id="israel"
               label=""
-              type="number"
               value={state.israel}
               onChange={handleInputChange}
               error={formState.israel}
@@ -562,10 +556,9 @@ function AlertsSettings(props) {
         <Grid container spacing={2} alignItems="center">
           <Grid item>
             <TextField
-              style={{ width: "40%" }}
+              style={{ width: "40%" , 'borderRadius': '3px', 'backgroundColor' : '#557A95'}}
               id="portugal"
               label=""
-              type="number"
               value={state.portugal}
               onChange={handleInputChange}
               error={formState.portugal}
@@ -576,14 +569,13 @@ function AlertsSettings(props) {
             />
           </Grid>
         </Grid>
-        <h2>Ukranie</h2>
+        <h2>Ukraine</h2>
         <Grid container spacing={2} alignItems="center">
           <Grid item>
             <TextField
-              style={{ width: "40%" }}
+              style={{ width: "40%" , 'borderRadius': '3px', 'backgroundColor' : '#557A95'}}
               id="ukraine"
               label=""
-              type="number"
               value={state.ukranie}
               onChange={handleInputChange}
               error={formState.ukranie}
@@ -600,10 +592,9 @@ function AlertsSettings(props) {
         <Grid container spacing={2} alignItems="center">
           <Grid item>
             <TextField
-              style={{ width: "40%" }}
+              style={{ width: "40%" , 'borderRadius': '3px', 'backgroundColor' : '#557A95'}}
               id="turkey"
               label=""
-              type="number"
               value={state.turkey}
               onChange={handleInputChange}
               error={formState.turkey}
@@ -618,10 +609,9 @@ function AlertsSettings(props) {
         <Grid container spacing={2} alignItems="center">
           <Grid item>
             <TextField
-              style={{ width: "40%" }}
+              style={{ width: "40%" , 'borderRadius': '3px', 'backgroundColor' : '#557A95'}}
               id="switzerland"
               label=""
-              type="number"
               value={state.switzerland}
               onChange={handleInputChange}
               error={formState.switzerland}
@@ -636,10 +626,9 @@ function AlertsSettings(props) {
         <Grid container spacing={2} alignItems="center">
           <Grid item>
             <TextField
-              style={{ width: "40%" }}
+              style={{ width: "40%" , 'borderRadius': '3px', 'backgroundColor' : '#557A95'}}
               id="spain"
               label=""
-              type="number"
               value={state.spain}
               onChange={handleInputChange}
               error={formState.spain}
@@ -656,10 +645,9 @@ function AlertsSettings(props) {
         <Grid container spacing={2} alignItems="center">
           <Grid item>
             <TextField
-              style={{ width: "40%" }}
+              style={{ width: "40%" , 'borderRadius': '3px', 'backgroundColor' : '#557A95'}}
               id="germany"
               label=""
-              type="number"
               value={state.germany}
               onChange={handleInputChange}
               error={formState.germany}
@@ -674,10 +662,9 @@ function AlertsSettings(props) {
         <Grid container spacing={2} alignItems="center">
           <Grid item>
             <TextField
-              style={{ width: "40%" }}
+              style={{ width: "40%" , 'borderRadius': '3px', 'backgroundColor' : '#557A95'}}
               id="ireland"
               label=""
-              type="number"
               value={state.ireland}
               onChange={handleInputChange}
               error={formState.ireland}
@@ -692,10 +679,9 @@ function AlertsSettings(props) {
         <Grid container spacing={2} alignItems="center">
           <Grid item>
             <TextField
-              style={{ width: "40%" }}
+              style={{ width: "40%" , 'borderRadius': '3px', 'backgroundColor' : '#557A95'}}
               id="uk"
               label=""
-              type="number"
               value={state.uk}
               onChange={handleInputChange}
               error={formState.uk}
@@ -712,10 +698,9 @@ function AlertsSettings(props) {
         <Grid container spacing={2} alignItems="center">
           <Grid item>
             <TextField
-              style={{ width: "40%" }}
+              style={{ width: "40%" , 'borderRadius': '3px', 'backgroundColor' : '#557A95'}}
               id="norway"
               label=""
-              type="number"
               value={state.norway}
               onChange={handleInputChange}
               error={formState.norway}
@@ -736,10 +721,9 @@ function AlertsSettings(props) {
         <Grid container spacing={2} alignItems="center">
           <Grid item>
             <TextField
-              style={{ width: "40%" }}
+              style={{ width: "40%" , 'borderRadius': '3px', 'backgroundColor' : '#557A95'}}
               id="agency"
               label=""
-              type="number"
               value={state.agency}
               onChange={handleInputChange}
               error={formState.agency}
@@ -754,10 +738,9 @@ function AlertsSettings(props) {
         <Grid container spacing={2} alignItems="center">
           <Grid item>
             <TextField
-              style={{ width: "40%" }}
+              style={{ width: "40%" , 'borderRadius': '3px', 'backgroundColor' : '#557A95'}}
               id="uni"
               label=""
-              type="number"
               value={state.uni}
               onChange={handleInputChange}
               error={formState.uni}
@@ -772,10 +755,9 @@ function AlertsSettings(props) {
         <Grid container spacing={2} alignItems="center">
           <Grid item>
             <TextField
-              style={{ width: "40%" }}
+              style={{ width: "40%" , 'borderRadius': '3px', 'backgroundColor' : '#557A95'}}
               id="company"
               label=""
-              type="number"
               value={state.company}
               onChange={handleInputChange}
               error={formState.company}
@@ -792,10 +774,9 @@ function AlertsSettings(props) {
         <Grid container spacing={2} alignItems="center">
           <Grid item>
             <TextField
-              style={{ width: "40%" }}
+              style={{ width: "41%" , 'borderRadius': '3px', 'backgroundColor' : '#557A95'}}
               id="RD"
               label=""
-              type="number"
               value={state.RD}
               onChange={handleInputChange}
               error={formState.RD}
@@ -810,10 +791,9 @@ function AlertsSettings(props) {
         <Grid container spacing={2} alignItems="center">
           <Grid item>
             <TextField
-              style={{ width: "40%" }}
+              style={{ width: "41%" , 'borderRadius': '3px', 'backgroundColor' : '#557A95'}}
               id="start"
               label=""
-              type="number"
               value={state.start}
               onChange={handleInputChange}
               error={formState.start}
@@ -828,10 +808,9 @@ function AlertsSettings(props) {
         <Grid container spacing={2} alignItems="center">
           <Grid item>
             <TextField
-              style={{ width: "40%" }}
+              style={{ width: "41%" , 'borderRadius': '3px', 'backgroundColor' : '#557A95'}}
               id="oth"
               label=""
-              type="number"
               value={state.oth}
               onChange={handleInputChange}
               error={formState.oth}

@@ -94,7 +94,7 @@ function Updates(props) {
       </div>
       <div className="update">
         <h2 style={{ "margin-left": "50px" }}>Last Update</h2>
-        <h3>{state.B2MATCH}</h3>
+        <h3 style={{'marginTop' : '8%'}}>{state.B2MATCH}</h3>
       </div>
       <div style={{ "margin-left": "50px", "margin-top": "50px" }}>
         <Button
@@ -113,7 +113,7 @@ function Updates(props) {
       </div>
       <div className="update">
         <h2 style={{ "margin-left": "50px" }}>Last Update</h2>
-        <h3>{state.EU}</h3>
+        <h3 style={{'marginTop' : '8.5%'}}>{state.EU}</h3>
       </div>
       <div style={{ "margin-left": "50px", "margin-top": "50px" }}>
         <Button
@@ -131,8 +131,7 @@ function Updates(props) {
         <h1
           style={{
             "margin-left": "45px",
-            color: "blue",
-            "font-weight": "bold",
+            "font-weight": "600",
           }}
         >
           ** There is an automatically updates every month for both EU & B2MATCH

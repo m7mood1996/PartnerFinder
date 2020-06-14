@@ -115,8 +115,8 @@ function SearchDetails(props) {
             visible: true,
           });
           setState({ ...state, loading: false });
-          setData({});
-          props.setState({ ...props.state, data: {} });
+          setData({ EU: [], B2MATCH: [] });
+          props.setState({ ...props.state, data: { EU: [], B2MATCH: [] } });
         } else {
           console.log(resp);
           setState({ ...state, loading: false });
@@ -126,8 +126,8 @@ function SearchDetails(props) {
       })
       .catch((error) => {
         console.log("ERROR", error);
-        setData({});
-        props.setState({ ...props.state, data: {} });
+        setData({ EU: [], B2MATCH: [] });
+        props.setState({ ...props.state, data: { EU: [], B2MATCH: [] } });
         setMsgState({
           title: "Failed",
           body: "Error while searching for organizations",
@@ -202,7 +202,7 @@ function SearchDetails(props) {
               <InputLabel
                 id="demo-mutiple-name-label"
                 id="textFontFamily"
-                style={{ color:"#02203c" }}
+                style={{ color: "#02203c" }}
               >
                 Country
               </InputLabel>
@@ -254,7 +254,11 @@ function SearchDetails(props) {
           {state && !state.loading && <span>Search</span>}
         </Button>
       </div>
-      {data && data.length === 0 ? null : (
+      {data &&
+      data.EU &&
+      data.B2MATCH &&
+      data.EU.length === 0 &&
+      data.B2MATCH.length === 0 ? null : (
         <div style={{ "margin-top": "10px" }}>
           <SearchResults data={data} />
         </div>

@@ -110,7 +110,7 @@ export default function NavTabs() {
   const [searchState, setSearchState] = React.useState({
     tags: [],
     countrySearched: [],
-    data: [],
+    data: { EU: [], B2MATCH: [] },
   });
   const [updatesState, setUpdatesState] = React.useState({
     EU: "",

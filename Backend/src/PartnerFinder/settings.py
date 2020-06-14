@@ -33,7 +33,7 @@ SECRET_KEY = config('SECRET_KEY')
 # DEBUG = False
 DEBUG = config('DEBUG')
 
-ALLOWED_HOSTS = ['localhost', '127.0.0.1', '[::1]', '62.90.89.14', 'parnerfinder.jce.ac.il']
+ALLOWED_HOSTS = ['localhost', '127.0.0.1', '[::1]', '62.90.89.14', 'parnerfinder.jce.ac.il', 'd-155-omen-8']
 
 # Application definition
 

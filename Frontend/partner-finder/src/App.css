@@ -178,7 +178,7 @@ pre {
 
 .alert_email {
   display: grid;
-  grid-template-columns: 8% 30% 28% 25% 1%;
+  grid-template-columns: 8% 35% 28% 25% 1%;
 }
 .res_score {
   display: grid;

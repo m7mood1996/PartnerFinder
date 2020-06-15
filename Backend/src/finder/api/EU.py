@@ -215,22 +215,9 @@ def getOrganizationsByCountries(countries):
     :param countries: list of countries
     :return: list of organizations objects
     """
-
-    countries = [val.lower() for val in countries]
-
-    countries = set(countries)
-    res = []
-    allOrgs = OrganizationProfile.objects.all()
-
     if not countries:
-        return allOrgs
-
-    for org in allOrgs:
-        currCountry = org.address.country.lower()
-        if currCountry in countries:
-            res.append(org)
-
-    return res
+        return OrganizationProfile.objects.all()
+    return OrganizationProfile.objects.filter(address__country__in=countries)
 
 
 def getOrgsIntersection(orgs1, orgs2):

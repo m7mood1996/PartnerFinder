@@ -33,7 +33,7 @@ SECRET_KEY = config('SECRET_KEY')
 # DEBUG = False
 DEBUG = config('DEBUG')
 
-ALLOWED_HOSTS = ['localhost', '127.0.0.1', '[::1]', '62.90.89.14', 'parnerfinder.jce.ac.il', 'd-155-omen-8']
+ALLOWED_HOSTS = ['localhost', '127.0.0.1', '[::1]', '62.90.89.14', 'https://www.parnerfinder.jce.ac.il', 'parnerfinder.jce.ac.il', 'd-155-omen-8']
 
 # Application definition
 
@@ -71,6 +71,7 @@ CACHES = {
         'BACKEND': 'django.core.cache.backends.db.DatabaseCache',
     }
 }
+
 CSRF_COOKIE_AGE = 31449600
 CACHE_MIDDLEWARE_SECONDS = 600
 CACHE_MIDDLEWARE_SECONDS = '/'
@@ -79,9 +80,14 @@ def make_key(key, key_prefix, version):
     return '%s:%s:%s' % (key_prefix, version, key)
 
 CORS_ORIGIN_WHITELIST = [
+    'http://localhost:5000',
     'http://localhost:8000',
     'http://partnerfinder.jce.ac.il',
+    'https://localhost:5000',
+    'https://localhost:8000',
+    'https://partnerfinder.jce.ac.il',
  ]
+
 CORS_ORIGIN_ALLOW_ALL = True
 
 ROOT_URLCONF = 'PartnerFinder.urls'
@@ -157,9 +163,6 @@ STATICFILES_FINDERS = [
     'django.contrib.staticfiles.finders.FileSystemFinder',
     'django.contrib.staticfiles.finders.AppDirectoriesFinder',
 ]
-
-CSRF_COOKIE_SECURE = True
-SESSION_COCKIE_SECURE = True
 
 
 REST_FRAMEWORK = {

@@ -254,22 +254,22 @@ class CallViewSet(viewsets.ModelViewSet):
             print("START BUILDING CONSORTIUM")
             print("*" * 50)
 
-            # Call.objects.all().delete()
-            # CallTag.objects.all().delete()
-            # calls = get_proposal_calls()
-            #
-            # calls_to_send = []
-            #
-            # for call in calls:
-            #     call = has_consortium(call)
-            #     if call['hasConsortium']:
-            #         calls_to_send.append({'title': call['title']})
-            #         add_call_to_DB(call)
+            Call.objects.all().delete()
+            CallTag.objects.all().delete()
+            calls = get_proposal_calls()
 
-            calls = Call.objects.all()
             calls_to_send = []
+
             for call in calls:
-                calls_to_send.append({'title': call.__dict__['title']})
+                call = has_consortium(call)
+                if call['hasConsortium']:
+                    calls_to_send.append({'title': call['title']})
+                    add_call_to_DB(call)
+
+            # calls = Call.objects.all()
+            # calls_to_send = []
+            # for call in calls:
+            #     calls_to_send.append({'title': call.__dict__['title']})
 
             body = MIMEMultipart('alternative')
 

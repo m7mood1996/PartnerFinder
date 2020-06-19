@@ -196,7 +196,7 @@ function SearchDetails(props) {
           </div>
           <div className="SCountry">
             <h1 id="textFontFamily" style={{ color: "#02203c" }}>
-              Country
+              Country\ies
             </h1>
             <FormControl className={SearchDetails.formControl} id="tab">
               <InputLabel
@@ -204,7 +204,7 @@ function SearchDetails(props) {
                 id="textFontFamily"
                 style={{ color: "#02203c" }}
               >
-                Country
+                Country\ies
               </InputLabel>
               <Select
                 id="textFontFamily"
@@ -212,14 +212,13 @@ function SearchDetails(props) {
                 options={countryList().getData()}
                 value={countrySearched}
                 onChange={handleCountrySearched}
-                labelId="demo-mutiple-name-label"
-                id="demo-mutiple-name"
                 multiple
+                autoWidth='true'
               >
                 {countryList()
                   .getData()
                   .map((val) => {
-                    return <MenuItem value={val.label}>{val.label}</MenuItem>;
+                    return <MenuItem style= {{ color:'#02203c'}}value={val.label}>{val.label}</MenuItem>;
                   })}
               </Select>
             </FormControl>

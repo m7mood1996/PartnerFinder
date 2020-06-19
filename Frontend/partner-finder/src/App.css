@@ -300,6 +300,26 @@ div.ReactTags__suggestions ul li.ReactTags__activeSuggestion {
   margin: 100px;
 }
 
+.MuiTypography-caption{
+  color: white;
+}
+
+.MuiTableSortLabel-root:hover{
+  color: white;
+}
+
+.MuiTableSortLabel-root{
+  color: white;
+}
+
+.MuiButtonBase-roo:hover{
+  color: white;
+}
+
+.MuiButtonBase-roo{
+  color: white;
+}
+
 #exitColor {
   background-color: red;
 }

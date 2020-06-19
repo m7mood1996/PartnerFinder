@@ -8,6 +8,7 @@ import { tableIcons } from "../utils";
 const MyTablePagination = styled(TablePagination)((theme) => ({
   color: "white",
   fontSize: "16px",
+  textDecorationColor: 'white'
 }));
 
 function ResultsTable(props) {
@@ -59,11 +60,21 @@ function ResultsTable(props) {
                 backgroundColor: "#02203c",
                 textAlign: "center",
                 color: "white",
+                '&:hover': {
+                  color: 'white',
+                  backgroundColor: 'white',
+                  background: 'white',
+                },
               },
               headerStyle: {
                 backgroundColor: "#02203c",
                 textAlign: "center",
                 color: "white",
+                '&:hover': {
+                  color: 'white',
+                  backgroundColor: 'white',
+                  background: 'white',
+                },
               },
               searchFieldStyle: {
                 backgroundColor: "#02203c",
@@ -76,7 +87,6 @@ function ResultsTable(props) {
                 color: "white",
               },
               showEmptyDataSourceMessage: false,
-              hideFilterIcons: true,
               header: true,
               exportButton: true,
               exportAllData: true,

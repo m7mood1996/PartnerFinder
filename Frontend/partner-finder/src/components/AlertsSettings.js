@@ -217,8 +217,9 @@ function AlertsSettings(props) {
     let res = {};
     let check = false;
     Object.keys(state).forEach((key) => {
-      if (key !== "email") {
-        if (state[key] < 0 || state[key] > 1) {
+      if (key !== "email" && key != 'calls' && key != 'events') {
+        console.log("HERE", key, state[key])
+        if (state[key] < 0 || state[key] > 1 || state[key].length === 0 || state[key] === undefined || state[key] === null) {
           res[key] = true;
           check = true;
         } else {
@@ -226,9 +227,7 @@ function AlertsSettings(props) {
         }
       } else if (key === "email") {
         if (!state[key].match(/^([\w.%+-]+)@([\w-]+\.)+([\w]{2,})$/i)) {
-          console.log("What the hell !!");
           setFormState({ ...formState, valid_email: true });
-          console.log("state of email" + "\t" + formState.valid_email);
           check = true;
         } else {
           res[key] = false;
@@ -370,15 +369,14 @@ function AlertsSettings(props) {
         style={{ marginBottom: "30px", marginLeft: "50px" }}
         className="alert_email"
       >
-        <h2 id="textFontFamily">E-mail</h2>
+        <h2 style={{marginTop:'25px'}} id="textFontFamily">E-mail</h2>
         <TextField
           id="email"
           style={{
             borderRadius: "3px",
             backgroundColor: "#02203c",
+            marginBottom: "45px"
           }}
-          className={{ color: "#02203c" }}
-          // label="E-mail"
           onChange={handleInputChange}
           className={AlertsSettings.textField}
           type={state.email}

@@ -1,6 +1,6 @@
 # Partner Finder Search Engine
 
-<div align="center"><img src="https://i.imgur.com/iyxryPA.jpg" width="300" height="300"/></div>
+<div align="center"><img src="https://i.imgur.com/iyxryPA.jpg" width="500" height="300"/></div>
 <br>
 > A smart search engine that enables searching for research partners in a short time using NLP on tags and keywords and descriptions.
 

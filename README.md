@@ -80,7 +80,7 @@ SOFTWARE.
 
 ## Author Info
 
-- Twitter - [@jamesqquick](https://twitter.com/jamesqquick)
-- Website - [James Q Quick](https://github.com/bashbash96)
+- Github - [@bashbash96](https://github.com/bashbash96)
+- Linkedin - [amjad-bashiti](https://www.linkedin.com/in/amjad-bashiti-2652a9192/)
 
 [Back To The Top](#partner-finder-search-engine)

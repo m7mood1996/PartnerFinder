@@ -175,27 +175,35 @@ Now you are ready to use the imported React Bootstrap components within your com
 
 To run locally, do the following on Backend directory:
 
-#. Create a Python 3.5 virtualenv
+1. Create a Python 3.5 virtualenv
 
-#. Install dependencies::
+2. Install dependencies:
+	
+```
+pip install -r requirements/dev.txt
+npm install
+```
 
-    pip install -r requirements/dev.txt
-    npm install
+   Alternatively, use the make task:
 
-   Alternatively, use the make task::
-
-    make install
+```
+make install
+```
+    
 
 in Backend/src directory you can run:
 
-#. When making changes::
+1. When making changes:
 
-    python manage.py makemigrations
-    python manage.py migrate
+```
+python manage.py makemigrations
+python manage.py migrate
+```
 
-#. Run the server locally::
-
-    python manage.py runserver
+2. Run the server locally:
+```
+python manage.py runserver
+```
 
 [Back To The Top](#partner-finder-search-engine)
 
@@ -213,6 +221,8 @@ in Backend/src directory you can run:
 [`Celery`](https://docs.celeryproject.org/en/stable/index.html)
 [`VS Code`](https://code.visualstudio.com/)
 [`Pycharm`](https://www.jetbrains.com/pycharm/)
+[`European Union`](https://europa.eu/european-union/index_en)
+[`B2match`](https://www.b2match.com/?campaignid=9573624898&adgroupid=102132546887&adid=423539737408&gclid=CjwKCAjw57b3BRBlEiwA1ImytnO4GfNg9sZ09Q1SvQPE_fEiUVPjYqoy3oeu3rFPw91iVwmjd7-N8RoCMIkQAvD_BwE)
 
 [Back To The Top](#partner-finder-search-engine)
 

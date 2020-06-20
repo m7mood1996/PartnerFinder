@@ -1,4 +1,4 @@
-<div align="left"><img src="https://i.imgur.com/iyxryPA.jpg" width="400" height="300"/></div>
+<div align="center"><img src="https://i.imgur.com/iyxryPA.jpg" width="400" height="300"/></div>
 <br>
 
 # Partner Finder Search Engine
@@ -21,16 +21,17 @@
 
 Creating ReadMe's for your Github repository can be tedious.  I hope this template can save you time and effort as well as provide you with some consistency across your projects.
 
-#### Technologies
+### Technologies
 
 - Django Framework
 - MongoDB
 - React.JS
+- Material-UI
 - Python
 - NLTK
 - Gensim
 - Celery
-- VSCode
+- VS Code
 - Pycharm
 
 [Back To The Top](#partner-finder-search-engine)
@@ -39,21 +40,179 @@ Creating ReadMe's for your Github repository can be tedious.  I hope this templa
 
 ## How To Use
 
-#### Installation
+### Installation
 
+- Copy this link ***https://github.com/bashbash96/PartnerFinder.git*** then on cmd or bash do:
 
+		cd ~/Desktop
+		git clone {{the link you just copied}} Project
 
-#### API Reference
+- This creates a directory named "Project", clones the repository there and adds a remote named "origin" back to the source.
 
-```html
-    <p>dummy code</p>
+		cd Project
+		git checkout develop
+
+- If that last command fails
+
+		git checkout -b develop
+
+### Updating/The Development Cycle
+------------
+You now have a git repository, likely with two branches: master and develop. Now bake these laws into your mind and process:
+
+####You will never commit to ***master*** directly.
+####You will never commit to ***develop*** directly.
+
+Instead, you will create ***feature branches*** on your machine that exist for the purpose of solving singular issues. You will always base your features off the develop branch.
+
+		git checkout develop
+		git checkout -b my-feature-branch
+
+This last command creates a new branch named "my-feature-branch" based off of develop. You can name that branch whatever you like. You should not have to push it to Github unless you intend to work on multiple machines on that feature.
+
+Make changes.
+
+	git add .
+	git commit -am "I have made some changes."
+
+This adds any new files to be tracked and makes a commit. Now let's add them to develop.
+
+	git checkout develop
+	git merge --no-ff my-feature-branch
+	git push origin develop
+
+### Releasing
+------------
+Finished with your project?
+
+- Create a feature branch as normal.
+- Update the version history in the README.md file
+- Update this to develop as normal.
+
+		git checkout master
+		git merge --no-ff develop
+		git push origin master
+		git tag v1.0.0
+		git push origin v1.0.0
+
+### Front-end
+
+In the Frontend\partner-finder directory, you can run:
+
+### `npm start`
+
+Runs the app in the development mode.<br>
+Open [http://localhost:3000](http://localhost:3000) to view it in the browser.
+
+The page will reload if you make edits.<br>
+You will also see any lint errors in the console.
+
+### `npm test`
+
+Launches the test runner in the interactive watch mode.<br>
+See the section about [running tests](#running-tests) for more information.
+
+### `npm run build`
+
+Builds the app for production to the `build` folder.<br>
+It correctly bundles React in production mode and optimizes the build for the best performance.
+
+The build is minified and the filenames include the hashes.<br>
+Your app is ready to be deployed!
+
+See the section about [deployment](#deployment) for more information.
+
+### `npm run eject`
+
+**Note: this is a one-way operation. Once you `eject`, you can’t go back!**
+
+If you aren’t satisfied with the build tool and configuration choices, you can `eject` at any time. This command will remove the single build dependency from your project.
+
+Instead, it will copy all the configuration files and the transitive dependencies (Webpack, Babel, ESLint, etc) right into your project so you have full control over them. All of the commands except `eject` will still work, but they will point to the copied scripts so you can tweak them. At this point you’re on your own.
+
+You don’t have to ever use `eject`. The curated feature set is suitable for small and middle deployments, and you shouldn’t feel obligated to use this feature. However we understand that this tool wouldn’t be useful if you couldn’t customize it when you are ready for it.
+
+### Installing a Dependency
+
+The generated project includes React and ReactDOM as dependencies. It also includes a set of scripts used by Create React App as a development dependency. You may install other dependencies (for example, React Router) with `npm`:
+
 ```
+npm install --save <library-name>
+```
+
+
+### Adding Bootstrap
+
+You don’t have to use [React Bootstrap](https://react-bootstrap.github.io) together with React but it is a popular library for integrating Bootstrap with React apps. If you need it, you can integrate it with Create React App by following these steps:
+
+Install React Bootstrap and Bootstrap from NPM. React Bootstrap does not include Bootstrap CSS so this needs to be installed as well:
+
+```
+npm install react-bootstrap --save
+npm install bootstrap@3 --save
+```
+
+Import Bootstrap CSS and optionally Bootstrap theme CSS in the ```src/index.js``` file:
+
+```js
+import 'bootstrap/dist/css/bootstrap.css';
+import 'bootstrap/dist/css/bootstrap-theme.css';
+```
+
+Import required React Bootstrap components within ```src/App.js``` file or your custom component files:
+
+```js
+import { Navbar, Jumbotron, Button } from 'react-bootstrap';
+```
+
+Now you are ready to use the imported React Bootstrap components within your component hierarchy defined in the render method. Here is an example [`App.js`](https://gist.githubusercontent.com/gaearon/85d8c067f6af1e56277c82d19fd4da7b/raw/6158dd991b67284e9fc8d70b9d973efe87659d72/App.js) redone using React Bootstrap.
+
+### Back-end
+
+To run locally, do the following on Backend directory:
+
+#. Create a Python 3.5 virtualenv
+
+#. Install dependencies::
+
+    pip install -r requirements/dev.txt
+    npm install
+
+   Alternatively, use the make task::
+
+    make install
+
+in Backend/src directory you can run:
+
+#. When making changes::
+
+    python manage.py makemigrations
+    python manage.py migrate
+
+#. Run the server locally::
+
+    python manage.py runserver
+
 [Back To The Top](#partner-finder-search-engine)
 
 ---
 
 ## References
+
+[`Django`](https://docs.djangoproject.com/en/3.0/)
+[`MongoDB`](https://www.mongodb.com/)
+[`React.JS`](https://reactjs.org/)
+[`Material-UI`](https://material-ui.com/)
+[`Python`](https://www.python.org/)
+[`NLTK`](https://www.nltk.org/)
+[`Gensim`](https://radimrehurek.com/gensim/auto_examples/index.html)
+[`Celery`](https://docs.celeryproject.org/en/stable/index.html)
+[`VS Code`](https://code.visualstudio.com/)
+[`Pycharm`](https://www.jetbrains.com/pycharm/)
+
 [Back To The Top](#partner-finder-search-engine)
+
+
 
 ---
 
@@ -96,7 +255,7 @@ know their rights.
 
 ## Author Info
 
-- Github - [@bashbash96](https://github.com/bashbash96)
+- Github - [bashbash96](https://github.com/bashbash96)
 - Linkedin - [amjad-bashiti](https://www.linkedin.com/in/amjad-bashiti-2652a9192/)
 
 [Back To The Top](#partner-finder-search-engine)

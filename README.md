@@ -2,7 +2,7 @@
 
 ![Project Image](project-image-url)
 
-> This is a ReadMe template to help save you time and effort.
+> A smart search engine that enables searching for research partners in a short time using tags and keywords.
 
 ---
 

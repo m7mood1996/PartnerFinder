@@ -19,10 +19,10 @@
 
 ## Description
 
-Search engine that connected to two repositories, the European Union and B2match repositories. 
+Search engine that connected to two repositories, the European Union and B2match. 
 It has more than 5M organizations, and 300K participants. 
-The engine use NLP and TF-IDF for comparing tags from user to tags and descriptions of the organizations and the participants in order to get accurate results.
-The website updates the repositories each month using scheduled tasks which executes by celery library. it also has automatic alerts for finding potential calls from the EU tht has at least three partners from three different countries, and alerts for potential events from b2match.
+The engine uses NLP and TF-IDF for comparing tags from user to tags and descriptions of the organizations and the participants in order to get accurate results.
+The website updates the repositories each month using scheduled tasks which executes by celery library. it also has automatic alerts for finding potential calls from the EU that has at least three partners from three different countries, and alerts for potential events from b2match.
 
 ### Technologies
 
@@ -59,12 +59,12 @@ The website updates the repositories each month using scheduled tasks which exec
 
 		git checkout -b develop
 
-### Updating/The Development Cycle
 ------------
+### Updating/The Development Cycle
+
 You now have a git repository, likely with two branches: master and develop. Now bake these laws into your mind and process:
 
-####You will never commit to ***master*** directly.
-####You will never commit to ***develop*** directly.
+You will never commit to ***master*** or ***develop*** directly  .
 
 Instead, you will create ***feature branches*** on your machine that exist for the purpose of solving singular issues. You will always base your features off the develop branch.
 
@@ -83,9 +83,9 @@ This adds any new files to be tracked and makes a commit. Now let's add them to 
 	git checkout develop
 	git merge --no-ff my-feature-branch
 	git push origin develop
-
-### Releasing
 ------------
+### Releasing
+
 Finished with your project?
 
 - Create a feature branch as normal.
@@ -97,7 +97,7 @@ Finished with your project?
 		git push origin master
 		git tag v1.0.0
 		git push origin v1.0.0
-
+------------
 ### Front-end
 
 In the Frontend\partner-finder directory, you can run:
@@ -170,6 +170,7 @@ import { Navbar, Jumbotron, Button } from 'react-bootstrap';
 
 Now you are ready to use the imported React Bootstrap components within your component hierarchy defined in the render method. Here is an example [`App.js`](https://gist.githubusercontent.com/gaearon/85d8c067f6af1e56277c82d19fd4da7b/raw/6158dd991b67284e9fc8d70b9d973efe87659d72/App.js) redone using React Bootstrap.
 
+------------
 ### Back-end
 
 To run locally, do the following on Backend directory:
@@ -215,10 +216,7 @@ in Backend/src directory you can run:
 
 [Back To The Top](#partner-finder-search-engine)
 
-
-
 ---
-
 ## License
 
 GPL License
@@ -255,7 +253,6 @@ know their rights.
 [Back To The Top](#partner-finder-search-engine)
 
 ---
-
 ## Author Info
 
 - Github - [bashbash96](https://github.com/bashbash96)

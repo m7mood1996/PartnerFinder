@@ -1,13 +1,12 @@
 # Partner Finder Search Engine
 
-![Project Image](project-image-url)
+![Project Image](https://imgur.com/iyxryPA)
 
-> A smart search engine that enables searching for research partners in a short time using tags and keywords.
+> A smart search engine that enables searching for research partners in a short time using NLP on tags and keywords and descriptions.
 
 ---
 
 ### Table of Contents
-You're sections headers will be used to reference location of destination.
 
 - [Description](#description)
 - [How To Use](#how-to-use)
@@ -23,8 +22,12 @@ Creating ReadMe's for your Github repository can be tedious.  I hope this templa
 
 #### Technologies
 
-- Technology 1
-- Technology 2
+- Django Framework
+- MongoDB
+- React.JS
+- Python
+- VSCode
+- Pycharm
 
 [Back To The Top](#partner-finder-search-engine)
 

@@ -26,7 +26,7 @@ Creating ReadMe's for your Github repository can be tedious.  I hope this templa
 - Technology 1
 - Technology 2
 
-[Back To The Top](#read-me-template)
+[Back To The Top](#partner-finder-engine)
 
 ---
 

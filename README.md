@@ -19,7 +19,10 @@
 
 ## Description
 
-Creating ReadMe's for your Github repository can be tedious.  I hope this template can save you time and effort as well as provide you with some consistency across your projects.
+Search engine that connected to two repositories, the European Union and B2match repositories. 
+It has more than 5M organizations, and 300K participants. 
+The engine use NLP and TF-IDF for comparing tags from user to tags and descriptions of the organizations and the participants in order to get accurate results.
+The website updates the repositories each month using scheduled tasks which executes by celery library. it also has automatic alerts for finding potential calls from the EU tht has at least three partners from three different countries, and alerts for potential events from b2match.
 
 ### Technologies
 

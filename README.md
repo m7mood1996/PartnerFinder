@@ -26,6 +26,9 @@ Creating ReadMe's for your Github repository can be tedious.  I hope this templa
 - MongoDB
 - React.JS
 - Python
+- NLTK
+- Gensim
+- Celery
 - VSCode
 - Pycharm
 

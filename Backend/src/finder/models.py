@@ -19,7 +19,7 @@ class MapIds(models.Model):
     relates to this organization in the inverted index
     """
     originalID = models.IntegerField(unique=True)
-    indexID = models.IntegerField(unique=True)
+    indexID = models.IntegerField()
 
 
 class OrganizationProfile(models.Model):

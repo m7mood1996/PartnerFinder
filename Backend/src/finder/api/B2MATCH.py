@@ -109,7 +109,7 @@ def add_Participants_from_Upcoming_Event():
 
         try:
             url_arr = getParticipentFromUrl(
-                event.event_url + "/participants")
+                event.event_url)
         except:
             continue
 
@@ -187,6 +187,13 @@ def getParticipentFromUrl(url_):
     # driver = webdriver.Chrome()
     # for Windows
     driver = webdriver.Chrome('C:\\bin\chromedriver.exe')
+    driver.get(url_)
+    sleep(1)
+    """
+    get the participant url
+    """
+
+    url_ = driver.execute_script("return document.getElementsByClassName(\"break-word\")[0].childNodes[0].innerHTML")  + "/participants"
     driver.get(url_)
     sleep(1)
     num_of_part = int(driver.execute_script(
@@ -399,19 +406,19 @@ def getParticipantsByTags(tags):
     corpus = NLP_Processor([tags])
     res1 = index1[corpus]
 
-    res2 = index2[corpus[:]]
+    res2 = index2[corpus]
 
     res1 = process_query_result(res1)
     res2 = process_query_result(res2)
 
     res1 = sorted(res1, key=lambda pair: pair[1], reverse=True)
-    res1 = res1[:101]
+    # res1 = res1[:101]
     res2 = sorted(res2, key=lambda pair: pair[1], reverse=True)
-    res2 = res2[:101]
+    # res2 = res2[:101]
 
-    res1 = [pair for pair in res1 if pair[1] > 0.6]
+    res1 = [pair for pair in res1 if pair[1] > 0.5]
     res1 = [MapIDsB2match.objects.get(indexID=pair[0]) for pair in res1]
-    res2 = [pair for pair in res2 if pair[1] > 0.6]
+    res2 = [pair for pair in res2 if pair[1] > 0.5]
     res2 = [MapIDsB2matchUpcoming.objects.get(
         indexID=pair[0]) for pair in res2]
 

@@ -47,18 +47,25 @@ class OrganizationProfileViewSet(viewsets.ModelViewSet):
         print("*" * 50)
         print("START UPDATING EU DB")
         print("*" * 50)
-        try:
-            MapIds.objects.all().delete()
-            try:
-                index = load_index('EU_Index')
-            except:
-                index = None
 
-            if index is None:
-                index = build_index('EU_Index')
-            else:
+        try:
+            # MapIds.objects.all().delete()
+            # try:
+            #     index = load_index('EU_Index')
+            # except:
+            #     index = None
+
+            try:
+                index = load_index('EU_Index_Temp')
                 index.destroy()
-                index = build_index('EU_Index')
+            except:
+                pass
+            index = build_index('EU_Index_Temp')
+
+            # if index:
+            #     index.destroy()
+
+            # index = build_index('EU_Index')
 
             status = {}
             graph = Graph()
@@ -67,6 +74,7 @@ class OrganizationProfileViewSet(viewsets.ModelViewSet):
             visitngQueue.append(startOrg)
             status[startOrg] = 'visiting'
             while len(visitngQueue) > 0:
+
                 currPic = visitngQueue.popleft()
                 try:
                     currOrg = getOrganizationProfileFromEUByPIC(currPic)
@@ -84,10 +92,15 @@ class OrganizationProfileViewSet(viewsets.ModelViewSet):
                 addOrganizationToDB(currOrg)
                 index = add_org_to_index(index, currOrg)
                 status[currPic] = 'visited'
+
+            destroyAndRename(old_index_name='EU_Index', new_index_name='EU_Index_Temp')
+
             response = {'success': 'Organizations updated successfully!'}
             if not setUpdateSettings(euDate=time.mktime(datetime.datetime.now().timetuple())):
                 raise
         except:
+            setUpdateSettings(euDate=time.mktime(datetime.datetime.now().timetuple()))
+            destroyAndRename(old_index_name='EU_Index', new_index_name='EU_Index_Temp')
             response = {'error': 'Error while updating organizations.'}
 
         return Response(response, status=status.HTTP_200_OK)
@@ -382,7 +395,12 @@ class EventViewSet(viewsets.ModelViewSet):
         """
                 method to define API to iimport all the events from B2MATCH and save it to the local DB
         """
-
+        Event.objects.all().delete()
+        TagP.objects.all().delete()
+        Participants.objects.all().delete()
+        MapIDsB2matchUpcoming.objects.all().delete()
+        MapIDsB2match.objects.all().delete()
+        Location.objects.all().delete()
         try:
             all_event_b2match = "https://events.b2match.com/?all=true"
             b2match = "https://events.b2match.com"
@@ -640,7 +658,7 @@ class ParticipantsViewSet(viewsets.ModelViewSet):
 
                 try:
                     url_arr = getParticipentFromUrl(
-                        event.event_url + "/participants")
+                        event.event_url)
                 except:
                     continue
                 for item in url_arr:

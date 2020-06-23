@@ -35,7 +35,14 @@ const B2Match_columns = [
   { title: "Org. Name", field: "organization_name" },
   { title: "Type", field: "org_type" },
   { title: "Country", field: "address" },
-  { title: "Website", field: "org_url" },
+  { title: "Website", field: "org_url" ,
+  render: (rowData) => (
+
+<a href={rowData.org_url} target="_blank" style={{color: 'white'}}>
+      {rowData.org_url}{" "}
+    </a>
+    
+  )},
   { title: "Description", field: "description" },
 ];
 

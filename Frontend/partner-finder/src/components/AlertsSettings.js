@@ -41,7 +41,7 @@ const events_columns = [
     title: "URL",
     field: "event_url",
     render: (rowData) => (
-      <a href={rowData.event_url} target="_blank">
+      <a href={rowData.event_url} target="_blank" style={{color: 'white'}}>
         {rowData.event_url}{" "}
       </a>
     ),
@@ -986,7 +986,7 @@ function AlertsSettings(props) {
       <div style={{ "margin-top": "10px" }}>
         {state && state.events && state.events.length === 0 ? null : (
           <ResultsTable
-            title={"B2match Alerts Results"}
+            title={"B2match Recommended Events"}
             columns={events_columns}
             data={state.events}
           />

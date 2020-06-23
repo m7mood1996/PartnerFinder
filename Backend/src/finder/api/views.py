@@ -27,6 +27,7 @@ from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
 
 import re
+import os
 
 
 class OrganizationProfileViewSet(viewsets.ModelViewSet):
@@ -49,23 +50,15 @@ class OrganizationProfileViewSet(viewsets.ModelViewSet):
         print("*" * 50)
 
         try:
-            # MapIds.objects.all().delete()
-            # try:
-            #     index = load_index('EU_Index')
-            # except:
-            #     index = None
-
             try:
                 index = load_index('EU_Index_Temp')
-                index.destroy()
+                if os.path.getsize('EU_Index_Temp.0') > os.path.getsize('EU_Index.0'):
+                    destroyAndRename(old_index_name='EU_Index', new_index_name='EU_Index_Temp')
+                else:
+                    index.destroy()
             except:
                 pass
             index = build_index('EU_Index_Temp')
-
-            # if index:
-            #     index.destroy()
-
-            # index = build_index('EU_Index')
 
             status = {}
             graph = Graph()
@@ -93,14 +86,20 @@ class OrganizationProfileViewSet(viewsets.ModelViewSet):
                 index = add_org_to_index(index, currOrg)
                 status[currPic] = 'visited'
 
-            destroyAndRename(old_index_name='EU_Index', new_index_name='EU_Index_Temp')
+            if os.path.getsize('EU_Index_Temp.0') > os.path.getsize('EU_Index.0'):
+                destroyAndRename(old_index_name='EU_Index', new_index_name='EU_Index_Temp')
+            else:
+                index.destroy()
 
             response = {'success': 'Organizations updated successfully!'}
             if not setUpdateSettings(euDate=time.mktime(datetime.datetime.now().timetuple())):
                 raise
         except:
             setUpdateSettings(euDate=time.mktime(datetime.datetime.now().timetuple()))
-            destroyAndRename(old_index_name='EU_Index', new_index_name='EU_Index_Temp')
+            if os.path.getsize('EU_Index_Temp.0') > os.path.getsize('EU_Index.0'):
+                destroyAndRename(old_index_name='EU_Index', new_index_name='EU_Index_Temp')
+            else:
+                index.destroy()
             response = {'error': 'Error while updating organizations.'}
 
         return Response(response, status=status.HTTP_200_OK)
@@ -119,8 +118,9 @@ class OrganizationProfileViewSet(viewsets.ModelViewSet):
             countries = data['countries']
             tags = data['tags']
             EURes = getOrgsByCountriesAndTags(tags, countries)
-            # B2MATCHRes = getB2MATCHPartByCountriesAndTags(tags, countries)
-            B2MATCHRes = []
+            B2MATCHRes = getB2MATCHPartByCountriesAndTags(tags, countries)
+            #B2MATCHRes = []
+
             B2MATCH = []
             EU = []
             for val in EURes:
@@ -401,6 +401,7 @@ class EventViewSet(viewsets.ModelViewSet):
         MapIDsB2matchUpcoming.objects.all().delete()
         MapIDsB2match.objects.all().delete()
         Location.objects.all().delete()
+        setUpdateSettings(b2matchDate=time.mktime(datetime.datetime.now().timetuple()))
         try:
             all_event_b2match = "https://events.b2match.com/?all=true"
             b2match = "https://events.b2match.com"
@@ -510,6 +511,12 @@ class EventViewSet(viewsets.ModelViewSet):
         print("updating....")
 
         try:
+            load_index("B2MATCH_upcoming_Index_temp")
+            os.remove("B2MATCH_upcoming_Index_temp")
+            os.remove("B2MATCH_upcoming_Index_temp.0")
+        except:
+            pass
+        try:
             newEvents = []
             upcoming_event_b2match = "https://events.b2match.com"
             b2match = "https://events.b2match.com"
@@ -614,7 +621,7 @@ class EventViewSet(viewsets.ModelViewSet):
                     toupdate.append(event)
 
             changeEventStatus(eventNoLongerUpcoming)
-
+            print("returnd from changing event status")
             deleteEventsTree(toupdate)
 
             for e in toupdate:
@@ -634,6 +641,7 @@ class EventViewSet(viewsets.ModelViewSet):
                 raise
             response = {'success': 'B2MATCH repository updated successfully'}
         except:
+            setUpdateSettings(b2matchDate=time.mktime(datetime.datetime.now().timetuple()))
             response = {'error': 'Error while updating B2match repository.'}
 
 

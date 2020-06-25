@@ -63,9 +63,6 @@ pre {
   line-height: 18.5714px;
 }
 
-#email-label {
-  color: white;
-}
 
 h3 {
   font-family: "Lucida Sans Typewriter", "Lucida Console", monaco,
@@ -144,26 +141,12 @@ pre {
 .counrty {
   display: grid;
 }
-.first_row {
-  color: black;
-  display: grid;
-  grid-template-columns: auto auto auto auto;
-  margin-left: 20px;
-  font-size: 9.5px;
-}
-.second_row {
+
+.input_row {
   color: black;
   margin-top: 35px;
   display: grid;
-  grid-template-columns: auto auto auto;
-  margin-left: 20px;
-  font-size: 9.5px;
-}
-.third_row {
-  color: black;
-  margin-top: 35px;
-  display: grid;
-  grid-template-columns: auto 0.5fr auto;
+  grid-template-columns: 25% 25% 25% 25%;
   margin-left: 20px;
   font-size: 9.5px;
 }
@@ -216,6 +199,10 @@ pre {
 
 #BackgroundColor {
   background-color: #02203c;
+  font-family: "Lucida Sans Typewriter", "Lucida Console", monaco,
+    "Bitstream Vera Sans Mono", monospace;
+  font-style: normal;
+  font-variant: normal;
 }
 
 #app {
@@ -234,12 +221,19 @@ div.ReactTags__tagInput {
   border-radius: 3px;
   display: inline-block;
   font-size: 16px;
+  
 }
+
+
 div.ReactTags__tagInput input.ReactTags__tagInputField,
 div.ReactTags__tagInput input.ReactTags__tagInputField {
   height: 31px;
   margin: 0;
   font-size: 14px;
+  font-family: "Lucida Sans Typewriter", "Lucida Console", monaco,
+    "Bitstream Vera Sans Mono", monospace;
+  font-style: normal;
+  font-variant: normal;
   width: 100%;
   border: 1px solid #02203c;
   padding: 0 4px;
@@ -255,6 +249,10 @@ div.ReactTags__tagInput input.ReactTags__tagInputField::placeholder {
 div.ReactTags__selected span.ReactTags__tag {
   border: 1px solid #02203c;
   background: #02203c;
+  font-family: "Lucida Sans Typewriter", "Lucida Console", monaco,
+    "Bitstream Vera Sans Mono", monospace;
+  font-style: normal;
+  font-variant: normal;
   font-size: 16px;
   display: inline-block;
   padding: 5px;
@@ -326,10 +324,10 @@ div.ReactTags__suggestions ul li.ReactTags__activeSuggestion {
 #israel,
 #resScore,
 #email,
-#oth,
-#uni,
+#other,
+#university,
 #agency,
-#start,
+#start_up,
 #RD,
 #company {
   font-family: "Lucida Sans Typewriter", "Lucida Console", monaco,
@@ -338,3 +336,5 @@ div.ReactTags__suggestions ul li.ReactTags__activeSuggestion {
   font-variant: normal;
   color: white;
 }
+
+

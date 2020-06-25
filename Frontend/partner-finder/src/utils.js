@@ -38,7 +38,13 @@ const B2Match_columns = [
   { title: "Website", field: "org_url" },
   { title: "Description", field: "description" },
 ];
-
+const classificationTypesOptions = [
+  "SME", "International Organization", "Higher or Secondary Education",
+  "Research Organization", "Private for Profit Organization", "Public Organization", "Other"
+];
+const consorsiumRoles = [
+  "Coordinator", "Regular"
+];
 const tableIcons = {
   Add: forwardRef((props, ref) => (
     <AddBox
@@ -163,4 +169,4 @@ const tableIcons = {
 
 const BACKEND_URL = "http://62.90.89.14:8000/api/";
 
-export { EU_columns, B2Match_columns, BACKEND_URL, tableIcons };
+export { EU_columns, B2Match_columns, BACKEND_URL, tableIcons, classificationTypesOptions, consorsiumRoles };

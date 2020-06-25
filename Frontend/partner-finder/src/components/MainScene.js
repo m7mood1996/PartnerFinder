@@ -101,14 +101,16 @@ export default function NavTabs() {
     spain: 0,
     norway: 0,
     agency: 0,
-    uni: 0,
+    university: 0,
     company: 0,
     RD: 0,
-    start: 0,
+    start_up: 0,
     oth: 0,
   });
   const [searchState, setSearchState] = React.useState({
     tags: [],
+    type: [], 
+    role: "",
     countrySearched: [],
     data: { EU: [], B2MATCH: [] },
   });
@@ -160,6 +162,7 @@ export default function NavTabs() {
       });
   }
 
+  
   if (alertsState.firstLoading) {
     let newState = { ...alertsState, firstLoading: false };
     let newMail = "";
@@ -212,11 +215,11 @@ export default function NavTabs() {
                 newState["spain"] = resp.Spain;
                 newState["norway"] = resp.Norway;
                 newState["agency"] = resp.Association_Agency;
-                newState["uni"] = resp.University;
+                newState["university"] = resp.University;
                 newState["company"] = resp.Company;
                 newState["RD"] = resp.R_D_Institution;
-                newState["start"] = resp.Start_Up;
-                newState["oth"] = resp.Others;
+                newState["start_up"] = resp.Start_Up;
+                newState["other"] = resp.Others;
                 newState["email"] = newMail;
                 newState["turned_on"] = turned_on;
                 setAlertsState(newState);
@@ -242,11 +245,20 @@ export default function NavTabs() {
       });
   }
 
+  /**
+   * 
+   * @param {*} event 
+   * @param {*} newValue 
+   */
   const handleChange = (event, newValue) => {
     setValue(newValue);
   };
   return (
     <div className={classes.root}>
+    <Msgtoshow
+        {...msgState}
+        handleClose={() => setMsgState({ ...msgState, visible: false })}
+      />
       <AppBar id="BackgroundColor" position="static">
         <Tabs
           classes={{

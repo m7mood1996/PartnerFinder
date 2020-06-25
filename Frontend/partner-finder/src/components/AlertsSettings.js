@@ -41,7 +41,7 @@ const events_columns = [
     title: "URL",
     field: "event_url",
     render: (rowData) => (
-      <a href={rowData.event_url} target="_blank">
+      <a href={rowData.event_url} target="_blank" rel="noopener noreferrer">
         {rowData.event_url}{" "}
       </a>
     ),
@@ -78,11 +78,11 @@ function AlertsSettings(props) {
     spain: 0,
     norway: 0,
     agency: 0,
-    uni: 0,
+    university: 0,
     company: 0,
     RD: 0,
-    start: 0,
-    oth: 0,
+    start_up: 0,
+    other: 0,
     calls: [],
     events: [],
   });
@@ -106,11 +106,11 @@ function AlertsSettings(props) {
     spain: false,
     norway: false,
     agency: false,
-    uni: false,
+    university: false,
     company: false,
     RD: false,
-    start: false,
-    oth: false,
+    start_up: false,
+    other: false,
   });
 
   if (state.firstLoading) {
@@ -122,6 +122,9 @@ function AlertsSettings(props) {
     setState(newState);
   }
 
+  /**
+   * Method that change the state of the switch key from on to off or the opposite
+   */
   const toggleChecked = () => {
     let temp = false;
     setturned_on((prev) => {
@@ -131,10 +134,16 @@ function AlertsSettings(props) {
     props.setState({ ...props.state, turned_on: temp });
   };
 
+  /**
+   * Method that hides the alerts table 
+   */
   const hideAlerts = () => {
     setState({ ...state, events: [], calls: [] });
   };
-
+  
+  /**
+   * 
+   */
   const getCalls = () => {
     setState({ ...state, loading: true });
     let url = new URL(BACKEND_URL + "calls/get_calls/");
@@ -195,8 +204,15 @@ function AlertsSettings(props) {
         setState({ ...state, loading: false, calls: [] });
       });
   };
-
+  
+  /**
+   * Method that sets the value of the scores that has been entered 
+   * @param {*} event event when the user to enter a new score
+   */
   const handleInputChange = (event) => {
+    /*
+   
+    */
     let newState = { ...state };
     newState[event.target.id] = event.target.value;
     setState(newState);
@@ -213,12 +229,15 @@ function AlertsSettings(props) {
     setFormState(newFormState);
   };
 
+  /**
+   *Method that checks if all the input fields has been
+    filled with the approriate values
+   */
   const formValidation = () => {
     let res = {};
     let check = false;
     Object.keys(state).forEach((key) => {
-      if (key !== "email" && key != 'calls' && key != 'events') {
-        console.log("HERE", key, state[key])
+      if (key !== "email" && key !== 'calls' && key !== 'events') {
         if (state[key] < 0 || state[key] > 1 || state[key].length === 0 || state[key] === undefined || state[key] === null) {
           res[key] = true;
           check = true;
@@ -239,6 +258,10 @@ function AlertsSettings(props) {
     return check;
   };
 
+  /**
+   * Method that updates the scores that the user want to change them in our DB  
+     with the new value that was inserted
+   */
   const updateAlert = () => {
     if (formValidation()) {
       if (formState.valid_email) {
@@ -303,11 +326,11 @@ function AlertsSettings(props) {
               Spain: state.spain,
               Norway: state.norway,
               Association_Agency: state.agency,
-              University: state.uni,
+              University: state.university,
               Company: state.company,
               R_D_Institution: state.RD,
-              Start_Up: state.start,
-              Others: state.oth,
+              Start_Up: state.start_up,
+              Other: state.other,
             };
             params = { data: JSON.stringify(data) };
             Object.keys(params).forEach((key) =>
@@ -356,6 +379,54 @@ function AlertsSettings(props) {
     }
   };
 
+  /**
+   * function that updates the alert results in the EU & B2MATCH manually 
+   */
+  const updateAlertResults = () => {
+    
+    let url = new URL(BACKEND_URL + "calls/consortium_builder/");
+    fetch(url, {
+      method: "GET",
+    })
+      .then((res) => res.json())
+      .then((resp) => {
+        if ("error" in resp) {
+          setMsgState({
+            title: "Failed",
+            body: "Error while updating alerts results",
+            visible: true,
+          });
+        }    
+      })
+      .catch((error) => {
+        setMsgState({
+          title: "Failed",
+          body: "Error while updating alerts results",
+          visible: true,
+        });
+      });
+      url = new URL(BACKEND_URL + "alerts/alertB2match");
+      fetch(url, {
+        method: "GET",
+      })
+        .then((res) => res.json())
+        .then((resp) => {
+          if ("error" in resp) {
+            setMsgState({
+              title: "Failed",
+              body: "Error while updating alerts results",
+              visible: true,
+            });
+          }       
+        })
+        .catch((error) => {
+          setMsgState({
+            title: "Failed",
+            body: "Error while updating alerts results",
+            visible: true,
+          });
+        });
+  };
   return (
     <React.Fragment>
       <Msgtoshow
@@ -850,11 +921,11 @@ function AlertsSettings(props) {
                 borderRadius: "3px",
                 backgroundColor: "#02203c",
               }}
-              id="uni"
+              id="university"
               label=""
-              value={state.uni}
+              value={state.university}
               onChange={handleInputChange}
-              error={formState.uni}
+              error={formState.university}
               InputLabelProps={{
                 shrink: true,
               }}
@@ -915,11 +986,11 @@ function AlertsSettings(props) {
                 borderRadius: "3px",
                 backgroundColor: "#02203c",
               }}
-              id="start"
+              id="start_up"
               label=""
-              value={state.start}
+              value={state.start_up}
               onChange={handleInputChange}
-              error={formState.start}
+              error={formState.start_up}
               InputLabelProps={{
                 shrink: true,
               }}
@@ -936,11 +1007,11 @@ function AlertsSettings(props) {
                 borderRadius: "3px",
                 backgroundColor: "#02203c",
               }}
-              id="oth"
+              id="other"
               label=""
-              value={state.oth}
+              value={state.other}
               onChange={handleInputChange}
-              error={formState.oth}
+              error={formState.other}
               InputLabelProps={{
                 shrink: true,
               }}
@@ -958,7 +1029,18 @@ function AlertsSettings(props) {
           id="BackgroundColor"
           onClick={() => updateAlert()}
         >
-          Update
+          Update Scores
+        </Button>
+
+        <Button
+          color="primary"
+          round
+          variant="contained"
+          id="BackgroundColor"
+          style={{'marginLeft' : '10%'}}
+          onClick={() => updateAlertResults()}
+        >
+          Update Alerts Results
         </Button>
       </div>
 

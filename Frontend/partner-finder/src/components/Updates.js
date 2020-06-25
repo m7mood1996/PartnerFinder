@@ -20,7 +20,11 @@ function Updates(props) {
     setState({ ...props.state });
   }
 
-  const updateB2match = (event) => {
+  /**
+   * Method that upadtes the B2MATCH events in our DB (getting the future events) and
+    returns the last update date from the backend and show it in the GUI
+   */
+  const updateB2match = () => {
     let url = new URL(BACKEND_URL + "events/update_upcoming_events/");
     fetch(url, {
       method: "POST",
@@ -50,7 +54,11 @@ function Updates(props) {
       );
   };
 
-  const updateEU = (event) => {
+  /**
+   * Method that upadtes the EU Organizations in our DB and
+    returns the last update date from the backend and show it in the GUI
+   */
+  const updateEU = () => {
     let url = new URL(BACKEND_URL + "organizations/updateOrganizations/");
     fetch(url, {
       method: "GET",

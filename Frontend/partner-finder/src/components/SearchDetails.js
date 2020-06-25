@@ -4,7 +4,7 @@ import Typography from "@material-ui/core/Typography";
 import InputLabel from "@material-ui/core/InputLabel";
 import MenuItem from "@material-ui/core/MenuItem";
 import FormControl from "@material-ui/core/FormControl";
-import { Button } from "@material-ui/core";
+import { Button, Checkbox } from "@material-ui/core";
 import countryList from "react-select-country-list";
 import "react-phone-number-input/style.css";
 import { WithContext as ReactTags } from "react-tag-input";
@@ -17,7 +17,7 @@ import {
   DialogTitle,
   DialogContent,
 } from "@material-ui/core/";
-import { companyTypesOptions, BACKEND_URL } from "../utils";
+import { classificationTypesOptions, consorsiumRoles, BACKEND_URL } from "../utils";
 
 const KeyCodes = {
   comma: 188,
@@ -41,39 +41,98 @@ function SearchDetails(props) {
   });
   const [data, setData] = React.useState({});
   const [tags, setTags] = React.useState([]);
+  const [type, setType] = React.useState([]);
+  const [role, setRole] = React.useState('');
   const [countrySearched, setCountrySearched] = React.useState([]);
+  
   const [state, setState] = React.useState({
     loading: false,
     firstLoading: true,
+   
   });
-
+  const [checked, setChecked] = React.useState([]);
+  
   const [formState, setFormState] = React.useState({
     tags: false,
   });
+  
+  
+  /**
+   * handler function for the checkbox to set the values of the countries and the 
+   * classification types that the user chose
+   * @param {event} event event when the user want to choose value from the checkbox
+   */
+  const handleCheckbox = (event) => {
+
+    const currentIndex = checked.indexOf(event.target.name);
+    const countryIndex = countrySearched.indexOf(event.target.name);
+    const typeIndex = type.indexOf(event.target.name);
+    const newChecked = [...checked];
+
+    if (currentIndex === -1) {
+      newChecked.push(event.target.name);
+      if(event.target.id === "country"){
+        countrySearched.push(event.target.name);
+        setCountrySearched([...countrySearched]);
+        props.setState({ ...props.state, countrySearched: event.target.name });
+      }else{
+        type.push(event.target.name);
+        setType([...type]);
+        props.setState({ ...props.state, type: event.target.name });
+      }
+    } else {
+      if(event.target.id === "country"){
+        countrySearched.splice(countryIndex, 1);
+      }
+      else{ 
+        type.splice(typeIndex, 1);
+      }
+      newChecked.splice(currentIndex, 1);
+    }
+    setChecked(newChecked);
+  };
 
   if (state.firstLoading) {
-    console.log("PROPS", props.state);
     setTags([...props.state.tags]);
+    setType([...props.state.type]);
+    setRole(...props.state.role);
     setCountrySearched([...props.state.countrySearched]);
     setData({ ...props.state.data });
     setState({ ...state, firstLoading: false });
   }
 
-  const handleCountrySearched = (event) => {
-    setCountrySearched(event.target.value);
-    props.setState({ ...props.state, countrySearched: event.target.value });
+  /**
+   * handler function to set the role that the user chose
+   * @param {event} event event when the user choose a role
+   */
+  const handleRole = (event) => {
+    setRole(event.target.value);
+    props.setState({ ...props.state, role: event.target.value });
   };
 
+  /**
+   * function for adding a new tag
+   * @param {String} tag the tag that the user inserts
+   */
   const addTag = (tag) => {
     setTags([...tags, tag]);
     props.setState({ ...props.state, tags: [...props.state.tags, tag] });
   };
 
+  
+  /**
+   * function that sets the value of the tag that the user filled
+   * @param {event} event 
+   */
   const changeTagInput = (event) => {
     if (event.length !== 0) {
       setFormState({ ...formState, tags: false });
     }
   };
+  /**
+   * function for deleting the tag that has been inserted
+   * @param {int} idx index of the tag we want to delete
+   */
   const deleteTag = (idx) => {
     let newTags = tags.filter((val, i) => i !== idx);
     setTags(newTags);
@@ -82,6 +141,9 @@ function SearchDetails(props) {
 
   const dragTag = (tag, currPos, newPos) => {};
 
+  /**
+   * Method that checkes the validation 
+   */
   const searchCompany = () => {
     if (formValidation()) {
       setMsgState({
@@ -90,15 +152,25 @@ function SearchDetails(props) {
         visible: true,
       });
     } else {
-      searchByTagsAndCountires(tags, countrySearched);
+      searchByTagsAndCountires(tags, countrySearched, type, role);
     }
   };
 
-  const searchByTagsAndCountires = (tags, countries) => {
+  /**
+   *[description] Method that searchs for the organizations from EU and for the participants 
+    from B2MATCH in our DB by tags and countries 
+   * @param {array} tags array of tags that the user entered
+   * @param {array} countries array of the countries that the user chose
+   * @param {array} type array of the classification types that the user chose
+   * @param {String} role the role that the user chose
+   * @returns {JSON} JSON file of the results 
+   */
+  const searchByTagsAndCountires = (tags, countries, type, role) => {
+    
     setState({ ...state, loading: true });
     tags = tags.map((tag) => tag.text);
     let url = new URL(BACKEND_URL + "genericSearch/searchByCountriesAndTags/");
-    let params = { data: JSON.stringify({ tags: tags, countries: countries }) };
+    let params = { data: JSON.stringify({ tags: tags, countries: countries, type: type, role: role }) };
     Object.keys(params).forEach((key) =>
       url.searchParams.append(key, params[key])
     );
@@ -136,7 +208,9 @@ function SearchDetails(props) {
         setState({ ...state, loading: false });
       });
   };
-
+  /**
+   * Method that checks if the tag input has been filled or not
+   */
   const formValidation = () => {
     let res = {};
     let check = false;
@@ -164,14 +238,13 @@ function SearchDetails(props) {
 
       <div className="Search_Details">
         <h1
-          style={{ "margin-left": "1%", color: "#02203c" }}
-          id="textFontFamily"
+          style={{ "margin-left": "1%" }}
         >
           Search Details
         </h1>
-        <div className="third_row">
+        <div className="input_row">
           <div className="Tags">
-            <h1 id="textFontFamily" style={{ color: "#02203c" }}>
+            <h1>
               Tags and Keywords
             </h1>
             <ReactTags
@@ -200,27 +273,59 @@ function SearchDetails(props) {
             </h1>
             <FormControl className={SearchDetails.formControl} id="tab">
               <InputLabel
-                id="demo-mutiple-name-label"
                 id="textFontFamily"
-                style={{ color: "#02203c" }}
+                style={{ 'color': "#02203c" }}
               >
                 Country\ies
               </InputLabel>
               <Select
                 id="textFontFamily"
-                style={{ color: "#02203c" }}
+                style={{ 'color': "#02203c" }}
                 options={countryList().getData()}
                 value={countrySearched}
-                onChange={handleCountrySearched}
-                multiple
+                
                 autoWidth='true'
               >
                 {countryList()
                   .getData()
                   .map((val) => {
-                    return <MenuItem style= {{ color:'#02203c'}}value={val.label}>{val.label}</MenuItem>;
+                    return <MenuItem id="country" style= {{ 'backgroundColor':'#ececec'}} value={val.label}><Checkbox id="country" name={val.label} checked={checked.indexOf(val.label) !== -1} onChange={handleCheckbox}/>{val.label}</MenuItem>;
                   })}
+                  
               </Select>
+            </FormControl>
+          </div>
+          <div>
+            <h1>Classification Type\s</h1>       
+            <FormControl className={SearchDetails.formControl} id="tab">
+                <InputLabel 
+                id="textFontFamily"
+                style={{ 'color': "#02203c" }}
+                >Type\s</InputLabel>
+                  <Select
+                      value={MenuItem.value}
+                  >
+                  {classificationTypesOptions.map((val) => {
+                      return <MenuItem style= {{ 'backgroundColor':'#ececec'}} value={val}><Checkbox id={val} name={val} checked={checked.indexOf(val) !== -1} onChange={handleCheckbox}/>{val}</MenuItem>
+                  })}
+                  </Select>
+            </FormControl>
+          </div>
+          <div>
+          <h1>Consortium Role</h1>       
+            <FormControl className={SearchDetails.formControl} id="tab">
+                <InputLabel 
+                id="textFontFamily"
+                style={{ 'color': "#02203c" }}
+                >Role</InputLabel>
+                  <Select
+                      value={role}
+                      onChange={handleRole}
+                  >
+                  {consorsiumRoles.map((val) => {
+                      return <MenuItem style= {{ 'backgroundColor':'#ececec'}} onChange={handleRole}value={val} >{val}</MenuItem>;
+                  })}
+                  </Select>
             </FormControl>
           </div>
         </div>

@@ -41,5 +41,5 @@ def update_events():
 @periodic_task(run_every=(crontab(minute=0, hour=4, day_of_week='sun')),
                name="update_events", ignore_result=True)
 def b2match_alerts():
-    url2 = URL + 'alerts/alertB2match/'
+    url2 = URL + 'b2matchalerts/alertB2match/'
     response2 = requests.get(url2)

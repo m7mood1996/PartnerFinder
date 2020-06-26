@@ -11,8 +11,16 @@ def NLP_Processor(documents):
     :return: Corpus of the documents
     """
     tokens = [process_Document(doc) for doc in documents]
-    dictionary = get_ids(tokens)
+    try:
+        dictionary = load_dictionary("Dictionary")
+    except:
+        dictionary = get_ids([])
+        dictionary.save("Dictionary")
 
+    print(dictionary)
+    dictionary.add_documents(tokens)
+    dictionary.save("Dictionary")
+    print(dictionary)
     return build_corpus(dictionary, tokens)
 
 
@@ -93,6 +101,14 @@ def load_index(path):
 
     return gensim.similarities.Similarity.load(path)
 
+def load_dictionary(path):
+    """
+
+    :param path:
+    :return:
+    """
+
+    return gensim.corpora.Dictionary.load(path)
 
 def build_index(path):
     """

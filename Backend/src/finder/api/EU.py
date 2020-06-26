@@ -203,17 +203,19 @@ def getOrgsByTags(tags):
     tags = ' '.join(tags)
     index = load_index('EU_Index.0')
     corpus = NLP_Processor([tags])
+    print(corpus)
     res = index[corpus]
+    print(res)
     res = process_query_result(res)
     res = sorted(res, key=lambda pair: pair[1], reverse=True)
     # res = res[:100]
     res = [pair for pair in res if pair[1] > 0.5]
+    print(res)
     res = [MapIds.objects.get(indexID=pair[0]) for pair in res]
 
     finalRes = []
     for mapId in res:
         finalRes.append(OrganizationProfile.objects.get(pic=mapId.originalID))
-
     return finalRes
 
 
@@ -259,7 +261,6 @@ def getOrgsByCountriesAndTags(tags, countries):
     """
     orgsByCountries = getOrganizationsByCountries(countries)
     orgsByTags = getOrgsByTags(tags)
-
     res = getOrgsIntersection(orgsByCountries, orgsByTags)
 
     return res

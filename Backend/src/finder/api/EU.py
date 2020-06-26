@@ -111,8 +111,18 @@ def add_org_to_index(index, org):
     doc = get_document_from_org(org)
     originalID = org['pic']
     indexID = len(index)
-    newMap = MapIds(originalID=originalID, indexID=indexID)
-    newMap.save()
+    try:
+        MapIds.objects.filter(indexID=indexID).delete()
+    except:
+        pass
+
+    try:
+        MapIds.objects.get(originalID=originalID)
+        MapIds.objects.filter(originalID=originalID).update(indexID=indexID)
+    except:
+        newMap = MapIds(originalID=originalID, indexID=indexID)
+        newMap.save()
+
     index = add_documents(index, [doc])
     return index
 
@@ -190,16 +200,14 @@ def getOrgsByTags(tags):
     :param tags: list of tags
     :return: list of organizations objects
     """
-
     tags = ' '.join(tags)
-    index = load_index('EU_Index')
+    index = load_index('EU_Index.0')
     corpus = NLP_Processor([tags])
     res = index[corpus]
-
     res = process_query_result(res)
     res = sorted(res, key=lambda pair: pair[1], reverse=True)
-    res = res[:100]
-    res = [pair for pair in res if pair[1] > 0.75]
+    # res = res[:100]
+    res = [pair for pair in res if pair[1] > 0.5]
     res = [MapIds.objects.get(indexID=pair[0]) for pair in res]
 
     finalRes = []

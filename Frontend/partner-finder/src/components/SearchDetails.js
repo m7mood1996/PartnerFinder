@@ -303,7 +303,7 @@ function SearchDetails(props) {
                 style={{ 'color': "#02203c" }}
                 >Type\s</InputLabel>
                   <Select
-                      value={MenuItem.value}
+                      value={type}
                   >
                   {classificationTypesOptions.map((val) => {
                       return <MenuItem style= {{ 'backgroundColor':'#ececec'}} value={val}><Checkbox id={val} name={val} checked={checked.indexOf(val) !== -1} onChange={handleCheckbox}/>{val}</MenuItem>

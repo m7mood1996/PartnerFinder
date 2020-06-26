@@ -4,6 +4,8 @@ import smtplib
 import ssl
 import os
 from decouple import config
+from .EU import *
+
 
 def translateData(data):
     """
@@ -63,5 +65,15 @@ def send_mail(receiver_email, message):
 def deleteOldIndexAndReplace():
     os.remove("B2MATCH_upcoming_Index")
     os.remove("B2MATCH_upcoming_Index.0")
-    os.rename("B2MATCH_upcoming_Index_temp","B2MATCH_upcoming_Index")
-    os.rename("B2MATCH_upcoming_Index_temp.0","B2MATCH_upcoming_Index.0")
+    os.rename("B2MATCH_upcoming_Index_temp", "B2MATCH_upcoming_Index")
+    os.rename("B2MATCH_upcoming_Index_temp.0", "B2MATCH_upcoming_Index.0")
+
+
+def destroyAndRename(old_index_name, new_index_name):
+    try:
+        os.remove(old_index_name)
+        os.remove(old_index_name+".0")
+    except:
+        pass
+    os.rename(new_index_name, old_index_name)
+    os.rename(new_index_name + '.0', old_index_name + '.0')

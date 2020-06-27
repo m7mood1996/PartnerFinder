@@ -46,11 +46,13 @@ const B2Match_columns = [
   { title: "Description", field: "description" },
 ];
 const classificationTypesOptions = [
-  "SME", "International Organization", "Higher or Secondary Education",
-  "Research Organization", "Private for Profit Organization", "Public Organization", "Other"
+  {label :"SME", value:"sme"}, {label:"International Organization", value:"international organizations"},
+  {label:"Higher or Secondary Education", value: "Higher or Secondary Education"},
+  {label:"Research Organization", value: "Research Organization"}, {label:"Private for Profit Organization", value:"Private for Profit Organization"},
+  {label:"Public Organization", value: "Public Organization"}, {label:"Other", value:"Other"}
 ];
 const consorsiumRoles = [
-  "Coordinator", "Regular"
+  {label:"Coordinator", value:"coordinator"}, {label:"Regular", value:"regular"}
 ];
 const tableIcons = {
   Add: forwardRef((props, ref) => (

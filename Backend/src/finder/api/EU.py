@@ -204,16 +204,22 @@ def get_organizations_by_tags(tags):
     index = load_index('EU_Index.0')
     corpus = NLP_Processor([tags])
     res = index[corpus]
+
     res = process_query_result(res)
     res = [pair for pair in res if pair[1] > 0.3]
     res = sorted(res, key=lambda pair: pair[1], reverse=True)
     # res = res[:100]
-    res = [MapIds.objects.get(indexID=pair[0]) for pair in res]
+    temp = []
+    for pair in res:
+        try:
+            temp.append(MapIds.objects.get(indexID=pair[0]))
+        except:
+            pass
+    res = temp
 
     finalRes = []
     for mapId in res:
         finalRes.append(OrganizationProfile.objects.get(pic=mapId.originalID))
-    print(finalRes)
     return finalRes
 
 
@@ -236,7 +242,6 @@ def get_organizations_by_types(types):
     """
     if not types:
         return OrganizationProfile.objects.all()
-
     return OrganizationProfile.objects.filter(classificationType__in=types)
 
 
@@ -248,7 +253,7 @@ def get_list_of_pics_from_list_of_orgs(orgs):
     """
     list_of_pics = set()
     for org in orgs:
-        set.add(org.pic)
+        list_of_pics.add(org.pic)
     return list_of_pics
 
 
@@ -258,9 +263,10 @@ def get_orgs_intersection(list_of_lists):
     :param list_of_lists: list of lists of organizations
     :return: intersection list
     """
-
     list_of_lists.sort(key=lambda x: len(x))
     res = list_of_lists[0]
+    if len(res) == 0:
+        return []
     res_pics = get_list_of_pics_from_list_of_orgs(res)
     for idx in range(1, len(list_of_lists)):
         curr_pics = get_list_of_pics_from_list_of_orgs(list_of_lists[idx])
@@ -290,6 +296,7 @@ def get_orgs_by_countries_and_tags_and_types(tags, countries, types):
     orgs_by_countries = get_organizations_by_countries(countries)
     org_by_tags = get_organizations_by_tags(tags)
     orgs_by_types = get_organizations_by_types(types)
+    print("AFTER TYPES", types)
     return get_orgs_intersection([org_by_tags, orgs_by_countries, orgs_by_types])
 
 

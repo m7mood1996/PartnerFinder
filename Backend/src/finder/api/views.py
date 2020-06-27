@@ -113,9 +113,11 @@ class OrganizationProfileViewSet(viewsets.ModelViewSet):
         try:
             data = request.query_params['data']
             data = json.loads(data)
+            print(data)
             countries = data['countries']
+            types = data['types']
             tags = data['tags']
-            EURes = getOrgsByCountriesAndTags(tags, countries)
+            EURes = get_orgs_by_countries_and_tags_and_types(tags=tags, countries=countries, types=types)
             B2MATCHRes = getB2MATCHPartByCountriesAndTags(tags, countries)
             #B2MATCHRes = []
 

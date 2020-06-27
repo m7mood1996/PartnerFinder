@@ -170,7 +170,7 @@ function SearchDetails(props) {
     setState({ ...state, loading: true });
     tags = tags.map((tag) => tag.text);
     let url = new URL(BACKEND_URL + "genericSearch/searchByCountriesAndTags/");
-    let params = { data: JSON.stringify({ tags: tags, countries: countries, type: type, role: role }) };
+    let params = { data: JSON.stringify({ tags: tags, countries: countries, types: type, role: role }) };
     Object.keys(params).forEach((key) =>
       url.searchParams.append(key, params[key])
     );

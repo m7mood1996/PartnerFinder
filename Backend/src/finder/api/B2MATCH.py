@@ -409,22 +409,21 @@ def getParticipantsByTags(tags):
     index2 = load_index('B2MATCH_upcoming_Index.0')  # B2match_upcoming_index
 
     corpus = NLP_Processor([tags])
-
     res1 = index1[corpus]
 
     res2 = index2[corpus]
 
     res1 = process_query_result(res1)
     res2 = process_query_result(res2)
-
+    res1 = [pair for pair in res1 if pair[1] > 0.3]
     res1 = sorted(res1, key=lambda pair: pair[1], reverse=True)
-    #res1 = res1[:101]
+    res2 = [pair for pair in res2 if pair[1] > 0.3]
+    # res1 = res1[:101]
     res2 = sorted(res2, key=lambda pair: pair[1], reverse=True)
-    #res2 = res2[:101]
+    # res2 = res2[:101]
 
-    res1 = [pair for pair in res1 if pair[1] > 0.7]
     res1 = [MapIDsB2match.objects.get(indexID=pair[0]) for pair in res1]
-    res2 = [pair for pair in res2 if pair[1] > 0.7]
+
     res2 = [MapIDsB2matchUpcoming.objects.get(
         indexID=pair[0]) for pair in res2]
 

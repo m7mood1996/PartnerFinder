@@ -52,14 +52,13 @@ class OrganizationProfileViewSet(viewsets.ModelViewSet):
         try:
             try:
                 index = load_index('EU_Index_Temp')
-                if os.path.getsize('EU_Index_Temp.0') > os.path.getsize('EU_Index.0'):
+                if  os.path.exists('EU_Index_Temp.0') and  os.path.getsize('EU_Index_Temp.0') > os.path.getsize('EU_Index.0'):
                     destroyAndRename(old_index_name='EU_Index', new_index_name='EU_Index_Temp')
                 else:
                     index.destroy()
             except:
                 pass
             index = build_index('EU_Index_Temp')
-
             status = {}
             graph = Graph()
             visitngQueue = collections.deque()
@@ -67,7 +66,6 @@ class OrganizationProfileViewSet(viewsets.ModelViewSet):
             visitngQueue.append(startOrg)
             status[startOrg] = 'visiting'
             while len(visitngQueue) > 0:
-
                 currPic = visitngQueue.popleft()
                 try:
                     currOrg = getOrganizationProfileFromEUByPIC(currPic)
@@ -86,7 +84,7 @@ class OrganizationProfileViewSet(viewsets.ModelViewSet):
                 index = add_org_to_index(index, currOrg)
                 status[currPic] = 'visited'
 
-            if os.path.getsize('EU_Index_Temp.0') > os.path.getsize('EU_Index.0'):
+            if  os.path.exists('EU_Index_Temp.0') and  os.path.getsize('EU_Index_Temp.0') > os.path.getsize('EU_Index.0'):
                 destroyAndRename(old_index_name='EU_Index', new_index_name='EU_Index_Temp')
             else:
                 index.destroy()
@@ -96,7 +94,7 @@ class OrganizationProfileViewSet(viewsets.ModelViewSet):
                 raise
         except:
             setUpdateSettings(euDate=time.mktime(datetime.datetime.now().timetuple()))
-            if os.path.getsize('EU_Index_Temp.0') > os.path.getsize('EU_Index.0'):
+            if os.path.exists('EU_Index_Temp.0') and  os.path.getsize('EU_Index_Temp.0') > os.path.getsize('EU_Index.0'):
                 destroyAndRename(old_index_name='EU_Index', new_index_name='EU_Index_Temp')
             else:
                 index.destroy()

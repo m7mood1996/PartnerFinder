@@ -84,9 +84,9 @@ def add_documents(index, documents):
     :return: updated index
     """
     corpus = NLP_Processor(documents)
+    index.num_features += len(corpus)
     for doc in corpus:
-        index.num_features += len(doc)
-    index.num_features += 1000
+        index.num_features += (len(doc) * 2)
     index.add_documents(corpus)
     index.save()
     return index
@@ -118,10 +118,10 @@ def build_index(path):
     """
 
     corpus = NLP_Processor([])
-    tfidf = gensim.models.TfidfModel(corpus)
+    tfidf = gensim.models.TfidfModel(corpus, )
 
     # build the index
-    return gensim.similarities.Similarity(path, tfidf[corpus], num_features=0)
+    return gensim.similarities.Similarity(path, tfidf[corpus], num_features=10000)
 
 
 def get_document_from_org(org):

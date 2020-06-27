@@ -7,8 +7,8 @@ __pycache__/
 # C extensions
 *.so
 
-**/.idea
-**/.vscode
+**/.idea/
+**/.vscode/
 Backend/src/.env
 **/src/Dictionary*
 Backend/src/Dictionary*

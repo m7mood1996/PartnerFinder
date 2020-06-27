@@ -7,8 +7,22 @@ body {
     "Bitstream Vera Sans Mono", monospace;
   font-style: normal;
   font-variant: normal;
+  
 }
 
+#text_select{
+  font-family: "Lucida Sans Typewriter", "Lucida Console", monaco,
+  "Bitstream Vera Sans Mono", monospace;
+font-style: normal;
+font-variant: normal;
+color:white;
+font-size:13px;
+}
+
+#text_select::hover{
+  color: black;
+  background-color: #f1f3f5;
+}
 .label{
   background-color: #ececec;
 }
@@ -145,30 +159,92 @@ pre {
   display: grid;
 }
 .select{
-  width:200%;
-  --rmsc-background: red;
+  width:300px;
+  --rmsc-background: #02203c;
 }
 .select_role{
-  width: 150%;
+  width: 200px;
 }
 
 .multi-select {
-  --rmsc-primary: #4285f4;
-  --rmsc-hover: #f1f3f5;
-  --rmsc-selected: #e2e6ea;
-  --rmsc-border: #ccc;
-  --rmsc-gray: #aaa;
-  --rmsc-background: #fff;
-  --rmsc-spacing: 10px;
-  --rmsc-border-radius: 4px;
-  --rmsc-height: 38px;
+  background-color: #02203c;
+  color: "white"; 
+  --rmsc-gray:white;
+
 }
+
+.go977458394.selected{
+  color: black;
+}
+
+.go977458394 :hover{
+  color: black;
+}
+
+.go4079732705 .gray{
+  color: ;
+}
+.go4079732705 .gray span{
+  color: white;
+  color: var(white);
+}
+
+.dropdown-heading-value span{
+  font-size: 13px;
+  color: white;
+  outline-color: white;
+  color-adjust: white;
+  text-decoration: white;
+  text-decoration-color: white;
+}
+
+.go1053659416 dropdown-heading{
+  color: white;
+}
+.go3433208811 dropdown-container{
+  color: white;
+}
+.go4079732705 select{
+  color:white;
+}
+.MuiFormControl-root{
+  color: white;
+}
+.dropdown-heading, .dropdown-heading-value{
+  background-color: #02203c;
+  color: "white";
+}
+.dropdown-content{
+  background-color: #02203c;
+  color: "white";
+}
+
+.select-panel{
+  background-color: #02203c;
+  color: "white";
+}
+.go2885254090 input{
+  background-color: #02203c;
+  color: "white";
+}
+
+.select_role css-2b097c-container{
+  background-color: #02203c;
+  color: "white";
+}
+
+
+.css-yk16xz-control{
+  background-color: #02203c;
+  color: "white";
+}
+
 
 .input_row {
   color: black;
   margin-top: 35px;
   display: grid;
-  grid-template-columns: 25% 25% 25% 25%;
+  grid-template-columns: 25% 30% 30% 25%;
   margin-left: 20px;
   font-size: 9.5px;
 }
@@ -239,7 +315,7 @@ div.ReactTags__tags {
 
 /* Styles for the input */
 div.ReactTags__tagInput {
-  width: 150px;
+  width: 240px;
   border-radius: 3px;
   display: inline-block;
   font-size: 16px;

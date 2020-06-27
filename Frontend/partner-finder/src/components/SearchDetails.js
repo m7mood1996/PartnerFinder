@@ -2,7 +2,6 @@ import React from "react";
 import Select from "react-select";
 import MultiSelect from "react-multi-select-component";
 import Typography from "@material-ui/core/Typography";
-import InputLabel from "@material-ui/core/InputLabel";
 import FormControl from "@material-ui/core/FormControl";
 import { Button } from "@material-ui/core";
 import countryList from "react-select-country-list";
@@ -17,6 +16,29 @@ import {
   DialogContent,
 } from "@material-ui/core/";
 import { classificationTypesOptions, consorsiumRoles, BACKEND_URL } from "../utils";
+
+const customStyles = {
+  menu: (provided, state) => ({
+    ...provided,
+    backgroundColor: "#02203c",
+    borderBottom: '1px dotted pink',
+    color: "white",
+   fontSize: "13px",
+  }),
+
+  placeholder: styles => ({...styles, color: "white", fontSize: "13px",}),
+  control: styles => ({ ...styles, backgroundColor: '#02203c', color: "white", fontSize: "13px",}),
+ 
+  option: styles => ({ ...styles, color:"white", backgroundColor:"#02203c", fontSize: "13px",  '&:hover': {
+    backgroundColor: "#f1f3f5",
+    color: "black",
+    fontSize: "13px",
+  },}),
+  singleValue: styles => ({...styles, color:"white", fontSize: "13px"})
+
+
+    
+}
 
 const KeyCodes = {
   comma: 188,
@@ -46,7 +68,7 @@ function SearchDetails(props) {
   const [countrySearched, setCountrySearched] = React.useState([]);
   const [country] = React.useState([]);
   const [types] = React.useState([]);
-
+  const [newrole] = React.useState('')
   const [state, setState] = React.useState({
     loading: false,
     firstLoading: true,
@@ -130,14 +152,15 @@ function SearchDetails(props) {
         visible: true,
       });
     } else {
-      countrySearched.map((value) => {
-        return country.push(value.label);
+      let countriesToSearch = countrySearched.map((value) => {
+        return value.label;
       })
-      type.map((value) => {
-        return types.push(value.label);
+      let typeTosSearch = type.map((value) => {
+        return value.label;
       })
-      console.log("countries are " + country);
-      searchByTagsAndCountires(tags, country, types, role);
+      
+      
+      searchByTagsAndCountires(tags, countriesToSearch, typeTosSearch, role.label);
     }
   };
 
@@ -153,6 +176,7 @@ function SearchDetails(props) {
   const searchByTagsAndCountires = (tags, countries, type, role) => {
     console.log(countries);
     console.log(type);
+    console.log(role);
     setState({ ...state, loading: true });
     tags = tags.map((tag) => tag.text);
     let url = new URL(BACKEND_URL + "genericSearch/searchByCountriesAndTags/");
@@ -257,7 +281,7 @@ function SearchDetails(props) {
             <h1 id="textFontFamily" style={{ color: "#02203c" }}>
               Country\ies
             </h1>
-            <FormControl className={SearchDetails.formControl} id="textFontFamily">
+            <FormControl className={SearchDetails.formControl} id="text_select">
               <MultiSelect
               options={countryList().getData()}
               value={countrySearched}
@@ -269,8 +293,9 @@ function SearchDetails(props) {
           </div>
           <div>
             <h1>Classification Type\s</h1>       
-            <FormControl className={SearchDetails.formControl} id="textFontFamily">
+            <FormControl className={SearchDetails.formControl} id="text_select">
             <MultiSelect
+              styles={customStyles}
               options={classificationTypesOptions}
               className="select"
               value={type}
@@ -282,11 +307,9 @@ function SearchDetails(props) {
           <div>
           <h1>Consortium Role</h1>       
             <FormControl className={SearchDetails.formControl} id="tab">
-                <InputLabel 
-                id="textFontFamily"
-                >Role</InputLabel>
                   <Select
                       value={role}
+                      styles={customStyles}
                       onChange={handleRole}
                       className="select_role"
                       options={consorsiumRoles}

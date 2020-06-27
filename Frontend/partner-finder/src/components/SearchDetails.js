@@ -1,12 +1,11 @@
 import React from "react";
-import Select from "@material-ui/core/Select";
+import Select from "react-select";
+import MultiSelect from "react-multi-select-component";
 import Typography from "@material-ui/core/Typography";
 import InputLabel from "@material-ui/core/InputLabel";
-import MenuItem from "@material-ui/core/MenuItem";
 import FormControl from "@material-ui/core/FormControl";
-import { Button, Checkbox } from "@material-ui/core";
+import { Button } from "@material-ui/core";
 import countryList from "react-select-country-list";
-import "react-phone-number-input/style.css";
 import { WithContext as ReactTags } from "react-tag-input";
 import SearchResults from "./SearchResults";
 import { BeatLoader } from "react-spinners";
@@ -34,6 +33,7 @@ const useStyles = makeStyles((theme) => ({
 
 function SearchDetails(props) {
   const classes = useStyles();
+ 
   const [msgState, setMsgState] = React.useState({
     title: "",
     body: "",
@@ -44,70 +44,48 @@ function SearchDetails(props) {
   const [type, setType] = React.useState([]);
   const [role, setRole] = React.useState('');
   const [countrySearched, setCountrySearched] = React.useState([]);
-  
+  const [country] = React.useState([]);
+  const [types] = React.useState([]);
+
   const [state, setState] = React.useState({
     loading: false,
     firstLoading: true,
    
   });
-  const [checked, setChecked] = React.useState([]);
   
   const [formState, setFormState] = React.useState({
     tags: false,
   });
   
-  
-  /**
-   * handler function for the checkbox to set the values of the countries and the 
-   * classification types that the user chose
-   * @param {event} event event when the user want to choose value from the checkbox
-   */
-  const handleCheckbox = (event) => {
-
-    const currentIndex = checked.indexOf(event.target.name);
-    const countryIndex = countrySearched.indexOf(event.target.name);
-    const typeIndex = type.indexOf(event.target.name);
-    const newChecked = [...checked];
-
-    if (currentIndex === -1) {
-      newChecked.push(event.target.name);
-      if(event.target.id === "country"){
-        countrySearched.push(event.target.name);
-        setCountrySearched([...countrySearched]);
-        props.setState({ ...props.state, countrySearched: event.target.name });
-      }else{
-        type.push(event.target.name);
-        setType([...type]);
-        props.setState({ ...props.state, type: event.target.name });
-      }
-    } else {
-      if(event.target.id === "country"){
-        countrySearched.splice(countryIndex, 1);
-      }
-      else{ 
-        type.splice(typeIndex, 1);
-      }
-      newChecked.splice(currentIndex, 1);
-    }
-    setChecked(newChecked);
-  };
-
   if (state.firstLoading) {
     setTags([...props.state.tags]);
     setType([...props.state.type]);
-    setRole(...props.state.role);
+    setRole(props.state.role);
     setCountrySearched([...props.state.countrySearched]);
     setData({ ...props.state.data });
     setState({ ...state, firstLoading: false });
   }
+
+  const handleCountry = (event) => {
+    console.log(event);
+    setCountrySearched(event);
+    props.setState({ ...props.state, countrySearched: event });
+    console.log(countrySearched);
+  };
+
+  const handleType = (event) => {
+    setType(event);
+    props.setState({ ...props.state, type: event });
+    console.log(type);
+  };
 
   /**
    * handler function to set the role that the user chose
    * @param {event} event event when the user choose a role
    */
   const handleRole = (event) => {
-    setRole(event.target.value);
-    props.setState({ ...props.state, role: event.target.value });
+    setRole(event);
+    props.setState({ ...props.state, role: event });
   };
 
   /**
@@ -118,8 +96,8 @@ function SearchDetails(props) {
     setTags([...tags, tag]);
     props.setState({ ...props.state, tags: [...props.state.tags, tag] });
   };
+ 
 
-  
   /**
    * function that sets the value of the tag that the user filled
    * @param {event} event 
@@ -152,7 +130,14 @@ function SearchDetails(props) {
         visible: true,
       });
     } else {
-      searchByTagsAndCountires(tags, countrySearched, type, role);
+      countrySearched.map((value) => {
+        return country.push(value.label);
+      })
+      type.map((value) => {
+        return types.push(value.label);
+      })
+      console.log("countries are " + country);
+      searchByTagsAndCountires(tags, country, types, role);
     }
   };
 
@@ -166,7 +151,8 @@ function SearchDetails(props) {
    * @returns {JSON} JSON file of the results 
    */
   const searchByTagsAndCountires = (tags, countries, type, role) => {
-    
+    console.log(countries);
+    console.log(type);
     setState({ ...state, loading: true });
     tags = tags.map((tag) => tag.text);
     let url = new URL(BACKEND_URL + "genericSearch/searchByCountriesAndTags/");
@@ -271,44 +257,26 @@ function SearchDetails(props) {
             <h1 id="textFontFamily" style={{ color: "#02203c" }}>
               Country\ies
             </h1>
-            <FormControl className={SearchDetails.formControl} id="tab">
-              <InputLabel
-                id="textFontFamily"
-                style={{ 'color': "#02203c" }}
-              >
-                Country\ies
-              </InputLabel>
-              <Select
-                id="textFontFamily"
-                style={{ 'color': "#02203c" }}
-                options={countryList().getData()}
-                value={countrySearched}
-                
-                autoWidth='true'
-              >
-                {countryList()
-                  .getData()
-                  .map((val) => {
-                    return <MenuItem id="country" style= {{ 'backgroundColor':'#ececec'}} value={val.label}><Checkbox id="country" name={val.label} checked={checked.indexOf(val.label) !== -1} onChange={handleCheckbox}/>{val.label}</MenuItem>;
-                  })}
-                  
-              </Select>
+            <FormControl className={SearchDetails.formControl} id="textFontFamily">
+              <MultiSelect
+              options={countryList().getData()}
+              value={countrySearched}
+              onChange={handleCountry}
+              className="select"
+              labelledBy={"Select"}
+            />
             </FormControl>
           </div>
           <div>
             <h1>Classification Type\s</h1>       
-            <FormControl className={SearchDetails.formControl} id="tab">
-                <InputLabel 
-                id="textFontFamily"
-                style={{ 'color': "#02203c" }}
-                >Type\s</InputLabel>
-                  <Select
-                      value={type}
-                  >
-                  {classificationTypesOptions.map((val) => {
-                      return <MenuItem style= {{ 'backgroundColor':'#ececec'}} value={val}><Checkbox id={val} name={val} checked={checked.indexOf(val) !== -1} onChange={handleCheckbox}/>{val}</MenuItem>
-                  })}
-                  </Select>
+            <FormControl className={SearchDetails.formControl} id="textFontFamily">
+            <MultiSelect
+              options={classificationTypesOptions}
+              className="select"
+              value={type}
+              onChange={handleType}
+              labelledBy={"Select"}
+            />
             </FormControl>
           </div>
           <div>
@@ -316,16 +284,15 @@ function SearchDetails(props) {
             <FormControl className={SearchDetails.formControl} id="tab">
                 <InputLabel 
                 id="textFontFamily"
-                style={{ 'color': "#02203c" }}
                 >Role</InputLabel>
                   <Select
                       value={role}
                       onChange={handleRole}
-                  >
-                  {consorsiumRoles.map((val) => {
-                      return <MenuItem style= {{ 'backgroundColor':'#ececec'}} onChange={handleRole}value={val} >{val}</MenuItem>;
-                  })}
-                  </Select>
+                      className="select_role"
+                      options={consorsiumRoles}
+                      id="textFontFamily"
+                      variant="outlined"
+                  />
             </FormControl>
           </div>
         </div>

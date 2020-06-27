@@ -7,12 +7,14 @@ __pycache__/
 # C extensions
 *.so
 
+**/.vscode
 Backend/src/.env
+**/src/Dictionary*
 Backend/src/Dictionary*
 Backend/src/EU_Index*
 Backend/src/B2MATCH_Index*
 Backend/src/B2MATCH_upcoming_Index*
-.DS_Store
+**/.DS_Store
 Backend/src/celerybeat*
 
 # Distribution / packaging

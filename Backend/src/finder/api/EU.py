@@ -129,7 +129,7 @@ def add_org_to_index(index, org):
 
 def addOrganizationToDB(org):
     """
-    method to add new organization to the local db
+    function to add new organization to the local db
     :param org: EU organization
     :return: True/False
     """
@@ -194,7 +194,7 @@ def addOrganizationToDB(org):
 
 
 # ----------------------- Processing query in EU data Funcs ------------------------
-def getOrgsByTags(tags):
+def get_organizations_by_tags(tags):
     """
     method to get all organizations with at least one tag from the list of tags.
     :param tags: list of tags
@@ -205,19 +205,19 @@ def getOrgsByTags(tags):
     corpus = NLP_Processor([tags])
     res = index[corpus]
     res = process_query_result(res)
+    res = [pair for pair in res if pair[1] > 0.3]
     res = sorted(res, key=lambda pair: pair[1], reverse=True)
     # res = res[:100]
-    res = [pair for pair in res if pair[1] > 0.5]
     res = [MapIds.objects.get(indexID=pair[0]) for pair in res]
 
     finalRes = []
     for mapId in res:
         finalRes.append(OrganizationProfile.objects.get(pic=mapId.originalID))
-
+    print(finalRes)
     return finalRes
 
 
-def getOrganizationsByCountries(countries):
+def get_organizations_by_countries(countries):
     """
     method to get all organizations that locates in one of the countries list.
     :param countries: list of countries
@@ -228,41 +228,69 @@ def getOrganizationsByCountries(countries):
     return OrganizationProfile.objects.filter(address__country__in=countries)
 
 
-def getOrgsIntersection(orgs1, orgs2):
+def get_organizations_by_types(types):
     """
-    private method to get intersection between two lists of organizations
-    :param orgs1: first list
-    :param orgs2: second list
+    function to get all organizations that has one type from the list of types.
+    :param types: list of organizations classifications types.
+    :return: list of organizations objects.
+    """
+    if not types:
+        return OrganizationProfile.objects.all()
+
+    return OrganizationProfile.objects.filter(classificationType__in=types)
+
+
+def get_list_of_pics_from_list_of_orgs(orgs):
+    """
+    function to get list of pics from list of orgs
+    :param orgs: list of organizations
+    :return: list of pics
+    """
+    list_of_pics = set()
+    for org in orgs:
+        set.add(org.pic)
+    return list_of_pics
+
+
+def get_orgs_intersection(list_of_lists):
+    """
+    private method to get intersection between list of lists of organizations
+    :param list_of_lists: list of lists of organizations
     :return: intersection list
     """
-    res, seenPICS = [], set()
 
-    for org in orgs1:
-        seenPICS.add(org.pic)
+    list_of_lists.sort(key=lambda x: len(x))
+    res = list_of_lists[0]
+    res_pics = get_list_of_pics_from_list_of_orgs(res)
+    for idx in range(1, len(list_of_lists)):
+        curr_pics = get_list_of_pics_from_list_of_orgs(list_of_lists[idx])
+        for pic in res_pics:
+            if pic not in curr_pics:
+                res_pics.remove(pic)
+        if len(res_pics) == 0:
+            return []
 
-    addedPICS = set()
-    for org in orgs2:
-        if org.pic in seenPICS and org.pic not in addedPICS:
-            res.append(org)
-            addedPICS.add(org.pic)
-
-    return res
+    final_res = []
+    for org in res:
+        if org.pic in res_pics:
+            final_res.append(org)
+    return final_res
 
 
-def getOrgsByCountriesAndTags(tags, countries):
+def get_orgs_by_countries_and_tags_and_types(tags, countries, types):
     """
     private method to get organizations from the database that have a certain tags
-    or located in one of the countries list.
+    and located in one of the countries list and has a certain classification type
     :param tags: list of tags
     :param countries: list of countries
+    :param types: list of classification types
     :return: list of organizations objects
     """
-    orgsByCountries = getOrganizationsByCountries(countries)
-    orgsByTags = getOrgsByTags(tags)
 
-    res = getOrgsIntersection(orgsByCountries, orgsByTags)
-
-    return res
+    orgs_by_countries = get_organizations_by_countries(countries)
+    org_by_tags = get_organizations_by_tags(tags)
+    orgs_by_types = get_organizations_by_types(types)
+    return get_orgs_intersection([org_by_tags, orgs_by_countries, orgs_by_types])
 
 
 # ----------------------- Consortium builder for open EU calls Funcs ---------------
@@ -313,7 +341,7 @@ def get_rest_attributes(obj):
 
 
 def get_call_to_save(obj):
-    #TODO: change sumbission to submission
+    # TODO: change sumbission to submission
     """
 
     :param obj:
@@ -460,12 +488,15 @@ def has_consortium(call):
     :return: new call with new field hasConsortium: True/False
     """
 
-    orgs = getOrgsByCountriesAndTags(call['tagsAndKeywords'], [])
+    orgs = get_orgs_by_countries_and_tags_and_types(call['tagsAndKeywords'], [], [])
 
     countries = set()
     for org in orgs:
         countries.add(org.address.country)
+        if len(countries) >= 3:
+            call['hasConsortium'] = True
+            return call
 
-    call['hasConsortium'] = True if len(countries) >= 3 else False
+    call['hasConsortium'] = False
 
     return call

@@ -7,6 +7,8 @@ from .Utils import *
 from time import sleep
 import re
 import operator
+import gensim
+from gensim import corpora
 
 
 def deleteEventsTree(toupdate):
@@ -413,25 +415,25 @@ def getParticipantsByTags(tags):
 
     res1 = process_query_result(res1)
     res2 = process_query_result(res2)
-
+    res1 = [pair for pair in res1 if pair[1] > 0.3]
     res1 = sorted(res1, key=lambda pair: pair[1], reverse=True)
-    res1 = res1[:101]
+    res2 = [pair for pair in res2 if pair[1] > 0.3]
+    # res1 = res1[:101]
     res2 = sorted(res2, key=lambda pair: pair[1], reverse=True)
-    res2 = res2[:101]
+    # res2 = res2[:101]
 
-    res1 = [pair for pair in res1 if pair[1] > 0.5]
     res1 = [MapIDsB2match.objects.get(indexID=pair[0]) for pair in res1]
-    res2 = [pair for pair in res2 if pair[1] > 0.5]
+
     res2 = [MapIDsB2matchUpcoming.objects.get(
         indexID=pair[0]) for pair in res2]
 
     finalRes = []
+
     for mapId in res1:
         finalRes.append(Participants.objects.get(pk=mapId.originalID))
 
     for mapId in res2:
         finalRes.append(Participants.objects.get(pk=mapId.originalID))
-
 
     return finalRes
 
@@ -442,25 +444,7 @@ def getB2MatchParByCountry(countries):
     :param countries:  list of countries
     :return: list of participants
     """
-    """
-    countries = [val.lower() for val in countries]
-    countries = set(countries)
-    res = []
-    allPart = Participants.objects.all()
 
-    if not countries:
-        return allPart
-
-    for participant in allPart:
-
-        try:
-            currLocation = participant.location.location.lower().split(" ", 1)[
-                1]
-        except:
-            currLocation = participant.location.location.lower()
-        if currLocation in countries:
-            res.append(participant)
-    return res"""
     par = Participants.objects.all()
     if not countries:
         return par

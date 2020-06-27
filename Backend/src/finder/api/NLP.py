@@ -11,8 +11,16 @@ def NLP_Processor(documents):
     :return: Corpus of the documents
     """
     tokens = [process_Document(doc) for doc in documents]
-    dictionary = get_ids(tokens)
+    try:
+        dictionary = load_dictionary("Dictionary")
+    except:
+        dictionary = get_ids([])
+        dictionary.save("Dictionary")
 
+    print(dictionary)
+    dictionary.add_documents(tokens)
+    dictionary.save("Dictionary")
+    print(dictionary)
     return build_corpus(dictionary, tokens)
 
 
@@ -76,9 +84,9 @@ def add_documents(index, documents):
     :return: updated index
     """
     corpus = NLP_Processor(documents)
+    index.num_features += len(corpus)
     for doc in corpus:
-        index.num_features += len(doc)
-    index.num_features += 1000
+        index.num_features += (len(doc) * 2)
     index.add_documents(corpus)
     index.save()
     return index
@@ -93,6 +101,14 @@ def load_index(path):
 
     return gensim.similarities.Similarity.load(path)
 
+def load_dictionary(path):
+    """
+
+    :param path:
+    :return:
+    """
+
+    return gensim.corpora.Dictionary.load(path)
 
 def build_index(path):
     """
@@ -102,10 +118,10 @@ def build_index(path):
     """
 
     corpus = NLP_Processor([])
-    tfidf = gensim.models.TfidfModel(corpus)
+    tfidf = gensim.models.TfidfModel(corpus, )
 
     # build the index
-    return gensim.similarities.Similarity(path, tfidf[corpus], num_features=0)
+    return gensim.similarities.Similarity(path, tfidf[corpus], num_features=10000)
 
 
 def get_document_from_org(org):

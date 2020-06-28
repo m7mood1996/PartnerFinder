@@ -38,12 +38,16 @@ function ResultsTable(props) {
             icons={tableIcons}
             title={title}
             components={{
+              
               Pagination: (props) => <MyTablePagination {...props} />,
               Toolbar: (props) => (
                 <div
                   style={{
                     backgroundColor: "#02203c",
                     color: "white",
+                    "&:hover": {
+                      color:"white",
+                    }
                   }}
                 >
                   <MTableToolbar {...props} />
@@ -51,6 +55,16 @@ function ResultsTable(props) {
               ),
             }}
             options={{
+              tableSortLabelStyle:{
+                "&:hover": {
+                  color:"white",
+                }
+              },
+              sortLablelStyle: {
+                "&:hover": {
+                  color:"white",
+                }
+              },
               actionsCellStyle: {
                 backgroundColor: "#02203c",
                 textAlign: "center",
@@ -69,11 +83,10 @@ function ResultsTable(props) {
               headerStyle: {
                 backgroundColor: "#02203c",
                 textAlign: "center",
+                zIndex: 0,
                 color: "white",
                 '&:hover': {
                   color: 'white',
-                  backgroundColor: 'white',
-                  background: 'white',
                 },
               },
               searchFieldStyle: {

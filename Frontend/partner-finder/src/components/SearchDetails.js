@@ -66,9 +66,6 @@ function SearchDetails(props) {
   const [type, setType] = React.useState([]);
   const [role, setRole] = React.useState('');
   const [countrySearched, setCountrySearched] = React.useState([]);
-  const [country] = React.useState([]);
-  const [types] = React.useState([]);
-  const [newrole] = React.useState('')
   const [state, setState] = React.useState({
     loading: false,
     firstLoading: true,
@@ -158,9 +155,12 @@ function SearchDetails(props) {
       let typeTosSearch = type.map((value) => {
         return value.label;
       })
-      
-      
-      searchByTagsAndCountires(tags, countriesToSearch, typeTosSearch, role.label);
+      let roleToSearch = '';
+      console.log("ROLE", role)
+      if (role !== ''){
+        roleToSearch = role.label;
+      }
+      searchByTagsAndCountires(tags, countriesToSearch, typeTosSearch, roleToSearch);
     }
   };
 
@@ -174,9 +174,6 @@ function SearchDetails(props) {
    * @returns {JSON} JSON file of the results 
    */
   const searchByTagsAndCountires = (tags, countries, type, role) => {
-    console.log(countries);
-    console.log(type);
-    console.log(role);
     setState({ ...state, loading: true });
     tags = tags.map((tag) => tag.text);
     let url = new URL(BACKEND_URL + "genericSearch/searchByCountriesAndTags/");
@@ -200,9 +197,13 @@ function SearchDetails(props) {
           setData({ EU: [], B2MATCH: [] });
           props.setState({ ...props.state, data: { EU: [], B2MATCH: [] } });
         } else {
-          console.log(resp);
+          console.log("BEFOR", resp);
           setState({ ...state, loading: false });
+          resp['EU'] = resp['EU'].map(val =>{
+           return  {...val, 'consorsiumRoles': val.consorsiumRoles ? 'Coordinator' : 'Regular'  }
+          })
           setData(resp);
+          console.log("AFTER", resp)
           props.setState({ ...props.state, data: { ...resp } });
         }
       })
@@ -286,6 +287,7 @@ function SearchDetails(props) {
               options={countryList().getData()}
               value={countrySearched}
               onChange={handleCountry}
+              focusSearchOnOpen={true}
               className="select"
               labelledBy={"Select"}
             />

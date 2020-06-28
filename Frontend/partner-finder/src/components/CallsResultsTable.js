@@ -148,6 +148,7 @@ function CallsResultsTable(props) {
                 backgroundColor: "#02203c",
                 textAlign: "center",
                 color: "white",
+                zIndex: 0,
               },
               searchFieldStyle: {
                 backgroundColor: "#02203c",

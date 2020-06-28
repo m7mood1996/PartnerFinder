@@ -18,15 +18,14 @@ import ViewColumn from "@material-ui/icons/ViewColumn";
 
 const EU_columns = [
   { title: "Name", field: "legalName" },
-  { title: "Type", field: "classificationType" },
+  { title: "Classification Type", field: "classificationType" },
   { title: "Country", field: "country" },
   { title: "Data Status", field: "dataStatus" },
   { title: "Number of EU Projects", field: "numberOfProjects" },
   { title: "Description", field: "description" },
   {
-    title: "Was Coordinator?",
+    title: "Consortium Role",
     field: "consorsiumRoles",
-    render: (rowData) => (rowData.consorsiumRoles ? "Yes" : "No"),
   },
 ];
 
@@ -45,15 +44,18 @@ const B2Match_columns = [
   )},
   { title: "Description", field: "description" },
 ];
+
 const classificationTypesOptions = [
-  {label :"SME", value:"sme"}, {label:"International Organization", value:"international organizations"},
-  {label:"Higher or Secondary Education", value: "Higher or Secondary Education"},
-  {label:"Research Organization", value: "Research Organization"}, {label:"Private for Profit Organization", value:"Private for Profit Organization"},
-  {label:"Public Organization", value: "Public Organization"}, {label:"Other", value:"Other"}
+  {label :"Small or medium-size enterprise", value:"Small or medium-size enterprise"}, {label:"International Organisation", value:"International Organisation"},
+  {label:"Higher or secondary education establishment", value: "Higher or secondary education establishment"},
+  {label:"Research Organisation", value: "Research Organisation"}, {label:"Private for profit organisation", value:"Private for profit organisation"},
+  {label:"Public organisation", value: "Public organisation"}, {label:"Other", value:"Other"}
 ];
+
 const consorsiumRoles = [
-  {label:"Coordinator", value:"coordinator"}, {label:"Regular", value:"regular"}
+  {label:"Coordinator", value:"Coordinator"}, {label:"Regular", value:"Regular"}
 ];
+
 const tableIcons = {
   Add: forwardRef((props, ref) => (
     <AddBox

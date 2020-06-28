@@ -357,7 +357,7 @@ class CallViewSet(viewsets.ModelViewSet):
             for tag in tags:
                 tagsList.append(tag.tag)
 
-            EURes = getOrgsByCountriesAndTags(tags=tagsList, countries=[])
+            EURes = get_orgs_by_countries_and_tags_and_types(tags=tagsList, countries=[], types=[], role='')
             EU = []
             for val in EURes:
                 EU.append({'legalName': val.legalName,

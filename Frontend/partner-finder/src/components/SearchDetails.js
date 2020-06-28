@@ -103,8 +103,15 @@ function SearchDetails(props) {
    * @param {event} event event when the user choose a role
    */
   const handleRole = (event) => {
-    setRole(event);
-    props.setState({ ...props.state, role: event });
+    let newRole = '';
+    if (event === role){
+      newRole = '';
+    }
+    else{
+      newRole = event;
+    }
+    setRole(newRole);
+    props.setState({ ...props.state, role: newRole });
   };
 
   /**
@@ -157,9 +164,7 @@ function SearchDetails(props) {
       })
       let roleToSearch = '';
       if (role !== ''){
-        if (role.label !== 'Both'){
-          roleToSearch = role.label;
-        }
+        roleToSearch = role.label;
       }
       searchByTagsAndCountires(tags, countriesToSearch, typeTosSearch, roleToSearch);
     }

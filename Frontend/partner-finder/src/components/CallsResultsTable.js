@@ -85,6 +85,9 @@ function CallsResultsTable(props) {
         } else {
           setState({ loading: false });
           setSearchTitle(rowData["title"]);
+          resp['EU'] = resp['EU'].map(val =>{
+            return  {...val, 'consorsiumRoles': val.consorsiumRoles ? 'Coordinator' : 'Regular'  }
+           })
           setSearchResult(resp.EU);
           setVisible(true);
         }

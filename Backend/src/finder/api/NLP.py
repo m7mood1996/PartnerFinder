@@ -17,10 +17,8 @@ def NLP_Processor(documents):
         dictionary = get_ids([])
         dictionary.save("Dictionary")
 
-    print(dictionary)
     dictionary.add_documents(tokens)
     dictionary.save("Dictionary")
-    print(dictionary)
     return build_corpus(dictionary, tokens)
 
 

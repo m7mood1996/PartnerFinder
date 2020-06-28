@@ -117,7 +117,8 @@ class OrganizationProfileViewSet(viewsets.ModelViewSet):
             countries = data['countries']
             types = data['types']
             tags = data['tags']
-            EURes = get_orgs_by_countries_and_tags_and_types(tags=tags, countries=countries, types=types)
+            role = data['role']
+            EURes = get_orgs_by_countries_and_tags_and_types(tags=tags, countries=countries, types=types, role=role)
             B2MATCHRes = getB2MATCHPartByCountriesAndTags(tags, countries)
             #B2MATCHRes = []
 

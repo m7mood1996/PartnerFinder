@@ -236,13 +236,27 @@ def get_organizations_by_countries(countries):
 
 def get_organizations_by_types(types):
     """
-    function to get all organizations that has one type from the list of types.
-    :param types: list of organizations classifications types.
-    :return: list of organizations objects.
+    function to get all organizations that has one type from the list of types
+    :param types: list of organizations classifications types
+    :return: list of organizations objects
     """
     if not types:
         return OrganizationProfile.objects.all()
     return OrganizationProfile.objects.filter(classificationType__in=types)
+
+
+def get_organizations_by_role(consortium_role):
+    """
+    function to get all organizations according to consortium role
+    :param consortium_role: Coordinator/regular
+    :return: list of organizations objects
+    """
+
+    if consortium_role == '':
+        return OrganizationProfile.objects.all()
+    elif consortium_role == 'Coordinator':
+        return OrganizationProfile.objects.filter(consorsiumRoles=True)
+    return OrganizationProfile.objects.filter(consorsiumRoles=False)
 
 
 def get_list_of_pics_from_list_of_orgs(orgs):
@@ -263,16 +277,18 @@ def get_orgs_intersection(list_of_lists):
     :param list_of_lists: list of lists of organizations
     :return: intersection list
     """
-    list_of_lists.sort(key=lambda x: len(x))
+    list_of_lists.sort(key=lambda orgs: len(orgs))
     res = list_of_lists[0]
     if len(res) == 0:
         return []
     res_pics = get_list_of_pics_from_list_of_orgs(res)
     for idx in range(1, len(list_of_lists)):
         curr_pics = get_list_of_pics_from_list_of_orgs(list_of_lists[idx])
+        temp_pics = res_pics.copy()
         for pic in res_pics:
             if pic not in curr_pics:
-                res_pics.remove(pic)
+                temp_pics.discard(pic)
+        res_pics = temp_pics.copy()
         if len(res_pics) == 0:
             return []
 
@@ -283,21 +299,22 @@ def get_orgs_intersection(list_of_lists):
     return final_res
 
 
-def get_orgs_by_countries_and_tags_and_types(tags, countries, types):
+def get_orgs_by_countries_and_tags_and_types(tags, countries, types, role):
     """
     private method to get organizations from the database that have a certain tags
     and located in one of the countries list and has a certain classification type
     :param tags: list of tags
     :param countries: list of countries
     :param types: list of classification types
+    :param role: organizations role (Coordinator/Regular)
     :return: list of organizations objects
     """
 
     orgs_by_countries = get_organizations_by_countries(countries)
     org_by_tags = get_organizations_by_tags(tags)
     orgs_by_types = get_organizations_by_types(types)
-    print("AFTER TYPES", types)
-    return get_orgs_intersection([org_by_tags, orgs_by_countries, orgs_by_types])
+    orgs_by_role = get_organizations_by_role(role)
+    return get_orgs_intersection([org_by_tags, orgs_by_countries, orgs_by_types, orgs_by_role])
 
 
 # ----------------------- Consortium builder for open EU calls Funcs ---------------
@@ -495,7 +512,7 @@ def has_consortium(call):
     :return: new call with new field hasConsortium: True/False
     """
 
-    orgs = get_orgs_by_countries_and_tags_and_types(call['tagsAndKeywords'], [], [])
+    orgs = get_orgs_by_countries_and_tags_and_types(call['tagsAndKeywords'], [], [], '')
 
     countries = set()
     for org in orgs:

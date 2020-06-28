@@ -41,7 +41,7 @@ const events_columns = [
     title: "URL",
     field: "event_url",
     render: (rowData) => (
-      <a href={rowData.event_url} target="_blank" rel="noopener noreferrer">
+      <a href={rowData.event_url} style={{color: "white"}} target="_blank" rel="noopener noreferrer">
         {rowData.event_url}{" "}
       </a>
     ),

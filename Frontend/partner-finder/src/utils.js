@@ -40,7 +40,6 @@ const B2Match_columns = [
 <a href={rowData.org_url} target="_blank" rel="noopener noreferrer" style={{color: 'white'}}>
       {rowData.org_url}{" "}
     </a>
-    
   )},
   { title: "Description", field: "description" },
 ];

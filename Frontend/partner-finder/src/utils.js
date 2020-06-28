@@ -52,7 +52,7 @@ const classificationTypesOptions = [
 ];
 
 const consorsiumRoles = [
-  {label:"Coordinator", value:"Coordinator"}, {label:"Regular", value:"Regular"}
+  {label:"Coordinator", value:"Coordinator"}, {label:"Regular", value:"Regular"}, {label:"Both", value:"Both"}
 ];
 
 const tableIcons = {

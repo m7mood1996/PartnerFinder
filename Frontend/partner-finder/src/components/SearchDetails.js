@@ -156,9 +156,10 @@ function SearchDetails(props) {
         return value.label;
       })
       let roleToSearch = '';
-      console.log("ROLE", role)
       if (role !== ''){
-        roleToSearch = role.label;
+        if (role.label !== 'Both'){
+          roleToSearch = role.label;
+        }
       }
       searchByTagsAndCountires(tags, countriesToSearch, typeTosSearch, roleToSearch);
     }

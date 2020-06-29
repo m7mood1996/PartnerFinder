@@ -728,30 +728,15 @@ class ScoresViewSet(viewsets.ModelViewSet):
         try:
             data = request.query_params['data']
             data = json.loads(data)
+
             try:
                 scores = Scores.objects.all()[0]
-                scores.RES = data['RES']
-                scores.Italy = data['Italy']
-                scores.France = data['France']
-                scores.Austria = data['Austria']
-                scores.Germany = data['Germany']
-                scores.Denmark = data['Denmark']
-                scores.Czech_Republic = data['Czech_Republic']
-                scores.Finland = data['Finland']
-                scores.Ireland = data['Ireland']
-                scores.Israel = data['Israel']
-                scores.Portugal = data['Portugal']
-                scores.Ukranie = data['Ukranie']
-                scores.United_Kingdom = data['United_Kingdom']
-                scores.Turkey = data['Turkey']
-                scores.Switzerland = data['Switzerland']
-                scores.Spain = data['Spain']
-                scores.Norway = data['Norway']
-                scores.Association_Agency = data['Association_Agency']
-                scores.University = data['University']
-                scores.R_D_Institution = data['R_D_Institution']
-                scores.Start_Up = data['Start_Up']
-                scores.Others = data['Others']
+                ATTRIBUTES = {'RES', 'Italy', 'France', 'Austria', 'Germany', 'Denmark', 'Czech_Republic', 'Finland'
+                    , 'Ireland', 'Israel', 'Portugal', 'Ukranie', 'United_Kingdom', 'Turkey', 'Switzerland', 'Spain'
+                    , 'Norway', 'Association_Agency', 'Company', 'University', 'R_D_Institution', 'Start_Up', 'Others'}
+
+                for atr in ATTRIBUTES:
+                    setattr(scores, atr, data[atr])
 
             except:
                 scores = Scores(RES=data['RES'],
@@ -763,13 +748,11 @@ class ScoresViewSet(viewsets.ModelViewSet):
                                 Switzerland=data['Switzerland'], Spain=data['Spain'], Norway=data['Norway'],
                                 Association_Agency=data['Association_Agency'], University=data['University'],
                                 R_D_Institution=data['R_D_Institution'], Start_Up=data['Start_Up'],
-                                Others=data['Others']
-                                )
+                                Others=data['Others'])
             scores.save()
             response = {'success': 'Scores updated successfully.'}
         except:
             response = {'error': 'Error while updating scores.'}
-
         return Response(response, status=status.HTTP_200_OK)
 
     @action(detail=False, methods=['GET'])

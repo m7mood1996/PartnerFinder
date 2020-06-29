@@ -121,7 +121,7 @@ export default function NavTabs() {
   });
 
   if (updatesState.firstLoading) {
-    let url = new URL(BACKEND_URL + "updates/getSettings/");
+    let url = new URL(BACKEND_URL + "updates/get_settings/");
     fetch(url, {
       method: "GET",
     })
@@ -167,7 +167,7 @@ export default function NavTabs() {
     let newState = { ...alertsState, firstLoading: false };
     let newMail = "";
     let turned_on = false;
-    let url = new URL(BACKEND_URL + "alerts/getSettings/");
+    let url = new URL(BACKEND_URL + "alerts/get_settings/");
     fetch(url, {
       method: "GET",
     })

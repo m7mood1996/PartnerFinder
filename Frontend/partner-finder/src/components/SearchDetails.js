@@ -23,21 +23,23 @@ const customStyles = {
     backgroundColor: "#02203c",
     borderBottom: '1px dotted pink',
     color: "white",
-   fontSize: "13px",
+    fontSize: "13px",
   }),
 
-  placeholder: styles => ({...styles, color: "white", fontSize: "13px",}),
-  control: styles => ({ ...styles, backgroundColor: '#02203c', color: "white", fontSize: "13px",}),
- 
-  option: styles => ({ ...styles, color:"white", backgroundColor:"#02203c", fontSize: "13px",  '&:hover': {
-    backgroundColor: "#f1f3f5",
-    color: "black",
-    fontSize: "13px",
-  },}),
-  singleValue: styles => ({...styles, color:"white", fontSize: "13px"})
+  placeholder: styles => ({ ...styles, color: "white", fontSize: "13px", }),
+  control: styles => ({ ...styles, backgroundColor: '#02203c', color: "white", fontSize: "13px", }),
+
+  option: styles => ({
+    ...styles, color: "white", backgroundColor: "#02203c", fontSize: "13px", '&:hover': {
+      backgroundColor: "#f1f3f5",
+      color: "black",
+      fontSize: "13px",
+    },
+  }),
+  singleValue: styles => ({ ...styles, color: "white", fontSize: "13px" })
 
 
-    
+
 }
 
 const KeyCodes = {
@@ -55,7 +57,7 @@ const useStyles = makeStyles((theme) => ({
 
 function SearchDetails(props) {
   const classes = useStyles();
- 
+
   const [msgState, setMsgState] = React.useState({
     title: "",
     body: "",
@@ -69,13 +71,13 @@ function SearchDetails(props) {
   const [state, setState] = React.useState({
     loading: false,
     firstLoading: true,
-   
+
   });
-  
+
   const [formState, setFormState] = React.useState({
     tags: false,
   });
-  
+
   if (state.firstLoading) {
     setTags([...props.state.tags]);
     setType([...props.state.type]);
@@ -92,26 +94,22 @@ function SearchDetails(props) {
     console.log(countrySearched);
   };
 
-  const handleType = (event) => {
-    setType(event);
-    props.setState({ ...props.state, type: event });
-    console.log(type);
-  };
-
-  /**
-   * handler function to set the role that the user chose
-   * @param {event} event event when the user choose a role
-   */
-  const handleRole = (event) => {
-    let newRole = '';
-    if (event === role){
-      newRole = '';
+  const handleSelect = (event) => {
+    if (event instanceof Array === false) {
+      let newRole = '';
+      if (event === role) {
+        newRole = '';
+      }
+      else {
+        newRole = event;
+      }
+      setRole(newRole);
+      props.setState({ ...props.state, role: newRole });
     }
-    else{
-      newRole = event;
+    else {
+        setType(event);
+        props.setState({ ...props.state, type: event });
     }
-    setRole(newRole);
-    props.setState({ ...props.state, role: newRole });
   };
 
   /**
@@ -122,7 +120,7 @@ function SearchDetails(props) {
     setTags([...tags, tag]);
     props.setState({ ...props.state, tags: [...props.state.tags, tag] });
   };
- 
+
 
   /**
    * function that sets the value of the tag that the user filled
@@ -143,7 +141,7 @@ function SearchDetails(props) {
     props.setState({ ...props.state, tags: [...newTags] });
   };
 
-  const dragTag = (tag, currPos, newPos) => {};
+  const dragTag = (tag, currPos, newPos) => { };
 
   /**
    * Method that checkes the validation 
@@ -163,10 +161,10 @@ function SearchDetails(props) {
         return value.label;
       })
       let roleToSearch = '';
-      if (role !== ''){
+      if (role !== '') {
         roleToSearch = role.label;
       }
-      searchByTagsAndCountires(tags, countriesToSearch, typeTosSearch, roleToSearch);
+      genericSearch(tags, countriesToSearch, typeTosSearch, roleToSearch);
     }
   };
 
@@ -179,10 +177,10 @@ function SearchDetails(props) {
    * @param {String} role the role that the user chose
    * @returns {JSON} JSON file of the results 
    */
-  const searchByTagsAndCountires = (tags, countries, type, role) => {
+  const genericSearch = (tags, countries, type, role) => {
     setState({ ...state, loading: true });
     tags = tags.map((tag) => tag.text);
-    let url = new URL(BACKEND_URL + "genericSearch/searchByCountriesAndTags/");
+    let url = new URL(BACKEND_URL + "generic_search/");
     let params = { data: JSON.stringify({ tags: tags, countries: countries, types: type, role: role }) };
     Object.keys(params).forEach((key) =>
       url.searchParams.append(key, params[key])
@@ -203,14 +201,36 @@ function SearchDetails(props) {
           setData({ EU: [], B2MATCH: [] });
           props.setState({ ...props.state, data: { EU: [], B2MATCH: [] } });
         } else {
-          console.log("BEFOR", resp);
           setState({ ...state, loading: false });
-          resp['EU'] = resp['EU'].map(val =>{
-           return  {...val, 'consorsiumRoles': val.consorsiumRoles ? 'Coordinator' : 'Regular'  }
+          resp['EU'] = resp['EU'].map(val => {
+            return { ...val, 'consorsiumRoles': val.consorsiumRoles ? 'Coordinator' : 'Regular' }
           })
           setData(resp);
-          console.log("AFTER", resp)
           props.setState({ ...props.state, data: { ...resp } });
+          if(resp.EU.length === 0 && resp.B2MATCH.length === 0){
+            setMsgState({
+              title: "Success",
+              body: "We didn't find any relevant results",
+              visible: true,
+            });
+          }
+          else{
+            if (resp.EU.length === 0){
+              setMsgState({
+                title: "Success",
+                body: "We didn't find any relevant organizations from EU",
+                visible: true,
+              });
+            }
+            if (resp.B2MATCH.length === 0){
+              setMsgState({
+                title: "Success",
+                body: "We didn't find any relevant participants from B2match",
+                visible: true,
+              });
+            }
+          }
+         
         }
       })
       .catch((error) => {
@@ -290,40 +310,40 @@ function SearchDetails(props) {
             </h1>
             <FormControl className={SearchDetails.formControl} id="text_select">
               <MultiSelect
-              options={countryList().getData()}
-              value={countrySearched}
-              onChange={handleCountry}
-              focusSearchOnOpen={true}
-              className="select"
-              labelledBy={"Select"}
-            />
+                options={countryList().getData()}
+                value={countrySearched}
+                onChange={handleCountry}
+                focusSearchOnOpen={true}
+                className="select"
+                labelledBy={"Select"}
+              />
             </FormControl>
           </div>
           <div>
-            <h1>Classification Type\s</h1>       
+            <h1>Classification Type\s</h1>
             <FormControl className={SearchDetails.formControl} id="text_select">
-            <MultiSelect
-              styles={customStyles}
-              options={classificationTypesOptions}
-              className="select"
-              value={type}
-              onChange={handleType}
-              labelledBy={"Select"}
-            />
+              <MultiSelect
+                styles={customStyles}
+                options={classificationTypesOptions}
+                className="select"
+                value={type}
+                onChange={handleSelect}
+                labelledBy={"Select"}
+              />
             </FormControl>
           </div>
           <div>
-          <h1>Consortium Role</h1>       
+            <h1>Consortium Role</h1>
             <FormControl className={SearchDetails.formControl} id="tab">
-                  <Select
-                      value={role}
-                      styles={customStyles}
-                      onChange={handleRole}
-                      className="select_role"
-                      options={consorsiumRoles}
-                      id="textFontFamily"
-                      variant="outlined"
-                  />
+              <Select
+                value={role}
+                styles={customStyles}
+                onChange={handleSelect}
+                className="select_role"
+                options={consorsiumRoles}
+                id="textFontFamily"
+                variant="outlined"
+              />
             </FormControl>
           </div>
         </div>
@@ -357,14 +377,14 @@ function SearchDetails(props) {
         </Button>
       </div>
       {data &&
-      data.EU &&
-      data.B2MATCH &&
-      data.EU.length === 0 &&
-      data.B2MATCH.length === 0 ? null : (
-        <div style={{ "margin-top": "10px" }}>
-          <SearchResults data={data} />
-        </div>
-      )}
+        data.EU &&
+        data.B2MATCH &&
+        data.EU.length === 0 &&
+        data.B2MATCH.length === 0 ? null : (
+          <div style={{ "margin-top": "10px" }}>
+            <SearchResults data={data} />
+          </div>
+        )}
     </React.Fragment>
   );
 }

@@ -281,7 +281,7 @@ function AlertsSettings(props) {
       }
     } else {
       setState({ ...state, loading: true });
-      let url = new URL(BACKEND_URL + "alerts/setSettings/");
+      let url = new URL(BACKEND_URL + "alerts/set_settings/");
       let params = {
         data: JSON.stringify({ email: state.email, turned_on: turned_on }),
       };

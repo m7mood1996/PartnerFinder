@@ -59,7 +59,7 @@ function Updates(props) {
     returns the last update date from the backend and show it in the GUI
    */
   const updateEU = () => {
-    let url = new URL(BACKEND_URL + "organizations/updateOrganizations/");
+    let url = new URL(BACKEND_URL + "organizations/update_organizations/");
     fetch(url, {
       method: "GET",
     })

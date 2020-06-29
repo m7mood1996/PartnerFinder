@@ -38,7 +38,7 @@ class OrganizationProfileViewSet(viewsets.ModelViewSet):
     serializer_class = OrganizationProfileSerializer
 
     @action(detail=False, methods=['GET'])
-    def updateOrganizations(self, request):
+    def update_organizations(self, request):
         """
         method to define API to update organizations in the local DB
         :param request: HTTP request
@@ -52,8 +52,9 @@ class OrganizationProfileViewSet(viewsets.ModelViewSet):
         try:
             try:
                 index = load_index('EU_Index_Temp')
-                if  os.path.exists('EU_Index_Temp.0') and  os.path.getsize('EU_Index_Temp.0') > os.path.getsize('EU_Index.0'):
-                    destroyAndRename(old_index_name='EU_Index', new_index_name='EU_Index_Temp')
+                if os.path.exists('EU_Index_Temp.0') and os.path.getsize('EU_Index_Temp.0') > os.path.getsize(
+                        'EU_Index.0'):
+                    destroy_and_rename(old_index_name='EU_Index', new_index_name='EU_Index_Temp')
                 else:
                     index.destroy()
             except:
@@ -68,8 +69,8 @@ class OrganizationProfileViewSet(viewsets.ModelViewSet):
             while len(visitngQueue) > 0:
                 currPic = visitngQueue.popleft()
                 try:
-                    currOrg = getOrganizationProfileFromEUByPIC(currPic)
-                    currAdjacent = getPicsFromCollaborations(
+                    currOrg = get_organization_profile_by_pic(currPic)
+                    currAdjacent = get_PICs_from_collaborations(
                         currOrg['collaborations'])
                 except:
                     continue
@@ -79,13 +80,13 @@ class OrganizationProfileViewSet(viewsets.ModelViewSet):
                         status[pic] = 'visiting'
                         visitngQueue.append(pic)
 
-                currOrg = translateData(currOrg)
-                addOrganizationToDB(currOrg)
+                currOrg = translate_data(currOrg)
+                add_organization_to_DB(currOrg)
                 index = add_org_to_index(index, currOrg)
                 status[currPic] = 'visited'
 
-            if  os.path.exists('EU_Index_Temp.0') and  os.path.getsize('EU_Index_Temp.0') > os.path.getsize('EU_Index.0'):
-                destroyAndRename(old_index_name='EU_Index', new_index_name='EU_Index_Temp')
+            if os.path.exists('EU_Index_Temp.0') and os.path.getsize('EU_Index_Temp.0') > os.path.getsize('EU_Index.0'):
+                destroy_and_rename(old_index_name='EU_Index', new_index_name='EU_Index_Temp')
             else:
                 index.destroy()
 
@@ -94,8 +95,8 @@ class OrganizationProfileViewSet(viewsets.ModelViewSet):
                 raise
         except:
             setUpdateSettings(euDate=time.mktime(datetime.datetime.now().timetuple()))
-            if os.path.exists('EU_Index_Temp.0') and  os.path.getsize('EU_Index_Temp.0') > os.path.getsize('EU_Index.0'):
-                destroyAndRename(old_index_name='EU_Index', new_index_name='EU_Index_Temp')
+            if os.path.exists('EU_Index_Temp.0') and os.path.getsize('EU_Index_Temp.0') > os.path.getsize('EU_Index.0'):
+                destroy_and_rename(old_index_name='EU_Index', new_index_name='EU_Index_Temp')
             else:
                 index.destroy()
             response = {'error': 'Error while updating organizations.'}
@@ -103,11 +104,11 @@ class OrganizationProfileViewSet(viewsets.ModelViewSet):
         return Response(response, status=status.HTTP_200_OK)
 
     @action(detail=False, methods=['GET'])
-    def searchByCountriesAndTags(self, request):
+    def generic_search(self, request):
         """
-        generic function to search organizations from EU and participants from B2Match
-        :param request: request with tags and countries fields
-        :return:
+        method to define API that defines generic function to search organizations from EU and participants from B2Match
+        :param request: HTTTP request with tags, countries, types, and role fields
+        :return: HTTP response with the relevant objects
         """
 
         try:
@@ -118,9 +119,9 @@ class OrganizationProfileViewSet(viewsets.ModelViewSet):
             types = data['types']
             tags = data['tags']
             role = data['role']
-            EURes = get_orgs_by_countries_and_tags_and_types(tags=tags, countries=countries, types=types, role=role)
+            EURes = get_orgs_by_countries_and_tags_and_types_and_role(tags=tags, countries=countries, types=types,
+                                                                      role=role)
             B2MATCHRes = getB2MATCHPartByCountriesAndTags(tags, countries)
-            #B2MATCHRes = []
 
             B2MATCH = []
             EU = []
@@ -153,9 +154,9 @@ class AlertsSettingsViewSet(viewsets.ModelViewSet):
     serializer_class = AlertsSettingsSerializer
 
     @action(detail=False, methods=['GET'])
-    def getSettings(self, request):
+    def get_settings(self, request):
         """
-        method to define API to get updates settings.
+        method to define API to get alerts settings
         :param request: HTTP request
         :return: HTTP Response
         """
@@ -169,14 +170,14 @@ class AlertsSettingsViewSet(viewsets.ModelViewSet):
         return Response(response, status=status.HTTP_200_OK)
 
     @action(detail=False, methods=['POST'])
-    def setSettings(self, request):
+    def set_settings(self, request):
         """
-        method to define API to update the update settings.
-        :param request: HTTP request with update times
+        method to define API to update the alerts settings
+        :param request: HTTP request with updated email and turned_on flag
         :return: HTTP response
         """
-        try:
 
+        try:
             data = request.query_params['data']
             data = json.loads(data)
             email = data['email']
@@ -206,9 +207,9 @@ class UpdateSettingsViewSet(viewsets.ModelViewSet):
     serializer_class = UpdateSettingsSerializer
 
     @action(detail=False, methods=['GET'])
-    def getSettings(self, request):
+    def get_settings(self, request):
         """
-        method to define API to get updates settings.
+        method to define API to get last update times
         :param request: HTTP request
         :return: HTTP Response
         """
@@ -222,22 +223,6 @@ class UpdateSettingsViewSet(viewsets.ModelViewSet):
         return Response(response, status=status.HTTP_200_OK)
 
 
-class AddressViewSet(viewsets.ModelViewSet):
-    queryset = Address.objects.all()
-    permission_classes = [
-        permissions.AllowAny
-    ]
-    serializer_class = AddressSerializer
-
-
-class TagViewSet(viewsets.ModelViewSet):
-    queryset = Tag.objects.all()
-    permission_classes = [
-        permissions.AllowAny
-    ]
-    serializer_class = TagSerializer
-
-
 class CallViewSet(viewsets.ModelViewSet):
     queryset = Call.objects.all()
     permission_classes = [
@@ -248,12 +233,13 @@ class CallViewSet(viewsets.ModelViewSet):
     @action(detail=False, methods=['GET'])
     def consortium_builder(self, request):
         """
-        method to build a consortium for EU grants calls that have at least three months
-        it checks if there is a potential partners from at least three different countries
-        if yes it sends an alert to the user's mail with these calls
+        method to define API to build a consortium for EU grants calls that have at least three months deadline and
+        there are three different potential partners from at least three different countries.
+        if we have at least one relevant call an email will be sent to the user
         :param request: HTTP request
         :return: HTTP Response
         """
+
         try:
             response = {'success': 'Please Turn Alerts ON!'}
             try:
@@ -262,11 +248,8 @@ class CallViewSet(viewsets.ModelViewSet):
                 alerts_settings['turned_on'] = False
             if not alerts_settings.turned_on:
                 return Response(response, status=status.HTTP_200_OK)
-            email = alerts_settings.email
 
-            print("*" * 50)
-            print("START BUILDING CONSORTIUM")
-            print("*" * 50)
+            email = alerts_settings.email
 
             Call.objects.all().delete()
             CallTag.objects.all().delete()
@@ -279,11 +262,6 @@ class CallViewSet(viewsets.ModelViewSet):
                 if call['hasConsortium']:
                     calls_to_send.append({'title': call['title']})
                     add_call_to_DB(call)
-
-            # calls = Call.objects.all()
-            # calls_to_send = []
-            # for call in calls:
-            #     calls_to_send.append({'title': call.__dict__['title']})
 
             body = MIMEMultipart('alternative')
 
@@ -311,7 +289,6 @@ class CallViewSet(viewsets.ModelViewSet):
             body['Subject'] = 'EU Proposal Calls Alert'
             if len(calls_to_send) > 0:
                 send_mail(receiver_email=email, message=body)
-
             response = {'success': 'Finished building consortium successfully!'}
         except:
             response = {'error': 'Error while building consortium.'}
@@ -321,7 +298,7 @@ class CallViewSet(viewsets.ModelViewSet):
     @action(detail=False, methods=['GET'])
     def get_calls(self, request):
         """
-        method to build get all calls that has a potential participants
+        method to define API to get all calls that has a potential participants
         :param request: HTTP request
         :return: HTTP Response
         """
@@ -343,7 +320,7 @@ class CallViewSet(viewsets.ModelViewSet):
     @action(detail=False, methods=['GET'])
     def search_organizations(self, request):
         """
-        method to search for organizations for a specific ccm2id call
+        method to define API to search for organizations for a specific ccm2id call
         :param request: HTTP request
         :return: HTTP Response
         """
@@ -357,7 +334,7 @@ class CallViewSet(viewsets.ModelViewSet):
             for tag in tags:
                 tagsList.append(tag.tag)
 
-            EURes = get_orgs_by_countries_and_tags_and_types(tags=tagsList, countries=[], types=[], role='')
+            EURes = get_orgs_by_countries_and_tags_and_types_and_role(tags=tagsList, countries=[], types=[], role='')
             EU = []
             for val in EURes:
                 EU.append({'legalName': val.legalName,
@@ -371,14 +348,6 @@ class CallViewSet(viewsets.ModelViewSet):
             response = {'EU': [], 'error': 'Error while uploading organizations.'}
 
         return Response(response, status=status.HTTP_200_OK)
-
-
-class CallTagViewSet(viewsets.ModelViewSet):
-    queryset = CallTag.objects.all()
-    permission_classes = [
-        permissions.AllowAny
-    ]
-    serializer_class = CallTagSerializer
 
 
 class EventViewSet(viewsets.ModelViewSet):
@@ -645,7 +614,6 @@ class EventViewSet(viewsets.ModelViewSet):
             setUpdateSettings(b2matchDate=time.mktime(datetime.datetime.now().timetuple()))
             response = {'error': 'Error while updating B2match repository.'}
 
-
         return Response(response, status=status.HTTP_200_OK)
 
 
@@ -681,7 +649,8 @@ class ParticipantsViewSet(viewsets.ModelViewSet):
                         participant = Participants(participant_name=part_temp[0], participant_img_url=part_temp[1],
                                                    organization_name=part_temp[2], org_type=part_temp[4],
                                                    org_url=part_temp[5],
-                                                   org_icon_url=part_temp[6], description=part_temp[8], location=location)
+                                                   org_icon_url=part_temp[6], description=part_temp[8],
+                                                   location=location)
 
                         participant.save()
                         event.event_part.add(participant)
@@ -797,10 +766,9 @@ class ScoresViewSet(viewsets.ModelViewSet):
                                 Others=data['Others']
                                 )
             scores.save()
-            response = {'success': 'Scores updated successfully.' }
+            response = {'success': 'Scores updated successfully.'}
         except:
             response = {'error': 'Error while updating scores.'}
-
 
         return Response(response, status=status.HTTP_200_OK)
 
@@ -906,7 +874,7 @@ class AlertsB2match(viewsets.ModelViewSet):
 
 def setUpdateSettings(euDate=None, b2matchDate=None):
     """
-    method to update the update settings.
+    function to update the last update settings (times)
     :param euDate: EU last update
     :param b2matchDate: B2match last update
     :return: True/False

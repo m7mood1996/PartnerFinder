@@ -4,17 +4,18 @@ import gensim
 from nltk.tokenize import word_tokenize
 
 
-def NLP_Processor(documents):
+def NLP_processor(documents):
     """
     function to make new corpus for a certain set of documents
-    :param documents: list of strings
-    :return: Corpus of the documents
+    :param documents: list of lists of strings
+    :return: Corpus of the documents, list of lists of pairs (token_id, token_frequency)
     """
-    tokens = [process_Document(doc) for doc in documents]
+
+    tokens = [process_document(doc) for doc in documents]
     try:
         dictionary = load_dictionary("Dictionary")
     except:
-        dictionary = get_ids([])
+        dictionary = build_dictionary([])
         dictionary.save("Dictionary")
 
     dictionary.add_documents(tokens)
@@ -22,21 +23,23 @@ def NLP_Processor(documents):
     return build_corpus(dictionary, tokens)
 
 
-def process_Document(document):
+def process_document(document):
     """
-    function to process a certain document which tokenize and make lower case for the current document
+    function to process a certain document by 1- tokenizing it 2- remove stop words 3- making lower cas of tokens
+    4- stemming each token
     :param document: string
     :return: list of tokens
     """
+
     ps = PorterStemmer()
     stop_words = set(stopwords.words('english'))
     return [ps.stem(word.lower()) for word in word_tokenize(document) if
             not word in stop_words]  # tokenizing and normalize tokens
 
 
-def get_ids(tokens):
+def build_dictionary(tokens):
     """
-    a function to map each token into a unique id
+    function to build new dictionary with a certain tokens
     :param tokens: list of lists of tokens
     :return: Dictionary object
     """
@@ -46,8 +49,8 @@ def get_ids(tokens):
 
 def build_corpus(dictionary, tokens):
     """
-    a function to build a corpus, which is mapping each token id to its frequency
-    :param dictionary: object for mapping token -> token id
+    function to build a corpus, which is mapping each token id to its frequency
+    :param dictionary: inner dictionary object for mapping token -> token id
     :param tokens: list of lists of tokens
     :return: list of lists of tuples (id, frequency)
     """
@@ -58,8 +61,7 @@ def build_corpus(dictionary, tokens):
 
 def process_query_result(result):
     """
-    a function to process similarity result, it will map each document similarity percentage with the document
-    id
+    function to process similarity result, it will map each document similarity percentage with the document id
     :param result: list of lists of percentages
     :return: pair of (doc id, doc similarity percentage)
     """
@@ -69,8 +71,8 @@ def process_query_result(result):
     result = result[0]
     pairs = []
     for idx, sim_perc in enumerate(result):
-        pairs.append((idx, sim_perc))
-
+        if sim_perc != 0:
+            pairs.append((idx, sim_perc))
     return pairs
 
 
@@ -78,10 +80,10 @@ def add_documents(index, documents):
     """
     function to add new documents to existent index
     :param index: current index
-    :param documents: list of strings
+    :param documents: list of lists of strings
     :return: updated index
     """
-    corpus = NLP_Processor(documents)
+    corpus = NLP_processor(documents)
     index.num_features += len(corpus)
     for doc in corpus:
         index.num_features += (len(doc) * 2)
@@ -92,31 +94,33 @@ def add_documents(index, documents):
 
 def load_index(path):
     """
-    function to load index from a specific directory in disk
+    function to load index from a specific directory on disk
     :param path: path to directory
     :return: Similarity Object
     """
 
     return gensim.similarities.Similarity.load(path)
 
+
 def load_dictionary(path):
     """
-
-    :param path:
-    :return:
+    function to load dictionary from a specific directory on disk
+    :param path: path to directory
+    :return: Dictionary object
     """
 
     return gensim.corpora.Dictionary.load(path)
 
+
 def build_index(path):
     """
-    build an empty index in disk
+    build an empty index in disk and save it on a specific directory
     :param path: path of the directory
     :return: Similarity object "index"
     """
 
-    corpus = NLP_Processor([])
-    tfidf = gensim.models.TfidfModel(corpus, )
+    corpus = NLP_processor([])
+    tfidf = gensim.models.TfidfModel(corpus)
 
     # build the index
     return gensim.similarities.Similarity(path, tfidf[corpus], num_features=10000)
@@ -124,10 +128,12 @@ def build_index(path):
 
 def get_document_from_org(org):
     """
-    function to take string attributes which are description and tags and keywords from EU organization
+    function to take string attributes which are description and tags and keywords from EU organization and build a
+    document for this organization
     :param org: EU organization object
-    :return: string of description and tags and keywords
+    :return: string of description and tags and keywords (document)
     """
+
     res = [org['description']]
     for tag in org['tagsAndKeywords']:
         res.append(tag)
@@ -142,6 +148,7 @@ def get_document_from_par(par, tags):
     :param tags: tags
     :return: string of combination of participants description and tags
     """
+
     res = [par.description]
     for tag in tags:
         res.append(tag)

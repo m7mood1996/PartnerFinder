@@ -7,12 +7,13 @@ from decouple import config
 from .EU import *
 
 
-def translateData(data):
+def translate_data(data):
     """
     function to translate non english data in object into english
     :param data: object
     :return: translated object
     """
+
     translator = Translator()
     for key in data:
         if type(data[key]) == str:
@@ -41,8 +42,8 @@ class Graph:
 
 def send_mail(receiver_email, message):
     """
-    function to send mail to a specific email address.
-    :param receiver_email: the receiver email address.
+    function to send mail to a specific email address with a specific message
+    :param receiver_email: the receiver email address
     :param message: the message to send.
     :return:
     """
@@ -57,7 +58,6 @@ def send_mail(receiver_email, message):
         with smtplib.SMTP_SSL(smtp_server, ssl_port, context=context) as server:
             server.login(sender_mail, password)
             server.sendmail(sender_mail, receiver_email, message.as_string())
-        print("SENT")
     except Exception as e:
         print("ERROR", e)
 
@@ -69,10 +69,10 @@ def deleteOldIndexAndReplace():
     os.rename("B2MATCH_upcoming_Index_temp.0", "B2MATCH_upcoming_Index.0")
 
 
-def destroyAndRename(old_index_name, new_index_name):
+def destroy_and_rename(old_index_name, new_index_name):
     try:
         os.remove(old_index_name)
-        os.remove(old_index_name+".0")
+        os.remove(old_index_name + ".0")
     except:
         pass
     os.rename(new_index_name, old_index_name)

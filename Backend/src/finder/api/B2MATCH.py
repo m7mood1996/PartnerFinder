@@ -408,7 +408,7 @@ def getParticipantsByTags(tags):
     index1 = load_index('B2MATCH_Index')  # B2match_index
     index2 = load_index('B2MATCH_upcoming_Index.0')  # B2match_upcoming_index
 
-    corpus = NLP_Processor([tags])
+    corpus = NLP_processor([tags])
     res1 = index1[corpus]
 
     res2 = index2[corpus]

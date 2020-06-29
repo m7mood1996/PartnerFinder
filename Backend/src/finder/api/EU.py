@@ -13,7 +13,7 @@ LIST_OF_ATTRIBUTES = {'pic', 'businessName', 'legalName', 'classificationType', 
                       'collaborations'}
 
 
-def getPicsFromCollaborations(collaborations):
+def get_PICs_from_collaborations(collaborations):
     """
     function to get list of pics from list of organizations
     :param collaborations: list of organizations
@@ -25,10 +25,10 @@ def getPicsFromCollaborations(collaborations):
     return pics
 
 
-def getNumOfProjects(pic):
+def get_num_of_projects(pic):
     """
     function to get number of projects for a certain EU organization
-    :param pic: id of the organization
+    :param pic: id of EU organization
     :return: number of projects for this organization
     """
 
@@ -44,10 +44,10 @@ def getNumOfProjects(pic):
     return len(response.json()['publicProjects'])
 
 
-def getOrganizationProfileFromEUByPIC(pic):
+def get_organization_profile_by_pic(pic):
     """
-    function to get organisation profile from the database of EU by pic number
-    :param pic: id of the organization
+    function to get organization profile from the database of EU by pic number
+    :param pic: id of EU organization
     :return: organization profile in format of json
     """
     url = 'https://ec.europa.eu/info/funding-tenders/opportunities/api/orgProfile/data.json?pic=' + \
@@ -59,13 +59,13 @@ def getOrganizationProfileFromEUByPIC(pic):
         print("Error - ", error)
         exit(0)
 
-    return getRelatedAttributes(response.json()['organizationProfile'])
+    return get_related_attributes(response.json()['organizationProfile'])
 
 
-def getRelatedAttributes(obj):
+def get_related_attributes(obj):
     """
-    function to get the related fields from an EU organization object
-    :param obj: EU organization
+    function to get the related fields from EU organization object
+    :param obj: EU organization object
     :return: obj with the related fields
     """
     resObj = {}
@@ -92,7 +92,7 @@ def getRelatedAttributes(obj):
             else:
                 resObj[attribute] = ''
 
-    resObj['numberOfProjects'] = getNumOfProjects(
+    resObj['numberOfProjects'] = get_num_of_projects(
         obj['publicOrganizationData']['pic'])
     resObj['consorsiumRoles'] = True if 'COORDINATOR' in resObj['consorsiumRoles'] else False
     resObj['pic'] = int(resObj['pic'])
@@ -102,7 +102,7 @@ def getRelatedAttributes(obj):
 
 def add_org_to_index(index, org):
     """
-    function to add new organization to the index
+    function to add new organization to the local inverted index
     :param index: current index
     :param org: new EU organization
     :return: updated index
@@ -127,9 +127,9 @@ def add_org_to_index(index, org):
     return index
 
 
-def addOrganizationToDB(org):
+def add_organization_to_DB(org):
     """
-    function to add new organization to the local db
+    function to add new organization to the local DB (Mongo)
     :param org: EU organization
     :return: True/False
     """
@@ -196,19 +196,19 @@ def addOrganizationToDB(org):
 # ----------------------- Processing query in EU data Funcs ------------------------
 def get_organizations_by_tags(tags):
     """
-    method to get all organizations with at least one tag from the list of tags.
+    function to get all organizations with at least one tag from the list of tags.
     :param tags: list of tags
     :return: list of organizations objects
     """
     tags = ' '.join(tags)
     index = load_index('EU_Index.0')
-    corpus = NLP_Processor([tags])
-    res = index[corpus]
+    corpus = NLP_processor([tags])
 
+    res = index[corpus]
     res = process_query_result(res)
+
     res = [pair for pair in res if pair[1] > 0.3]
     res = sorted(res, key=lambda pair: pair[1], reverse=True)
-    # res = res[:100]
     temp = []
     for pair in res:
         try:
@@ -220,6 +220,7 @@ def get_organizations_by_tags(tags):
     finalRes = []
     for mapId in res:
         finalRes.append(OrganizationProfile.objects.get(pic=mapId.originalID))
+
     return finalRes
 
 
@@ -247,7 +248,7 @@ def get_organizations_by_types(types):
 
 def get_organizations_by_role(consortium_role):
     """
-    function to get all organizations according to consortium role
+    function to get all organizations according to a consortium role
     :param consortium_role: Coordinator/regular
     :return: list of organizations objects
     """
@@ -261,7 +262,7 @@ def get_organizations_by_role(consortium_role):
 
 def get_list_of_pics_from_list_of_orgs(orgs):
     """
-    function to get list of pics from list of orgs
+    function to get list of pics from list of EU organizations
     :param orgs: list of organizations
     :return: list of pics
     """
@@ -273,9 +274,9 @@ def get_list_of_pics_from_list_of_orgs(orgs):
 
 def get_orgs_intersection(list_of_lists):
     """
-    private method to get intersection between list of lists of organizations
+    function to get intersection between list of lists of organizations
     :param list_of_lists: list of lists of organizations
-    :return: intersection list
+    :return: intersection list of organizations
     """
     list_of_lists.sort(key=lambda orgs: len(orgs))
     res = list_of_lists[0]
@@ -299,7 +300,7 @@ def get_orgs_intersection(list_of_lists):
     return final_res
 
 
-def get_orgs_by_countries_and_tags_and_types(tags, countries, types, role):
+def get_orgs_by_countries_and_tags_and_types_and_role(tags, countries, types, role):
     """
     private method to get organizations from the database that have a certain tags
     and located in one of the countries list and has a certain classification type
@@ -310,10 +311,26 @@ def get_orgs_by_countries_and_tags_and_types(tags, countries, types, role):
     :return: list of organizations objects
     """
 
-    orgs_by_countries = get_organizations_by_countries(countries)
     org_by_tags = get_organizations_by_tags(tags)
+    orgs_by_countries = get_organizations_by_countries(countries)
     orgs_by_types = get_organizations_by_types(types)
     orgs_by_role = get_organizations_by_role(role)
+
+    if countries == [] and types == [] and role == '':
+        return org_by_tags
+    elif countries == [] and types == []:
+        return get_orgs_intersection([org_by_tags, orgs_by_role])
+    elif countries == [] and role == '':
+        return get_orgs_intersection([org_by_tags, orgs_by_types])
+    elif types == [] and role == '':
+        return get_orgs_intersection([org_by_tags, orgs_by_countries])
+    elif countries == []:
+        return get_orgs_intersection([org_by_tags, orgs_by_types, orgs_by_role])
+    elif types == []:
+        return get_orgs_intersection([org_by_tags, orgs_by_countries, orgs_by_role])
+    elif role == '':
+        return get_orgs_intersection([org_by_tags, orgs_by_countries, orgs_by_types])
+
     return get_orgs_intersection([org_by_tags, orgs_by_countries, orgs_by_types, orgs_by_role])
 
 
@@ -326,11 +343,11 @@ REST_ATTRIBUTES = {'description', 'conditions',
                    'ccm2Id', 'focusArea', 'supportInfo', 'actions'}
 
 
-def get_related_attributes(obj):
+def get_call_related_attributes(obj):
     """
     function to get related attributes from call object
     :param obj: call object
-    :return: new object with the related attributes
+    :return: new call object with the related attributes
     """
     resObj = {}
     for atr in LIST_OF_CALLS_ATTRIBUTES:
@@ -365,11 +382,10 @@ def get_rest_attributes(obj):
 
 
 def get_call_to_save(obj):
-    # TODO: change sumbission to submission
     """
-
-    :param obj:
-    :return:
+    function to return only relevant attributes to save in the inner DB
+    :param obj: EU call object
+    :return: call object to save
     """
     finalObj = {}
     for atr in LIST_OF_CALLS_ATTRIBUTES:
@@ -400,7 +416,6 @@ def is_valid_date(date):
     try:
         date //= 1000
         three_months = datetime.now() + relativedelta(months=+3)
-        print(datetime.fromtimestamp(date))
         three_months = time.mktime(three_months.timetuple())
         return date >= three_months
     except:
@@ -421,11 +436,11 @@ def is_valid_status(obj):
 
 def is_relevant_action(obj):
     """
-    function to check if the demand tags are being included in the call object actions
+    function to check if the demand actions tags are being included in the call object actions
     :param obj: call object
     :return: True/False
     """
-    tags = ['ia', 'ria']
+    tags = ['ia', 'ria']  # tags of actions from the client
     try:
         for action in obj['actions']:
             types = action['types']
@@ -448,8 +463,8 @@ def get_proposal_calls():
     function to get all proposal calls for grants that are open and have at least three months deadline
     :return: list of object of open calls
     """
-    url = 'https://ec.europa.eu/info/funding-tenders/opportunities/data/referenceData/grantsTenders.json'
 
+    url = 'https://ec.europa.eu/info/funding-tenders/opportunities/data/referenceData/grantsTenders.json'
     try:
         response = requests.get(url)
     except requests.exceptions.RequestException as err:
@@ -460,7 +475,7 @@ def get_proposal_calls():
     grants = []
     for obj in res:
         if 'type' in obj and obj['type'] == 1:
-            obj = get_related_attributes(obj)
+            obj = get_call_related_attributes(obj)
             obj = get_rest_attributes(obj)
             try:
                 check_dates = [is_valid_date(date)
@@ -477,13 +492,13 @@ def get_proposal_calls():
 
 def add_call_to_DB(call):
     """
-    method to add new call to the local db
+    method to add new call to the local DB (Mongo)
     :param call: EU call
     :return: True/False
     """
 
     response = True
-    call = translateData(call)
+    call = translate_data(call)
     try:
         Call.objects.get(ccm2Id=call['ccm2Id'])
         response = False
@@ -507,12 +522,13 @@ def add_call_to_DB(call):
 
 def has_consortium(call):
     """
-    function to check if there is a consortium for a specific EU call
+    function to check if there is a consortium of at least three partners from three different countries for a specific
+    EU call
     :param call: EU call
     :return: new call with new field hasConsortium: True/False
     """
 
-    orgs = get_orgs_by_countries_and_tags_and_types(call['tagsAndKeywords'], [], [], '')
+    orgs = get_orgs_by_countries_and_tags_and_types_and_role(call['tagsAndKeywords'], [], [], '')
 
     countries = set()
     for org in orgs:
@@ -522,5 +538,4 @@ def has_consortium(call):
             return call
 
     call['hasConsortium'] = False
-
     return call

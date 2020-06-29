@@ -330,7 +330,7 @@ function AlertsSettings(props) {
               Company: state.company,
               R_D_Institution: state.RD,
               Start_Up: state.start_up,
-              Other: state.other,
+              Others: state.other,
             };
             params = { data: JSON.stringify(data) };
             Object.keys(params).forEach((key) =>
@@ -700,7 +700,6 @@ function AlertsSettings(props) {
                 backgroundColor: "#02203c",
               }}
               id="portugal"
-              label=""
               value={state.portugal}
               onChange={handleInputChange}
               error={formState.portugal}
@@ -720,8 +719,7 @@ function AlertsSettings(props) {
                 borderRadius: "3px",
                 backgroundColor: "#02203c",
               }}
-              id="ukraine"
-              label=""
+              id="ukranie"
               value={state.ukranie}
               onChange={handleInputChange}
               error={formState.ukranie}

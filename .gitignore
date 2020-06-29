@@ -9,6 +9,7 @@ __pycache__/
 
 **/.idea/
 **/.vscode/
+Backend/.idea/
 Backend/src/.env
 **/src/Dictionary*
 Backend/src/Dictionary*

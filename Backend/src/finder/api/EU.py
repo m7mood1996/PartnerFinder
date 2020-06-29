@@ -13,7 +13,7 @@ LIST_OF_ATTRIBUTES = {'pic', 'businessName', 'legalName', 'classificationType', 
                       'collaborations'}
 
 
-def get_PICs_from_collaborations(collaborations):
+def get_pics_from_collaborations(collaborations):
     """
     function to get list of pics from list of organizations
     :param collaborations: list of organizations
@@ -300,7 +300,7 @@ def get_orgs_intersection(list_of_lists):
     return final_res
 
 
-def get_orgs_by_countries_and_tags_and_types_and_role(tags, countries, types, role):
+def get_orgs_by_parameters(tags, countries, types, role):
     """
     private method to get organizations from the database that have a certain tags
     and located in one of the countries list and has a certain classification type
@@ -528,7 +528,7 @@ def has_consortium(call):
     :return: new call with new field hasConsortium: True/False
     """
 
-    orgs = get_orgs_by_countries_and_tags_and_types_and_role(call['tagsAndKeywords'], [], [], '')
+    orgs = get_orgs_by_parameters(call['tagsAndKeywords'], [], [], '')
 
     countries = set()
     for org in orgs:

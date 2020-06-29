@@ -70,7 +70,7 @@ class OrganizationProfileViewSet(viewsets.ModelViewSet):
                 currPic = visitngQueue.popleft()
                 try:
                     currOrg = get_organization_profile_by_pic(currPic)
-                    currAdjacent = get_PICs_from_collaborations(
+                    currAdjacent = get_pics_from_collaborations(
                         currOrg['collaborations'])
                 except:
                     continue
@@ -119,8 +119,8 @@ class OrganizationProfileViewSet(viewsets.ModelViewSet):
             types = data['types']
             tags = data['tags']
             role = data['role']
-            EURes = get_orgs_by_countries_and_tags_and_types_and_role(tags=tags, countries=countries, types=types,
-                                                                      role=role)
+            EURes = get_orgs_by_parameters(tags=tags, countries=countries, types=types,
+                                           role=role)
             B2MATCHRes = getB2MATCHPartByCountriesAndTags(tags, countries)
 
             B2MATCH = []
@@ -334,7 +334,7 @@ class CallViewSet(viewsets.ModelViewSet):
             for tag in tags:
                 tagsList.append(tag.tag)
 
-            EURes = get_orgs_by_countries_and_tags_and_types_and_role(tags=tagsList, countries=[], types=[], role='')
+            EURes = get_orgs_by_parameters(tags=tagsList, countries=[], types=[], role='')
             EU = []
             for val in EURes:
                 EU.append({'legalName': val.legalName,

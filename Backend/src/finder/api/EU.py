@@ -311,6 +311,11 @@ def get_orgs_by_parameters(tags, countries, types, role):
     :return: list of organizations objects
     """
 
+    if len(types) == 7:
+        types = []
+    if len(countries) == 249:
+        countries = []
+
     org_by_tags = get_organizations_by_tags(tags)
     orgs_by_countries = get_organizations_by_countries(countries)
     orgs_by_types = get_organizations_by_types(types)

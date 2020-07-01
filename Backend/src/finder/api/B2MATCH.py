@@ -445,6 +445,9 @@ def getB2MatchParByCountry(countries):
     :return: list of participants
     """
 
+    if len(countries) == 249:
+        countries = []
+
     par = Participants.objects.all()
     if not countries:
         return par

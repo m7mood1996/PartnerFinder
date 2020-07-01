@@ -737,7 +737,6 @@ class ScoresViewSet(viewsets.ModelViewSet):
 
                 for atr in ATTRIBUTES:
                     setattr(scores, atr, data[atr])
-
             except:
                 scores = Scores(RES=data['RES'],
                                 Italy=data['Italy'], France=data['France'], Austria=data['Austria'],

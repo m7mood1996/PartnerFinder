@@ -2,7 +2,6 @@
 import React from "react";
 
 import {
-    makeStyles,
     Button,
     Dialog,
     DialogTitle,
@@ -12,18 +11,10 @@ import {
 
 } from '@material-ui/core/';
 
-const useStyles = makeStyles(theme => ({
-    title: {
-        textAlign: 'center',
-        fontSize: 30,
-    },
 
-
-}));
 
 const Msgtoshow = ({ title, body, visible, handleClose }) => {
 
-    const classes = useStyles();
 
     function _handleClose() {
         handleClose();
@@ -38,14 +29,14 @@ const Msgtoshow = ({ title, body, visible, handleClose }) => {
             aria-labelledby="alert-dialog-title"
             aria-describedby="alert-dialog-description"
         >
-            <DialogTitle id="alert-dialog-title" className={classes.title}>{title}</DialogTitle>
-            <DialogContent>
-                <DialogContentText id="alert-dialog-description">
+            <DialogTitle id="textFontFamily" style={{color: 'red'}}>{title}</DialogTitle>
+            <DialogContent style={{backgroundColor: '#ececec'}}>
+                <DialogContentText style={{color:'#02203c'}} id="textFontFamily">
                     {body}
                 </DialogContentText>
             </DialogContent>
-            <DialogActions>
-                <Button onClick={_handleClose} color="primary">
+            <DialogActions style={{backgroundColor: '#ececec', alignContent: 'center'}}>
+                <Button onClick={_handleClose} style={{color:"#02203c", marginRight: '100px'}} id="textFontFamily" >
                     OK
           </Button>
             </DialogActions>

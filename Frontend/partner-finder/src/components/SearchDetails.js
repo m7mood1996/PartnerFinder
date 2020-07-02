@@ -86,14 +86,20 @@ function SearchDetails(props) {
     setData({ ...props.state.data });
     setState({ ...state, firstLoading: false });
   }
-
+  
+  /**
+   * Method to set the value of the country/ies that the user chose
+   * @param {event} event when the user want to choose country/ies
+   */
   const handleCountry = (event) => {
-    console.log(event);
     setCountrySearched(event);
     props.setState({ ...props.state, countrySearched: event });
-    console.log(countrySearched);
   };
 
+  /**
+   * Method to set the values of the type or the role that the user chose
+   * @param {event} event when the user choose from the role or type options 
+   */
   const handleSelect = (event) => {
     if (event instanceof Array === false) {
       let newRole = '';

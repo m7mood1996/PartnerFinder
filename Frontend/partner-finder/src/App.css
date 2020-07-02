@@ -241,7 +241,17 @@ pre {
   color: "white";
 }
 
+.MuiDialogTitle-root {
+  background-color:  #02203c;
+ 
+}
 
+.MuiTypography-h6{
+  color: white;
+  font-style: normal;
+  font-variant: normal;
+  text-align: center;
+}
 .input_row {
   color: black;
   margin-top: 35px;

@@ -87,7 +87,7 @@ function AlertsSettings(props) {
     events: [],
   });
   const [formState, setFormState] = React.useState({
-    valid_email: false,
+    email: false,
     resScore: false,
     italy: false,
     france: false,
@@ -210,9 +210,7 @@ function AlertsSettings(props) {
    * @param {*} event event when the user to enter a new score
    */
   const handleInputChange = (event) => {
-    /*
-   
-    */
+  
     let newState = { ...state };
     newState[event.target.id] = event.target.value;
     setState(newState);
@@ -237,16 +235,16 @@ function AlertsSettings(props) {
     let res = {};
     let check = false;
     Object.keys(state).forEach((key) => {
-      if (key !== "email" && key !== 'calls' && key !== 'events') {
+      if (key !== 'email' && key !== 'calls' && key !== 'events') {
         if (state[key] < 0 || state[key] > 1 || state[key].length === 0 || state[key] === undefined || state[key] === null) {
           res[key] = true;
           check = true;
         } else {
           res[key] = false;
         }
-      } else if (key === "email") {
+      } else if (key === 'email') {
         if (!state[key].match(/^([\w.%+-]+)@([\w-]+\.)+([\w]{2,})$/i)) {
-          setFormState({ ...formState, valid_email: true });
+          res[key] = true;
           check = true;
         } else {
           res[key] = false;
@@ -264,7 +262,8 @@ function AlertsSettings(props) {
    */
   const updateAlert = () => {
     if (formValidation()) {
-      if (formState.valid_email) {
+      console.log(formState);
+      if (formState.email) {
         console.log("Invalid Email");
         setMsgState({
           title: "Failed",
@@ -272,7 +271,6 @@ function AlertsSettings(props) {
           visible: true,
         });
       } else {
-        console.log("form" + formState.valid_email);
         setMsgState({
           title: "Failed",
           body: "Scores must be between 0 and 1",
@@ -453,7 +451,7 @@ function AlertsSettings(props) {
           type={state.email}
           name={state.email}
           value={state.email}
-          error={formState.valid_email}
+          error={formState.invalidemail}
           autoComplete="email"
           margin="normal"
           variant="outlined"

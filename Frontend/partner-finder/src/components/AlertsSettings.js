@@ -16,17 +16,7 @@ import {
   DialogTitle,
   DialogContent,
 } from "@material-ui/core/";
-import { BACKEND_URL } from "../utils";
-
-const calls_columns = [
-  { title: "Title", field: "title" },
-  { title: "Call Title", field: "callTitle" },
-  { title: "Identifier", field: "identifier" },
-  { title: "Type", field: "type" },
-  { title: "Status", field: "status" },
-  { title: "Deadline Date", field: "deadlineDate" },
-  { title: "Submission Procedure Role", field: "sumbissionProcedure" },
-];
+import { BACKEND_URL, calls_columns, events_columns } from "../utils";
 
 const useStyles = makeStyles((theme) => ({
   title: {
@@ -34,19 +24,6 @@ const useStyles = makeStyles((theme) => ({
     fontSize: 30,
   },
 }));
-
-const events_columns = [
-  { title: "Name", field: "event_name" },
-  {
-    title: "URL",
-    field: "event_url",
-    render: (rowData) => (
-      <a href={rowData.event_url} style={{color: "white"}} target="_blank" rel="noopener noreferrer">
-        {rowData.event_url}{" "}
-      </a>
-    ),
-  },
-];
 
 function AlertsSettings(props) {
   const classes = useStyles();
@@ -251,9 +228,8 @@ function AlertsSettings(props) {
         }
       }
     });
-    console.log(res);
     setFormState(res);
-    return check;
+    return {check: check, res:res};
   };
 
   /**
@@ -261,10 +237,9 @@ function AlertsSettings(props) {
      with the new value that was inserted
    */
   const updateAlert = () => {
-    if (formValidation()) {
-      console.log(formState);
-      if (formState.email) {
-        console.log("Invalid Email");
+    let validation = formValidation()
+    if (validation.check) {
+      if (validation.res.email) {
         setMsgState({
           title: "Failed",
           body: "Invalid Email",
@@ -448,10 +423,8 @@ function AlertsSettings(props) {
           }}
           onChange={handleInputChange}
           className={AlertsSettings.textField}
-          type={state.email}
-          name={state.email}
           value={state.email}
-          error={formState.invalidemail}
+          error={formState.email}
           autoComplete="email"
           margin="normal"
           variant="outlined"

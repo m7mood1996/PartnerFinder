@@ -29,6 +29,16 @@ const EU_columns = [
   },
 ];
 
+const calls_columns = [
+  { title: "Title", field: "title" },
+  { title: "Call Title", field: "callTitle" },
+  { title: "Identifier", field: "identifier" },
+  { title: "Type", field: "type" },
+  { title: "Status", field: "status" },
+  { title: "Deadline Date", field: "deadlineDate" },
+  { title: "Submission Procedure Role", field: "sumbissionProcedure" },
+];
+
 const B2Match_columns = [
   { title: "Name", field: "participant_name" },
   { title: "Org. Name", field: "organization_name" },
@@ -49,6 +59,19 @@ const classificationTypesOptions = [
   {label:"Higher or secondary education establishment", value: "Higher or secondary education establishment"},
   {label:"Research Organisation", value: "Research Organisation"}, {label:"Private for profit organisation", value:"Private for profit organisation"},
   {label:"Public organisation", value: "Public organisation"}, {label:"Other", value:"Other"}
+];
+
+const events_columns = [
+  { title: "Name", field: "event_name" },
+  {
+    title: "URL",
+    field: "event_url",
+    render: (rowData) => (
+      <a href={rowData.event_url} style={{color: "white"}} target="_blank" rel="noopener noreferrer">
+        {rowData.event_url}{" "}
+      </a>
+    ),
+  },
 ];
 
 const consorsiumRoles = [
@@ -179,4 +202,4 @@ const tableIcons = {
 
 const BACKEND_URL = "http://62.90.89.14:8000/api/";
 
-export { EU_columns, B2Match_columns, BACKEND_URL, tableIcons, classificationTypesOptions, consorsiumRoles };
+export { EU_columns, B2Match_columns, BACKEND_URL, tableIcons, classificationTypesOptions, consorsiumRoles, calls_columns, events_columns };

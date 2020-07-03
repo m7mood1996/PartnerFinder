@@ -3,7 +3,13 @@ import SearchDetails from "./SearchDetails";
 import AlertsSettings from "./AlertsSettings";
 import Updates from "./Updates";
 import PropTypes from "prop-types";
-import { makeStyles } from "@material-ui/core";
+import {
+  makeStyles,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+} from "@material-ui/core/";
+import { BeatLoader } from "react-spinners";
 import AppBar from "@material-ui/core/AppBar";
 import Tabs from "@material-ui/core/Tabs";
 import Tab from "@material-ui/core/Tab";
@@ -73,6 +79,9 @@ const useStyles = makeStyles((theme) => ({
 export default function NavTabs() {
   const classes = useStyles();
   const [value, setValue] = React.useState(0);
+  const [state, setState] = React.useState({
+    firstLoading: true,
+  });
   const [msgState, setMsgState] = React.useState({
     title: "",
     body: "",
@@ -80,7 +89,6 @@ export default function NavTabs() {
   });
   const [alertsState, setAlertsState] = React.useState({
     firstLoading: true,
-    loading: false,
     turned_on: false,
     email: "",
     resScore: 0,
@@ -253,8 +261,30 @@ export default function NavTabs() {
   const handleChange = (event, newValue) => {
     setValue(newValue);
   };
+
+
+  if (state.firstLoading)
+  {
+    if(!alertsState.firstLoading && !updatesState.firstLoading)
+    {
+      setState({...state, firstLoading: false});
+    }
+  }
+
   return (
-    <div className={classes.root}>
+    <div>
+    {state.firstLoading? <Dialog
+      disableBackdropClick
+      disableEscapeKeyDown
+      open={true}
+      aria-labelledby="alert-dialog-title"
+      aria-describedby="alert-dialog-description"
+    >
+      <DialogTitle className={classes.title}>LOADING</DialogTitle>
+      <DialogContent style={{ "margin-left": "17px" }}>
+        <BeatLoader />
+      </DialogContent>
+    </Dialog>: <div className={classes.root}>
     <Msgtoshow
         {...msgState}
         handleClose={() => setMsgState({ ...msgState, visible: false })}
@@ -306,6 +336,7 @@ export default function NavTabs() {
       <MainScene value={value} index={2}>
         <Updates state={updatesState} setState={setUpdatesState} />
       </MainScene>
+    </div>}
     </div>
   );
 }

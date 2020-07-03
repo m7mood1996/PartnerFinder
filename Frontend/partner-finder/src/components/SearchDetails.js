@@ -37,9 +37,6 @@ const customStyles = {
     },
   }),
   singleValue: styles => ({ ...styles, color: "white", fontSize: "13px" })
-
-
-
 }
 
 const KeyCodes = {

@@ -17,7 +17,6 @@ from bs4 import BeautifulSoup
 from selenium import webdriver
 
 from celery.schedules import crontab
-from celery.task import periodic_task
 
 from .EU import *
 from .B2MATCH import *
@@ -59,7 +58,7 @@ class OrganizationProfileViewSet(viewsets.ModelViewSet):
                     index.destroy()
             except:
                 pass
-            index = build_index('EU_Index_Temp')
+            index = build_index('EU_Index_Temp', 'EU')
             status = {}
             graph = Graph()
             visitngQueue = collections.deque()
@@ -121,8 +120,10 @@ class OrganizationProfileViewSet(viewsets.ModelViewSet):
             role = data['role']
             EURes = get_orgs_by_parameters(tags=tags, countries=countries, types=types,
                                            role=role)
-            B2MATCHRes = getB2MATCHPartByCountriesAndTags(tags, countries)
-
+            print("AFTER EU")
+            #B2MATCHRes = getB2MATCHPartByCountriesAndTags(tags, countries)
+            B2MATCHRes = []
+            print("AFTER B@MATCH")
             B2MATCH = []
             EU = []
             for val in EURes:
@@ -481,7 +482,7 @@ class EventViewSet(viewsets.ModelViewSet):
         print("updating....")
 
         try:
-            load_index("B2MATCH_upcoming_Index_temp")
+
             os.remove("B2MATCH_upcoming_Index_temp")
             os.remove("B2MATCH_upcoming_Index_temp.0")
         except:
@@ -637,11 +638,13 @@ class ParticipantsViewSet(viewsets.ModelViewSet):
                     url_arr = getParticipentFromUrl(
                         event.event_url)
                 except:
+                    print("in except1")
                     continue
                 for item in url_arr:
                     try:
                         part_temp = getParticipentDATA(item)
                     except:
+                        print("in except2")
                         continue
                     location = Location(location=part_temp[3])
                     location.save()
@@ -655,6 +658,7 @@ class ParticipantsViewSet(viewsets.ModelViewSet):
                         participant.save()
                         event.event_part.add(participant)
                     except:
+                        print("in except3")
                         continue
 
                     for i in part_temp[7]:
@@ -679,7 +683,7 @@ class ParticipantsViewSet(viewsets.ModelViewSet):
                             # this is the path for the index
                             # index = build_index(
                             #     '/Users/mahmoodnael/PycharmProjects/PartnerFinderApril/Backend/src/B2MATCH_Index')
-                            index = build_index('B2MATCH_Index')
+                            index = build_index('B2MATCH_Index', 'B2MATCH')
                             print("index built....")
 
                         index = add_par_to_index(
@@ -687,25 +691,30 @@ class ParticipantsViewSet(viewsets.ModelViewSet):
                     elif event.is_upcoming:
                         try:
                             # this is the path for the index
+                            print("in try")
 
                             # index = load_index('/Users/mahmoodnael/PycharmProjects/PartnerFinderApril/Backend/src/B2MATCH_upcoming_Index')
                             index = load_index('B2MATCH_upcoming_Index')
                             print("upcoming index loaded......")
                         except:
+                            print("in except")
+
                             index = None
 
                         if index is None:
+                            print("in if if ifs")
                             # this is the path for the index
                             # index = build_index('/Users/mahmoodnael/PycharmProjects/PartnerFinderApril/Backend/src/B2MATCH_upcoming_Index')
-                            index = build_index('B2MATCH_upcoming_Index')
+                            index = build_index('B2MATCH_upcoming_Index', "B2MATCH")
                             print("upcoming index built....")
-
+                        print("befor index")
                         index = add_par_to_index(
                             index, participant, part_temp[7], True)
+                        print("after index")
             response = {'success': 'Adding participant successfully.'}
         except:
             response = {'error': 'Error while adding participant'}
-        return Response({'message': 'done see DataBase'}, status=status.HTTP_200_OK)
+        return Response({'message': response}, status=status.HTTP_200_OK)
 
 
 class ScoresViewSet(viewsets.ModelViewSet):
@@ -847,7 +856,8 @@ class AlertsB2match(viewsets.ModelViewSet):
             # myEvents.sort(key=event_score, reverse=True)
             response = []
             for event in myEvents:
-                response.append({'event_name': event.event_name, 'event_url': event.event_url})
+                date = str(event.event_date).split('T')[0]
+                response.append({'event_name': event.event_name, 'event_url': event.event_url, 'date':date})
         except:
             response = {'error': 'Error while uploading recommended events.'}
 

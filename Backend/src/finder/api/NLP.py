@@ -4,22 +4,27 @@ import gensim
 from nltk.tokenize import word_tokenize
 
 
-def NLP_processor(documents):
+def NLP_processor(documents, type):
     """
     function to make new corpus for a certain set of documents
     :param documents: list of lists of strings
+    :param type: type of repository EU or B2MATCH
     :return: Corpus of the documents, list of lists of pairs (token_id, token_frequency)
     """
-
+    if type == 'EU':
+        dir = 'Dictionary'
+    elif type == 'B2MATCH':
+        dir = 'Dictionary_b2match'
     tokens = [process_document(doc) for doc in documents]
     try:
-        dictionary = load_dictionary("Dictionary")
+        dictionary = load_dictionary(dir)
     except:
+        print("HERER",dir)
         dictionary = build_dictionary([])
-        dictionary.save("Dictionary")
+        dictionary.save(dir)
 
     dictionary.add_documents(tokens)
-    dictionary.save("Dictionary")
+    dictionary.save(dir)
     return build_corpus(dictionary, tokens)
 
 
@@ -76,15 +81,16 @@ def process_query_result(result):
     return pairs
 
 
-def add_documents(index, documents):
+def add_documents(index, documents,type):
     """
     function to add new documents to existent index
     :param index: current index
     :param documents: list of lists of strings
+    :param type: string to know which index b2match or eu
     :return: updated index
     """
-    corpus = NLP_processor(documents)
-    index.num_features += len(corpus)
+    corpus = NLP_processor(documents,type)
+    index.num_features += len(corpus) * 1000
     for doc in corpus:
         index.num_features += (len(doc) * 2)
     index.add_documents(corpus)
@@ -112,14 +118,15 @@ def load_dictionary(path):
     return gensim.corpora.Dictionary.load(path)
 
 
-def build_index(path):
+def build_index(path, type):
     """
     build an empty index in disk and save it on a specific directory
     :param path: path of the directory
+    :param type: string to know whatc index b2match or eu
     :return: Similarity object "index"
     """
-
-    corpus = NLP_processor([])
+    print("before courps")
+    corpus = NLP_processor([], type)
     tfidf = gensim.models.TfidfModel(corpus)
 
     # build the index

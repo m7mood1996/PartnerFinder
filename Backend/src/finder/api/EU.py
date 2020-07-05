@@ -123,7 +123,7 @@ def add_org_to_index(index, org):
         newMap = MapIds(originalID=originalID, indexID=indexID)
         newMap.save()
 
-    index = add_documents(index, [doc])
+    index = add_documents(index, [doc],'EU')
     return index
 
 
@@ -202,7 +202,7 @@ def get_organizations_by_tags(tags):
     """
     tags = ' '.join(tags)
     index = load_index('EU_Index.0')
-    corpus = NLP_processor([tags])
+    corpus = NLP_processor([tags], 'EU')
 
     res = index[corpus]
     res = process_query_result(res)

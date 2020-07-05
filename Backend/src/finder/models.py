@@ -231,3 +231,4 @@ class EventsForAlerts(models.Model):
     event_name = models.CharField(max_length=200, unique=True)
     event_url = models.CharField(max_length=200)
     event_score = models.FloatField(blank=False, null=False)
+    event_date = models.DateField(blank=True, null=True)

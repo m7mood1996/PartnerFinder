@@ -49,7 +49,7 @@ def add_par_to_index(index, par, tags, upcoming):
     else:
         newMap = MapIDsB2matchUpcoming(originalID=originalID, indexID=indexID)
     newMap.save()
-    index = add_documents(index, [doc])
+    index = add_documents(index, [doc],'B2MATCH')
     return index
 
 
@@ -155,7 +155,7 @@ def add_Participants_from_Upcoming_Event():
             if index is None:
                 # this is the path for the index
                 # index = build_index('/Users/mahmoodnael/PycharmProjects/PartnerFinderApril/Backend/src/B2MATCH_upcoming_Index')
-                index = build_index('B2MATCH_upcoming_Index_temp')
+                index = build_index('B2MATCH_upcoming_Index_temp', "B2MATCH")
 
                 print("upcoming index built....")
 
@@ -290,7 +290,11 @@ def getParticipentDATA(url_):
             'return document.getElementsByClassName("personal-info-holder")[0].children[1].outerHTML')
         soup = BeautifulSoup(temp1, 'html.parser')
         temp1 = soup.find('a')['href']
-    temp0 = temp0.split('\n')
+    print("FOR LOCATION",temp0)
+    temp_for_location = temp0.split(',',1)
+    print("temp_for_location", temp_for_location)
+    temp0 = temp0.split('\n',2)
+    print("FOR LOCATION SPLIT",temp0)
     try:
         name = temp0[0]
     except:
@@ -301,7 +305,7 @@ def getParticipentDATA(url_):
     except:
         org_name = ""
     try:
-        location = temp0[2]
+        location = temp_for_location[1]
     except:
         location = ""
     try:
@@ -406,35 +410,40 @@ def getParticipantsByTags(tags):
     """
     tags = ' '.join(tags)
     index1 = load_index('B2MATCH_Index')  # B2match_index
-    index2 = load_index('B2MATCH_upcoming_Index.0')  # B2match_upcoming_index
+    index2 = load_index('B2MATCH_upcoming_Index')  # B2match_upcoming_index
 
-    corpus = NLP_processor([tags])
+    corpus = NLP_processor([tags],'B2MATCH')
+
     res1 = index1[corpus]
 
     res2 = index2[corpus]
 
     res1 = process_query_result(res1)
     res2 = process_query_result(res2)
-    res1 = [pair for pair in res1 if pair[1] > 0.3]
+
+
+    res1 = [pair for pair in res1 if pair[1] > 0.1]
     res1 = sorted(res1, key=lambda pair: pair[1], reverse=True)
-    res2 = [pair for pair in res2 if pair[1] > 0.3]
+    res2 = [pair for pair in res2 if pair[1] > 0.1]
     # res1 = res1[:101]
+
     res2 = sorted(res2, key=lambda pair: pair[1], reverse=True)
     # res2 = res2[:101]
 
-    res1 = [MapIDsB2match.objects.get(indexID=pair[0]) for pair in res1]
 
+    res1 = [MapIDsB2match.objects.get(indexID=pair[0]) for pair in res1]
     res2 = [MapIDsB2matchUpcoming.objects.get(
         indexID=pair[0]) for pair in res2]
 
     finalRes = []
+
 
     for mapId in res1:
         finalRes.append(Participants.objects.get(pk=mapId.originalID))
 
     for mapId in res2:
         finalRes.append(Participants.objects.get(pk=mapId.originalID))
-
+    print("FINALRES",finalRes)
     return finalRes
 
 
@@ -530,6 +539,7 @@ def getScoreForEvent(parts):
             typeScore = getattr(scores,'R_D_Institution' )
         else:
             typeScore = getattr(scores, field[typeIndex])
+        print("LOCATION",locIndex,"LOCSCORE", locScore,"TYPEScore",typeScore, "LOCATION",loc.location)
         eventScore.append((locIndex, locScore * typeScore))
         locIndex=0
         typeIndex=-1
@@ -551,5 +561,5 @@ def updateAlertsEvents(myEvents):
     """
     EventsForAlerts.objects.all().delete()
     for event,score in myEvents:
-        event_for_alerts = EventsForAlerts(event_name=event.event_name,event_url=event.event_url,event_score=score)
+        event_for_alerts = EventsForAlerts(event_name=event.event_name,event_url=event.event_url,event_score=score,event_date=event.event_date)
         event_for_alerts.save()

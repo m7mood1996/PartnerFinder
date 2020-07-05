@@ -63,6 +63,7 @@ const classificationTypesOptions = [
 
 const events_columns = [
   { title: "Name", field: "event_name" },
+  { title: "Event Date", field: "date" },
   {
     title: "URL",
     field: "event_url",
@@ -72,6 +73,7 @@ const events_columns = [
       </a>
     ),
   },
+  
 ];
 
 const consorsiumRoles = [

@@ -119,7 +119,8 @@ function AlertsSettings(props) {
   };
   
   /**
-   * 
+   * function to get the EU calls that has consortium, at least three partners from three different countries.
+   * and all the recommended events from B2match.
    */
   const getCalls = () => {
     setState({ ...state, loading: true });
@@ -378,7 +379,7 @@ function AlertsSettings(props) {
           visible: true,
         });
       });
-      url = new URL(BACKEND_URL + "alerts/alertB2match");
+      url = new URL(BACKEND_URL + "b2matchalerts/alertB2match");
       fetch(url, {
         method: "GET",
       })

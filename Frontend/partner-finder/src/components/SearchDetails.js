@@ -25,7 +25,6 @@ const customStyles = {
     color: "white",
     fontSize: "13px",
   }),
-
   placeholder: styles => ({ ...styles, color: "white", fontSize: "13px", }),
   control: styles => ({ ...styles, backgroundColor: '#02203c', color: "white", fontSize: "13px", }),
 
@@ -314,6 +313,7 @@ function SearchDetails(props) {
             <FormControl className={SearchDetails.formControl} id="text_select">
               <MultiSelect
                 options={countryList().getData()}
+                styles={customStyles}
                 value={countrySearched}
                 onChange={handleCountry}
                 focusSearchOnOpen={true}

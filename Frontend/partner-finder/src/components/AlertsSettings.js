@@ -122,7 +122,7 @@ function AlertsSettings(props) {
    * function to get the EU calls that has consortium, at least three partners from three different countries.
    * and all the recommended events from B2match.
    */
-  const getCalls = () => {
+  const getAlerts = () => {
     setState({ ...state, loading: true });
     let url = new URL(BACKEND_URL + "calls/get_calls/");
     fetch(url, {
@@ -1020,7 +1020,7 @@ function AlertsSettings(props) {
           color="primary"
           round
           variant="contained"
-          onClick={() => getCalls()}
+          onClick={() => getAlerts()}
         >
           Show Alerts Results
         </Button>

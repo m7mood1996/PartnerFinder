@@ -10,6 +10,7 @@ body {
   
 }
 
+
 #text_select{
   font-family: "Lucida Sans Typewriter", "Lucida Console", monaco,
   "Bitstream Vera Sans Mono", monospace;
@@ -170,7 +171,6 @@ pre {
   background-color: #02203c;
   color: "white"; 
   --rmsc-gray:white;
-
 }
 
 .go977458394.selected{
@@ -181,18 +181,21 @@ pre {
   color: black;
 }
 
-.go4079732705 .gray span{
+.go4079732705 .gray{
+  color:white;
+}
+
+.go4079732705, .gray span{
   color: white;
-  color: var(white);
 }
 
 .dropdown-heading-value span{
   font-size: 13px;
   color: white;
-  outline-color: white;
+  /* outline-color: white;
   color-adjust: white;
   text-decoration: white;
-  text-decoration-color: white;
+  text-decoration-color: white; */
 }
 
 .go2885254090 input{

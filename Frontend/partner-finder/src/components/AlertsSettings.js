@@ -998,7 +998,7 @@ function AlertsSettings(props) {
           id="BackgroundColor"
           onClick={() => updateAlert()}
         >
-          Update Scores
+          Update Settings
         </Button>
 
         <Button

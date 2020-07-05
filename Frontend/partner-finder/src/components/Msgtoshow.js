@@ -30,13 +30,13 @@ const Msgtoshow = ({ title, body, visible, handleClose }) => {
             aria-describedby="alert-dialog-description"
         >
             <DialogTitle id="textFontFamily" style={{color: 'red'}}>{title}</DialogTitle>
-            <DialogContent style={{backgroundColor: '#ececec'}}>
+            <DialogContent >
                 <DialogContentText style={{color:'#02203c'}} id="textFontFamily">
                     {body}
                 </DialogContentText>
             </DialogContent>
-            <DialogActions style={{backgroundColor: '#ececec', alignContent: 'center'}}>
-                <Button onClick={_handleClose} style={{color:"#02203c", marginRight: '100px'}} id="textFontFamily" >
+            <DialogActions id="textFontFamily" style={{ alignSelf: 'center'}}>
+                <Button onClick={_handleClose} id="BackgroundColor" className= "Buttons" style={{color:"white"}} >
                     OK
           </Button>
             </DialogActions>

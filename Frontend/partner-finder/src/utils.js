@@ -1,5 +1,6 @@
 import React, { forwardRef } from "react";
 
+import { GridList, GridListTile } from '@material-ui/core';
 import AddBox from "@material-ui/icons/AddBox";
 import ArrowDownward from "@material-ui/icons/ArrowDownward";
 import Check from "@material-ui/icons/Check";
@@ -17,12 +18,20 @@ import Search from "@material-ui/icons/Search";
 import ViewColumn from "@material-ui/icons/ViewColumn";
 
 const EU_columns = [
-  { title: "Name", field: "legalName" },
+  { title: "Name", field: "legalName", render: (rowData) => (
+    <GridList cols={1} cellHeight='auto'>
+    <div style={{maxHeight: '100px', maxWidth: 'auto'}}>{rowData.legalName}</div>
+    </GridList>
+      ) },
   { title: "Classification Type", field: "classificationType" },
   { title: "Country", field: "country" },
   { title: "Data Status", field: "dataStatus" },
   { title: "Number of EU Projects", field: "numberOfProjects" },
-  { title: "Description", field: "description" },
+  { title: "Description", field: "description", render: (rowData) => (
+    <GridList cols={1} cellHeight='auto'>
+    <div style={{maxHeight: '100px', maxWidth: 'auto'}}>{rowData.description}</div>
+    </GridList>
+      )},
   {
     title: "Consortium Role",
     field: "consorsiumRoles",
@@ -30,7 +39,11 @@ const EU_columns = [
 ];
 
 const calls_columns = [
-  { title: "Title", field: "title" },
+  { title: "Title", field: "title", render: (rowData) => (
+    <GridList cols={1} cellHeight='auto'>
+    <div style={{maxHeight: '100px', maxWidth: 'auto'}}>{rowData.title}</div>
+    </GridList>
+      ) },
   { title: "Call Title", field: "callTitle" },
   { title: "Identifier", field: "identifier" },
   { title: "Type", field: "type" },
@@ -51,7 +64,11 @@ const B2Match_columns = [
       {rowData.org_url}{" "}
     </a>
   )},
-  { title: "Description", field: "description" },
+  { title: "Description", field: "description", render: (rowData) => (
+    <GridList cols={1} cellHeight='auto'>
+    <div style={{maxHeight: '100px', maxWidth: 'auto'}}>{rowData.description}</div>
+    </GridList>
+      ) },
 ];
 
 const classificationTypesOptions = [

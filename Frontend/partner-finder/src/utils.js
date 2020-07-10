@@ -20,7 +20,7 @@ import ViewColumn from "@material-ui/icons/ViewColumn";
 const EU_columns = [
   { title: "Name", field: "legalName", render: (rowData) => (
     <GridList cols={1} cellHeight='auto'>
-    <div style={{maxHeight: '100px', maxWidth: 'auto'}}>{rowData.legalName}</div>
+    <div style={{maxHeight: '100px', maxWidth: '100px'}}>{rowData.legalName}</div>
     </GridList>
       ) },
   { title: "Classification Type", field: "classificationType" },
@@ -29,7 +29,7 @@ const EU_columns = [
   { title: "Number of EU Projects", field: "numberOfProjects" },
   { title: "Description", field: "description", render: (rowData) => (
     <GridList cols={1} cellHeight='auto'>
-    <div style={{maxHeight: '100px', maxWidth: 'auto'}}>{rowData.description}</div>
+    <div style={{maxHeight: '100px', maxWidth: '100px'}}>{rowData.description}</div>
     </GridList>
       )},
   {
@@ -41,7 +41,7 @@ const EU_columns = [
 const calls_columns = [
   { title: "Title", field: "title", render: (rowData) => (
     <GridList cols={1} cellHeight='auto'>
-    <div style={{maxHeight: '100px', maxWidth: 'auto'}}>{rowData.title}</div>
+    <div style={{maxHeight: '100px', maxWidth: '100px'}}>{rowData.title}</div>
     </GridList>
       ) },
   { title: "Call Title", field: "callTitle" },
@@ -66,7 +66,7 @@ const B2Match_columns = [
   )},
   { title: "Description", field: "description", render: (rowData) => (
     <GridList cols={1} cellHeight='auto'>
-    <div style={{maxHeight: '100px', maxWidth: 'auto'}}>{rowData.description}</div>
+    <div style={{maxHeight: '100px', maxWidth: '100px'}}>{rowData.description}</div>
     </GridList>
       ) },
 ];

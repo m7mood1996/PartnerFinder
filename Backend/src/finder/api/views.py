@@ -121,8 +121,8 @@ class OrganizationProfileViewSet(viewsets.ModelViewSet):
             EURes = get_orgs_by_parameters(tags=tags, countries=countries, types=types,
                                            role=role)
             print("AFTER EU")
-            #B2MATCHRes = getB2MATCHPartByCountriesAndTags(tags, countries)
-            B2MATCHRes = []
+            B2MATCHRes = getB2MATCHPartByCountriesAndTags(tags, countries)
+            #B2MATCHRes = []
             print("AFTER B@MATCH")
             B2MATCH = []
             EU = []
@@ -853,7 +853,6 @@ class AlertsB2match(viewsets.ModelViewSet):
         try:
             events = EventsForAlerts.objects.all()
             myEvents = sorted(events, key=lambda x: x.event_score, reverse=True)
-            # myEvents.sort(key=event_score, reverse=True)
             response = []
             for event in myEvents:
                 date = str(event.event_date).split('T')[0]

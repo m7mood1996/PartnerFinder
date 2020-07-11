@@ -17,10 +17,12 @@ import SaveAlt from "@material-ui/icons/SaveAlt";
 import Search from "@material-ui/icons/Search";
 import ViewColumn from "@material-ui/icons/ViewColumn";
 
+const customStyle = { maxHeight: '110px', width: '240px', maxWidth: '250px'}
+
 const EU_columns = [
   { title: "Name", field: "legalName", render: (rowData) => (
     <GridList cols={1} cellHeight='auto'>
-    <div style={{maxHeight: '100px', maxWidth: '100px'}}>{rowData.legalName}</div>
+    <div style={customStyle, {width: '180px'}}>{rowData.legalName}</div>
     </GridList>
       ) },
   { title: "Classification Type", field: "classificationType" },
@@ -29,7 +31,7 @@ const EU_columns = [
   { title: "Number of EU Projects", field: "numberOfProjects" },
   { title: "Description", field: "description", render: (rowData) => (
     <GridList cols={1} cellHeight='auto'>
-    <div style={{maxHeight: '100px', maxWidth: '100px'}}>{rowData.description}</div>
+    <div style={customStyle}>{rowData.description}</div>
     </GridList>
       )},
   {
@@ -41,7 +43,7 @@ const EU_columns = [
 const calls_columns = [
   { title: "Title", field: "title", render: (rowData) => (
     <GridList cols={1} cellHeight='auto'>
-    <div style={{maxHeight: '100px', maxWidth: '100px'}}>{rowData.title}</div>
+    <div style={customStyle}>{rowData.title}</div>
     </GridList>
       ) },
   { title: "Call Title", field: "callTitle" },
@@ -65,8 +67,8 @@ const B2Match_columns = [
     </a>
   )},
   { title: "Description", field: "description", render: (rowData) => (
-    <GridList cols={1} cellHeight='auto'>
-    <div style={{maxHeight: '100px', maxWidth: '100px'}}>{rowData.description}</div>
+    <GridList style={customStyle} cols={1}>
+    <div style={customStyle}>{rowData.description}</div>
     </GridList>
       ) },
 ];

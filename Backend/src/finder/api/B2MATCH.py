@@ -271,45 +271,29 @@ def getParticipentDATA(url_):
         img_src = soup.find("img")['src']
     except:
         pass
-    try:
-        participant_name = driver.execute_script(
-            "return document.getElementsByClassName(\"name\")[0].innerText")
-    except:
-        pass
 
-    childcount = int(
-        driver.execute_script("return document.getElementsByClassName(\"personal-info-holder\")[0].childElementCount"))
     list_ = []
     i = 0
 
     temp0 = driver.execute_script(
-        'return document.getElementsByClassName("personal-info-holder")[0].innerText')
-    temp1 = None
-    if childcount == 3:
-        temp1 = driver.execute_script(
-            'return document.getElementsByClassName("personal-info-holder")[0].children[1].outerHTML')
-        soup = BeautifulSoup(temp1, 'html.parser')
-        temp1 = soup.find('a')['href']
-    print("FOR LOCATION",temp0)
-    temp_for_location = temp0.split(',',1)
-    print("temp_for_location", temp_for_location)
-    temp0 = temp0.split('\n',2)
-    print("FOR LOCATION SPLIT",temp0)
+        'return document.getElementsByClassName("personal-info-holder")[0].outerHTML')
+    soup0 = BeautifulSoup(temp0, 'html.parser')
+
     try:
-        name = temp0[0]
+        name = soup0.span.get_text()
     except:
         name = ""
     try:
-        org_name = temp0[1]
-        org_name = org_name.split("at")[-1]
+        org_name = driver.execute_script('return document.getElementsByClassName("organisation")[0].innerText')
+
     except:
         org_name = ""
     try:
-        location = temp_for_location[1]
+        location = soup0.find_all('span')[-1].get_text()
     except:
         location = ""
     try:
-        org_url = temp1
+        org_url = soup0.find('a')['href']
     except:
         org_url = ""
 
@@ -443,7 +427,7 @@ def getParticipantsByTags(tags):
 
     for mapId in res2:
         finalRes.append(Participants.objects.get(pk=mapId.originalID))
-    print("FINALRES",finalRes)
+
     return finalRes
 
 
@@ -539,7 +523,6 @@ def getScoreForEvent(parts):
             typeScore = getattr(scores,'R_D_Institution' )
         else:
             typeScore = getattr(scores, field[typeIndex])
-        print("LOCATION",locIndex,"LOCSCORE", locScore,"TYPEScore",typeScore, "LOCATION",loc.location)
         eventScore.append((locIndex, locScore * typeScore))
         locIndex=0
         typeIndex=-1

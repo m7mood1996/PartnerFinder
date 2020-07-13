@@ -44,9 +44,7 @@ class OrganizationProfileViewSet(viewsets.ModelViewSet):
         :return: HTTP Response
         """
 
-        print("*" * 50)
-        print("START UPDATING EU DB")
-        print("*" * 50)
+        print("*" * 50, "\nSTART UPDATING EU DB\n", "*" * 50 )
 
         try:
             try:
@@ -113,17 +111,13 @@ class OrganizationProfileViewSet(viewsets.ModelViewSet):
         try:
             data = request.query_params['data']
             data = json.loads(data)
-            print(data)
             countries = data['countries']
             types = data['types']
             tags = data['tags']
             role = data['role']
             EURes = get_orgs_by_parameters(tags=tags, countries=countries, types=types,
                                            role=role)
-            print("AFTER EU")
             B2MATCHRes = getB2MATCHPartByCountriesAndTags(tags, countries)
-            #B2MATCHRes = []
-            print("AFTER B@MATCH")
             B2MATCH = []
             EU = []
             for val in EURes:
@@ -574,8 +568,6 @@ class EventViewSet(viewsets.ModelViewSet):
 
                 if (curr_page + str(i) == upcoming_events_last_page):
                     break
-                print("\t\ti =", i)
-
                 i += 1
             myEvents = list(Event.objects.filter(is_upcoming=True))
 
@@ -592,7 +584,6 @@ class EventViewSet(viewsets.ModelViewSet):
                     toupdate.append(event)
 
             changeEventStatus(eventNoLongerUpcoming)
-            print("returnd from changing event status")
             deleteEventsTree(toupdate)
 
             for e in toupdate:
@@ -638,13 +629,11 @@ class ParticipantsViewSet(viewsets.ModelViewSet):
                     url_arr = getParticipentFromUrl(
                         event.event_url)
                 except:
-                    print("in except1")
                     continue
                 for item in url_arr:
                     try:
                         part_temp = getParticipentDATA(item)
                     except:
-                        print("in except2")
                         continue
                     location = Location(location=part_temp[3])
                     location.save()
@@ -658,7 +647,6 @@ class ParticipantsViewSet(viewsets.ModelViewSet):
                         participant.save()
                         event.event_part.add(participant)
                     except:
-                        print("in except3")
                         continue
 
                     for i in part_temp[7]:
@@ -675,7 +663,6 @@ class ParticipantsViewSet(viewsets.ModelViewSet):
                             # index = load_index(
                             #     '/Users/mahmoodnael/PycharmProjects/PartnerFinderApril/Backend/src/B2MATCH_Index')
                             index = load_index('B2MATCH_Index')
-                            print("index loaded......")
                         except:
                             index = None
 
@@ -684,33 +671,24 @@ class ParticipantsViewSet(viewsets.ModelViewSet):
                             # index = build_index(
                             #     '/Users/mahmoodnael/PycharmProjects/PartnerFinderApril/Backend/src/B2MATCH_Index')
                             index = build_index('B2MATCH_Index', 'B2MATCH')
-                            print("index built....")
 
                         index = add_par_to_index(
                             index, participant, part_temp[7], False)
                     elif event.is_upcoming:
                         try:
                             # this is the path for the index
-                            print("in try")
 
                             # index = load_index('/Users/mahmoodnael/PycharmProjects/PartnerFinderApril/Backend/src/B2MATCH_upcoming_Index')
-                            index = load_index('B2MATCH_upcoming_Index')
-                            print("upcoming index loaded......")
+                            index = load_index('B2MATCH_upcoming_Index.0')
                         except:
-                            print("in except")
-
                             index = None
 
                         if index is None:
-                            print("in if if ifs")
                             # this is the path for the index
                             # index = build_index('/Users/mahmoodnael/PycharmProjects/PartnerFinderApril/Backend/src/B2MATCH_upcoming_Index')
                             index = build_index('B2MATCH_upcoming_Index', "B2MATCH")
-                            print("upcoming index built....")
-                        print("befor index")
                         index = add_par_to_index(
                             index, participant, part_temp[7], True)
-                        print("after index")
             response = {'success': 'Adding participant successfully.'}
         except:
             response = {'error': 'Error while adding participant'}
@@ -804,11 +782,9 @@ class AlertsB2match(viewsets.ModelViewSet):
                 else:
                     eventScore = getScoreForEvent(parts)
                     myEvents.append((event, eventScore))
-                    print(event.event_name, event.event_url, eventScore)
                     updateAlertsEvents(myEvents)
 
             myEvents.sort(key=operator.itemgetter(1), reverse=True)
-            print(myEvents)
             alerts_settings = AlertsSettings.objects.all()[0]
             email = alerts_settings.email
             body = MIMEMultipart('alternative')

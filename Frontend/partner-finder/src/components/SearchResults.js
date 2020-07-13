@@ -5,10 +5,8 @@ import { EU_columns, B2Match_columns } from "../utils";
 function SearchResults(props) {
   const [data, setData] = React.useState([]);
 
-  console.log("PROPS3", props.data);
   React.useEffect(
     function effectFunction() {
-      console.log("PROPS2", props.data);
       setData(props.data);
     },
     [props.data]

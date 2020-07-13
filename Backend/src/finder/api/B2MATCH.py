@@ -394,19 +394,14 @@ def getParticipantsByTags(tags):
     """
     tags = ' '.join(tags)
     index1 = load_index('B2MATCH_Index')  # B2match_index
-    index2 = load_index('B2MATCH_upcoming_Index')  # B2match_upcoming_index
-
+    index2 = load_index('B2MATCH_upcoming_Index.0')  # B2match_upcoming_index
     corpus = NLP_processor([tags],'B2MATCH')
-
     res1 = index1[corpus]
-
     res2 = index2[corpus]
-
     res1 = process_query_result(res1)
     res2 = process_query_result(res2)
-
-
     res1 = [pair for pair in res1 if pair[1] > 0.1]
+
     res1 = sorted(res1, key=lambda pair: pair[1], reverse=True)
     res2 = [pair for pair in res2 if pair[1] > 0.1]
     # res1 = res1[:101]
@@ -416,11 +411,17 @@ def getParticipantsByTags(tags):
 
 
     res1 = [MapIDsB2match.objects.get(indexID=pair[0]) for pair in res1]
-    res2 = [MapIDsB2matchUpcoming.objects.get(
-        indexID=pair[0]) for pair in res2]
+
+    rest =[]
+    for pair in res2:
+        try:
+            rest.append(MapIDsB2matchUpcoming.objects.get(indexID=pair[0]))
+        except:
+
+            continue
+    res2 = rest
 
     finalRes = []
-
 
     for mapId in res1:
         finalRes.append(Participants.objects.get(pk=mapId.originalID))

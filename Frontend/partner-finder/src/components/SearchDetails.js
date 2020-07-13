@@ -193,7 +193,6 @@ function SearchDetails(props) {
       .then((res) => res.json())
       .then((resp) => {
         if ("error" in resp) {
-          console.log("ERROR", resp);
           setMsgState({
             title: "Failed",
             body: "Error while searching for organizations",
@@ -236,7 +235,6 @@ function SearchDetails(props) {
         }
       })
       .catch((error) => {
-        console.log("ERROR", error);
         setData({ EU: [], B2MATCH: [] });
         props.setState({ ...props.state, data: { EU: [], B2MATCH: [] } });
         setMsgState({

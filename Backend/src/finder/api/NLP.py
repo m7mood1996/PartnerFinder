@@ -19,10 +19,8 @@ def NLP_processor(documents, type):
     try:
         dictionary = load_dictionary(dir)
     except:
-        print("HERER",dir)
         dictionary = build_dictionary([])
         dictionary.save(dir)
-
     dictionary.add_documents(tokens)
     dictionary.save(dir)
     return build_corpus(dictionary, tokens)
@@ -76,6 +74,7 @@ def process_query_result(result):
     result = result[0]
     pairs = []
     for idx, sim_perc in enumerate(result):
+
         if sim_perc != 0:
             pairs.append((idx, sim_perc))
     return pairs
@@ -125,7 +124,6 @@ def build_index(path, type):
     :param type: string to know whatc index b2match or eu
     :return: Similarity object "index"
     """
-    print("before courps")
     corpus = NLP_processor([], type)
     tfidf = gensim.models.TfidfModel(corpus)
 

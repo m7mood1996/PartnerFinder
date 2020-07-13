@@ -473,7 +473,7 @@ def get_proposal_calls():
     try:
         response = requests.get(url)
     except requests.exceptions.RequestException as err:
-        print(err)
+        print("Error - ", err)
         return []
 
     res = response.json()['fundingData']['GrantTenderObj']

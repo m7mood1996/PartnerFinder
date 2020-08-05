@@ -111,17 +111,17 @@ def add_org_to_index(index, org):
     doc = get_document_from_org(org)
     originalID = org['pic']
     indexID = len(index)
-    try:
-        MapIds.objects.filter(indexID=indexID).delete()
-    except:
-        pass
+    # try:
+    #     MapIds.objects.filter(indexID=indexID).delete()
+    # except:
+    #     pass
 
-    try:
-        MapIds.objects.get(originalID=originalID)
-        MapIds.objects.filter(originalID=originalID).update(indexID=indexID)
-    except:
-        newMap = MapIds(originalID=originalID, indexID=indexID)
-        newMap.save()
+    # try:
+    #     MapIds.objects.get(originalID=originalID)
+    #     MapIds.objects.filter(originalID=originalID).update(indexID=indexID)
+    # except:
+    newMap = MapIds(originalID=originalID, indexID=indexID)
+    newMap.save()
 
     index = add_documents(index, [doc],'EU')
     return index
@@ -201,15 +201,19 @@ def get_organizations_by_tags(tags):
     :return: list of organizations objects
     """
     tags = ' '.join(tags)
+    print("TAGS", tags)
     index = load_index('EU_Index.0')
+    print("INDEX", index)
     corpus = NLP_processor([tags], 'EU')
-
+    print("CORPUS", corpus)
     res = index[corpus]
+    print("AFTER RES")
     res = process_query_result(res)
-
+    print("AFTER PROCESS")
     res = [pair for pair in res if pair[1] > 0.3]
     res = sorted(res, key=lambda pair: pair[1], reverse=True)
     temp = []
+    print("AFTER SORT")
     for pair in res:
         try:
             temp.append(MapIds.objects.get(indexID=pair[0]))
@@ -317,9 +321,13 @@ def get_orgs_by_parameters(tags, countries, types, role):
         countries = []
 
     org_by_tags = get_organizations_by_tags(tags)
+    print("AFTER TAGS", org_by_tags)
     orgs_by_countries = get_organizations_by_countries(countries)
+    print("AFTER countries", orgs_by_countries)
     orgs_by_types = get_organizations_by_types(types)
+    print("AFTER types", orgs_by_types)
     orgs_by_role = get_organizations_by_role(role)
+    print("AFTER roles", orgs_by_role)
 
     if countries == [] and types == [] and role == '':
         return org_by_tags

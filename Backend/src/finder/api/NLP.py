@@ -11,18 +11,25 @@ def NLP_processor(documents, type):
     :param type: type of repository EU or B2MATCH
     :return: Corpus of the documents, list of lists of pairs (token_id, token_frequency)
     """
+    print("NLP")
     if type == 'EU':
         dir = 'Dictionary'
     elif type == 'B2MATCH':
         dir = 'Dictionary_b2match'
     tokens = [process_document(doc) for doc in documents]
+    print("TOKENS")
     try:
+        print("TRY")
         dictionary = load_dictionary(dir)
     except:
+        print("CATCH")
         dictionary = build_dictionary([])
         dictionary.save(dir)
+    print("DICT")
     dictionary.add_documents(tokens)
+    print("ADD DOCS")
     dictionary.save(dir)
+    print("AFTER SAVE")
     return build_corpus(dictionary, tokens)
 
 

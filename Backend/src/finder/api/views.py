@@ -46,17 +46,25 @@ class OrganizationProfileViewSet(viewsets.ModelViewSet):
 
         print("*" * 50, "\nSTART UPDATING EU DB\n", "*" * 50 )
 
+
         try:
             try:
-                index = load_index('EU_Index_Temp')
-                if os.path.exists('EU_Index_Temp.0') and os.path.getsize('EU_Index_Temp.0') > os.path.getsize(
-                        'EU_Index.0'):
-                    destroy_and_rename(old_index_name='EU_Index', new_index_name='EU_Index_Temp')
-                else:
-                    index.destroy()
+                index = load_index('EU_Index')
+                # if os.path.exists('EU_Index_Temp.0') and os.path.getsize('EU_Index_Temp.0') > os.path.getsize(
+                #         'EU_Index.0'):
+                #     destroy_and_rename(old_index_name='EU_Index', new_index_name='EU_Index_Temp')
+                # else:
+                index.destroy()
             except:
                 pass
-            index = build_index('EU_Index_Temp', 'EU')
+            try:
+                dictionary = load_dictionary("Dictionary")
+                os.remove("Dictionary")
+            except:
+                pass
+
+            index = build_index('EU_Index', 'EU')
+            MapIds.objects.all().delete()
             status = {}
             graph = Graph()
             visitngQueue = collections.deque()
@@ -82,20 +90,20 @@ class OrganizationProfileViewSet(viewsets.ModelViewSet):
                 index = add_org_to_index(index, currOrg)
                 status[currPic] = 'visited'
 
-            if os.path.exists('EU_Index_Temp.0') and os.path.getsize('EU_Index_Temp.0') > os.path.getsize('EU_Index.0'):
-                destroy_and_rename(old_index_name='EU_Index', new_index_name='EU_Index_Temp')
-            else:
-                index.destroy()
+            # if os.path.exists('EU_Index_Temp.0') and os.path.getsize('EU_Index_Temp.0') > os.path.getsize('EU_Index.0'):
+            #     destroy_and_rename(old_index_name='EU_Index', new_index_name='EU_Index_Temp')
+            # else:
+            #     index.destroy()
 
             response = {'success': 'Organizations updated successfully!'}
             if not setUpdateSettings(euDate=time.mktime(datetime.datetime.now().timetuple())):
                 raise
         except:
             setUpdateSettings(euDate=time.mktime(datetime.datetime.now().timetuple()))
-            if os.path.exists('EU_Index_Temp.0') and os.path.getsize('EU_Index_Temp.0') > os.path.getsize('EU_Index.0'):
-                destroy_and_rename(old_index_name='EU_Index', new_index_name='EU_Index_Temp')
-            else:
-                index.destroy()
+            # if os.path.exists('EU_Index_Temp.0') and os.path.getsize('EU_Index_Temp.0') > os.path.getsize('EU_Index.0'):
+            #     destroy_and_rename(old_index_name='EU_Index', new_index_name='EU_Index_Temp')
+            # else:
+            #     index.destroy()
             response = {'error': 'Error while updating organizations.'}
 
         return Response(response, status=status.HTTP_200_OK)
@@ -115,9 +123,11 @@ class OrganizationProfileViewSet(viewsets.ModelViewSet):
             types = data['types']
             tags = data['tags']
             role = data['role']
+            print(data)
             EURes = get_orgs_by_parameters(tags=tags, countries=countries, types=types,
                                            role=role)
-            B2MATCHRes = getB2MATCHPartByCountriesAndTags(tags, countries)
+            # B2MATCHRes = getB2MATCHPartByCountriesAndTags(tags, countries)
+            B2MATCHRes = []
             B2MATCH = []
             EU = []
             for val in EURes:

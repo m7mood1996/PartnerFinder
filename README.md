@@ -267,7 +267,7 @@ know their rights.
 ---
 ## Author Info
 
-- Github - [bashbash96](https://github.com/bashbash96), [m7mood1996](https://github.com/m7mood1996)
-- Linkedin - [amjad-bashiti](https://www.linkedin.com/in/amjad-bashiti-2652a9192/), [Mahmood-Qawasmi](https://www.linkedin.com/in/mahmood-qawasmi-457013163)
+- Github - [bashbash96](https://github.com/bashbash96), [m7mood1996](https://github.com/m7mood1996), [anaSameer](https://github.com/anaSameer)
+- Linkedin - [amjad-bashiti](https://www.linkedin.com/in/amjad-bashiti-2652a9192/), [Mahmood-Qawasmi](https://www.linkedin.com/in/mahmood-qawasmi-457013163), [Anas-Aburmeileh](https://www.linkedin.com/in/anas-aburmeileh-694b51173/)
 
 [Back To The Top](#partner-finder-search-engine)
